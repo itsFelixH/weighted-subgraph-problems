@@ -1,4 +1,3 @@
-import gurobipy as gp
 import networkx as nx
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
@@ -21,8 +20,9 @@ CHOICE = 'a'
 # USER INPUT
 # --------------------------
 
+
 def main():
-    
+
     if ASK_USER:
         print(text)
         choice = input('Your choice: ')
@@ -111,6 +111,7 @@ def main():
             plt.show()
             nx.draw(H)
             plt.show()
+
 
 def draw_weighted_subgraph(G, H, dic=None, weight=None, method='', time=None):
     if not dic:

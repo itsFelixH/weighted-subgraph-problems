@@ -1,7 +1,5 @@
 from itertools import *
-import random
 import networkx as nx
-import matplotlib.pyplot as plt
 
 from gurobipy import *
 
@@ -26,11 +24,11 @@ def solve_rooted_ip(G, root, mode='max'):
     
     # Set objective      
     if mode == 'max':
-        ip.setObjective((quicksum(z[u][v]*w for u,v,w in G.edges.data('weight')))
-            - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
+        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
+                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
     elif mode == 'min':
-        ip.setObjective((quicksum(z[u][v]*w for u,v,w in G.edges.data('weight')))
-            - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
+        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
+                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
     
     # Add induce constraints
     for u, v in G.edges():
@@ -50,8 +48,7 @@ def solve_rooted_ip(G, root, mode='max'):
             elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
             t = [v for v in G.nodes() if v not in s]
 
-            ip.addConstr((quicksum(z[u][v]*n for u, v in elist))
-            >= (quicksum(y[v] for v in t)))
+            ip.addConstr((quicksum(z[u][v]*n for u, v in elist)) >= (quicksum(y[v] for v in t)))
     
     # Solve
     ip.optimize()
@@ -70,7 +67,8 @@ def solve_rooted_ip(G, root, mode='max'):
             if z[u][v].x > 0.5:
                 H.add_edge(u, v, weight=w)
     
-    return (H, weight)
+    return H, weight
+
 
 def solve_full_ip__rooted(G, mode='max'):
     
@@ -97,7 +95,8 @@ def solve_full_ip__rooted(G, mode='max'):
                     H = H1
                     weight = objVal
 
-    return (H, weight)
+    return H, weight
+
 
 def solve_full_ip(G, mode='max'):
     """Compute maximum weighted subgraph in graph G.
@@ -165,7 +164,8 @@ def solve_full_ip(G, mode='max'):
             if z[u][v].x > 0.5:
                 H.add_edge(u, v, weight=w)
 
-    return (H, weight)
+    return H, weight
+
 
 def solve_ip_on_path(G, mode='max'):
     """Compute maximum weighted subgraph in graph G.
@@ -245,7 +245,8 @@ def solve_ip_on_path(G, mode='max'):
             if z[u][v].x > 0.5:
                 H.add_edge(u, v, weight=w)
 
-    return (H, weight)
+    return H, weight
+
 
 def solve_on_path__all_subpaths(G, mode='max'):
     """Compute weighted subgraph in graph G.
@@ -290,7 +291,8 @@ def solve_on_path__all_subpaths(G, mode='max'):
     
     H = G.subgraph(nodelist)
     
-    return (H, weight)
+    return H, weight
+
 
 def solve_on_tree__all_subtrees(G, mode='max'):
     """Compute weighted subgraph in graph G.
@@ -305,7 +307,7 @@ def solve_on_tree__all_subtrees(G, mode='max'):
     if not nx.is_tree(G):
         print('G is not a tree!')
     
-    root = [v for v, d in G.in_degree() if d==0]
+    root = [v for v, d in G.in_degree() if d == 0]
     Q = gh.level_order_list(G, root[0])[::-1]
     
     i=1

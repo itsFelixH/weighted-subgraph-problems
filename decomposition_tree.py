@@ -1,7 +1,8 @@
-import networkx as nx
 import graph_helper as gh
 
+
 class DecompositionTree:
+
     def __init__(self, composition=None, joinNode=None, left=None, right=None):
         self.composition = composition
         self.joinNode = joinNode
@@ -9,7 +10,7 @@ class DecompositionTree:
         self.right = right
         
     def get_graph(self, node, G):
-        path = self.getPathInTree(node)
+        path = self.get_path_in_tree_as_string(node)
         currentNode = self
         while path != '':
             if path[0] == 'l':
@@ -122,4 +123,4 @@ class DecompositionTree:
             n += self.left.size()
         if self.right is not None:
             n += self.right.size()
-        return n   
+        return n
