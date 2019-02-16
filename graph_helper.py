@@ -1,4 +1,5 @@
 import networkx as nx
+import random
 
 
 def merge_nodes(G, selected_nodes, new_node, node_weight=None):
@@ -84,7 +85,25 @@ def is_path(G):
     G = nx.convert_node_labels_to_integers(G)
     N = G.number_of_nodes()
     return all([G.has_edge(i, i+1) for i in range(N-1)])
+
+def direct_tree(G, root=None):
+    root = random.choice(list(G.nodes))
     
+    H = nx.DiGraph()
+    H.add_nodes_from(G.nodes(data=True))
+    
+    Q = [root]
+    used_nodes = []
+    while len(Q) > 0:
+        u = Q[0]
+        used_nodes.append(u)
+        for v in G.neighbors(u):
+            if v not in used_nodes:
+                H.add_edge(u, v, weight=G[u][v]['weight'])
+                Q.append(v)
+        Q.remove(u)
+    
+    return H
     
 def weight(G):
     """Computes wsp-weight of a given graph.

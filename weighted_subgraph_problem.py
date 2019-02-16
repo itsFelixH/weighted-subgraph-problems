@@ -426,6 +426,8 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
     if not nx.is_tree(G):
         print('G is not a tree!')
     
+    if not G.is_directed():
+        G = gh.direct_tree(G)
     root = [v for v, d in G.in_degree() if d==0]
     root = root[0]
     
@@ -478,42 +480,3 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
         weight = 0
     
     return (H, weight)
-
-
-def preprocessing(G):
-    #TODO
-    
-    R = G.copy()
-    k = nx.number_of_nodes(G) + 1
-    node_map = dict()
-    
-    multigraph = 0
-    if R.is_multigraph():
-        multigraph = 1
-    
-    # Phase I)    
-    for v in list(nx.isolates(R)):
-        R.remove_node(v)
-    
-    for u, v in list(R.edges()):
-        if multigraph:
-            if R.has_node(u) and R.has_node(v) and R.has_edge(u,v):
-                weight = 0
-                for edge in R[u][v]:
-                    weight += R[u][v][edge]['weight']
-                weight = weight - R.nodes[u]['weight'] - R.nodes[v]['weight']
-                if weight >= 0:
-                    combine = [u, v]
-                    R = gh.merge_nodes(R, combine, k, {'weight': weight})
-                    node_map[k] = combine
-                    k = k+1
-        else:
-            if R.has_node(u) and R.has_node(v) and R.has_edge(u,v):
-                weight = R[u][v]['weight'] - R.nodes[u]['weight'] - R.nodes[v]['weight']
-                if weight >= 0:
-                    combine = [u, v]
-                    R = gh.merge_nodes(R, combine, k, {'weight': weight})
-                    node_map[k] = combine
-                    k += 1
-    
-    return (R, node_map)

@@ -32,10 +32,6 @@ def main():
     if choice != 'z':
         
         if choice == 'a':
-            #G = gg.random_weighted_binary_tree(10, 10)
-            #G = gg.random_weighted_tree(10, 10)
-            #G = gg.random_weighted_path(10, 10)
-            #(G, D) = gg.random_weighted_spg(15, 10)
             G = gg.random_weighted_graph(10, 0.33, 10)
             start = timer()            
             (H, weight) = wsp.solve_full_ip(G, 'max')
@@ -106,6 +102,15 @@ def main():
             end = timer()
             if DRAW:
                 draw_weighted_subgraph(G, H, dic, weight, 'a dynamic programm', end-start)
+        
+        elif choice == 'd':
+            G = gg.random_weighted_tree(6, 10)
+            H = gh.direct_tree(G)
+            
+            nx.draw(G)
+            plt.show()
+            nx.draw(H)
+            plt.show()
 
 def draw_weighted_subgraph(G, H, dic=None, weight=None, method='', time=None):
     if not dic:

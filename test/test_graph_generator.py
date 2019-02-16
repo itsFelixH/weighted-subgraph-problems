@@ -83,7 +83,6 @@ def test_random_weighted_path_coinfilp():
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']
 
-
 def test_random_weighted_path():
     G = gg.random_weighted_path(100, 50)
     
