@@ -193,7 +193,6 @@ def test_solve_full_ip__max():
     for e in H5.edges():
         assert e in G5.edges()
 
-
 def test_solve_ip_on_path__max():
     G = gg.random_weighted_path(10, 40)
     mode = 'max'

@@ -10,18 +10,23 @@ def test_init_op():
     assert isinstance(ip, Model)
     assert isinstance(ip, ig.OP)
     assert ip.params.outputflag == 0
+    assert ip._x == dict()
+    assert ip._y == dict()
+    assert ip._z == dict()
 
 
 def test_add_node_variables():
     ip = ig.OP()
     G = gg.random_weighted_path(100, 50)
     
-    y = ip.add_node_variables(G.nodes())
+    y = ip.add_node_variables(G)
     
     assert G.number_of_nodes() == len(y)
     
     for v in G.nodes():
         assert y[v]
+        assert ip._y[v]
+        assert y[v] == ip._y[v]
     
     for v in ip.getVars():
         assert int(v.varName[1:]) in G.nodes()
@@ -31,12 +36,14 @@ def test_add_edge_variables():
     ip = ig.OP()
     G = gg.random_weighted_path(100, 50)
     
-    z = ip.add_edge_variables(G.edges())
+    z = ip.add_edge_variables(G)
     
     assert G.number_of_edges() == len(z)
     
     for (u, v) in G.edges():
         assert z[u][v]
+        assert ip._z[u][v]
+        assert z[u][v] == ip._z[u][v]
         
     for v in ip.getVars():
         z = v.varName.split('_')
@@ -56,7 +63,7 @@ def test_op_model():
     m.optimize()
     
     op = ig.OP()
-    y = op.add_node_variables(G.nodes())
+    y = op.add_node_variables(G)
     
     op.setObjective(quicksum(y[v]*w for v, w in G.nodes.data('weight')), GRB.MAXIMIZE)
     op.addConstr(quicksum(y[v] for v in G.nodes()) <= 50)

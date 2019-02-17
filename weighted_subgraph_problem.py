@@ -17,8 +17,8 @@ def solve_rooted_ip(G, root, mode='max'):
     ip = ig.OP()
     
     # Create variables
-    y = ip.add_node_variables(G.nodes)
-    z = ip.add_edge_variables(G.edges)
+    y = ip.add_node_variables(G)
+    z = ip.add_edge_variables(G)
     
     # Set objective      
     if mode == 'max':
@@ -106,9 +106,9 @@ def solve_full_ip(G, mode='max'):
     ip = ig.OP()
     
     # Create variables
-    x = ip.add_node_variables(G.nodes, 'x')
-    y = ip.add_node_variables(G.nodes)
-    z = ip.add_edge_variables(G.edges)
+    x = ip.add_node_variables(G, 'x')
+    y = ip.add_node_variables(G)
+    z = ip.add_edge_variables(G)
     
     # Set objective      
     if mode == 'max':
@@ -162,6 +162,47 @@ def solve_full_ip(G, mode='max'):
     return H, weight
 
 
+def setup_ip(G, mode='max'):
+    ip = ig.OP()
+
+    # Create variables
+    y = ip.add_node_variables(G)
+    z = ip.add_edge_variables(G)
+
+    ip.set_wsp_objective(G, mode)
+    ip.add_induce_constraints(G)
+
+    return ip
+
+
+def solve_separation(G, mode='max'):
+    ip = setup_ip(G, mode)
+    connected = False
+
+    while not connected:
+        ip.optimize()
+
+        # Construct subgraph
+        H = nx.empty_graph()
+        for v, w in G.nodes.data('weight'):
+            if ip._y[v].x > 0.5:
+                H.add_node(v, weight=w)
+
+        for u, v, w in G.edges.data('weight'):
+            if ip._z[u][v].x > 0.5:
+                H.add_edge(u, v, weight=w)
+
+        # Check if connected
+        if nx.is_connected(H):
+            connected = True
+        else:
+            ip.add_violated_constraint(G, H.nodes())
+
+    weight = ip.objVal
+
+    return H, weight
+
+
 def solve_ip_on_path(G, mode='max'):
     """Compute maximum weighted subgraph in graph G.
     Parameters:
@@ -177,9 +218,9 @@ def solve_ip_on_path(G, mode='max'):
     ip = ig.OP()
     
     # Create variables
-    x = ip.add_node_variables(G.nodes, 'x')
-    y = ip.add_node_variables(G.nodes)
-    z = ip.add_edge_variables(G.edges)
+    x = ip.add_node_variables(G, 'x')
+    y = ip.add_node_variables(G)
+    z = ip.add_edge_variables(G)
     
     # Set objective      
     if mode == 'max':

@@ -145,6 +145,29 @@ def main():
                 plt.axis('off')
                 plt.show()
 
+        elif choice == 'e':
+            G = gg.random_weighted_tree(100, 30)
+            dic = nx.spring_layout(G)
+
+            start = timer()
+            (H, weight) = wsp.solve_separation(G, MODE)
+            end = timer()
+            if DRAW:
+                ax = plt.subplot(2, 1, 1)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (separation)', end - start)
+
+            start = timer()
+            (H, weight) = wsp.solve_dynamic_prog_on_tree(G, MODE)
+            end = timer()
+            if DRAW:
+                ax = plt.subplot(2, 1, 2)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end - start)
+
+            # Results
+            if DRAW:
+                plt.axis('off')
+                plt.show()
+
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
     if not dic:
@@ -186,6 +209,7 @@ a) Compute WSP on random weighted graph using an IP formulation
 b) Compare WSP algorithms and their running times for paths
 c) Compute WSP on big path
 d) Compare WSP algorithms and their running times for trees
+e) Compare IP (separation) and dynamic program for trees
       
 z) End program...
 
