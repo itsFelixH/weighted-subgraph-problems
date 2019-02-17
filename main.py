@@ -161,7 +161,7 @@ def main():
             end = timer()
             if DRAW:
                 ax = plt.subplot(2, 1, 2)
-                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end - start)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic program', end - start)
 
             # Results
             if DRAW:
