@@ -1,10 +1,5 @@
-import networkx as nx
-import numpy as np
-import pytest
-
-import graph_helper as gh
-import graph_generator as gg
 from decomposition_tree import DecompositionTree
+
 
 def test_init_tree():
     D = DecompositionTree()
@@ -26,7 +21,7 @@ def test_init_tree():
     assert D1
     assert isinstance(D1, DecompositionTree)
     assert D1.composition == 's'
-    assert D1.joinNode == None
+    assert not D1.joinNode
     assert D1.left == D3
     assert D1.right == D4
     
@@ -36,7 +31,8 @@ def test_init_tree():
     assert D2.joinNode == 4
     assert D2.left == D5
     assert D2.right == D6    
-    
+
+
 def test_is_leaf():
     D3 = DecompositionTree()
     D4 = DecompositionTree()
@@ -65,6 +61,7 @@ def test_is_leaf():
     assert not D0.left.is_leaf()
     assert not D0.right.is_leaf()
 
+
 def test_children():
     D3 = DecompositionTree()
     D4 = DecompositionTree()
@@ -83,7 +80,8 @@ def test_children():
     assert D4.children() == []
     assert D5.children() == []
     assert D6.children() == []
-    
+
+
 def test_contains():
     D3 = DecompositionTree()
     D4 = DecompositionTree()
@@ -118,7 +116,8 @@ def test_contains():
     assert not D2.contains(D1)
     assert not D2.contains(D3)
     assert not D2.contains(D4)
-    
+
+
 def test_get_path_in_tree_as_string():
     D3 = DecompositionTree()
     D4 = DecompositionTree()

@@ -1,7 +1,4 @@
-import networkx as nx
 from gurobipy import *
-
-import graph_helper as gh
 import graph_generator as gg
 import ip_generator as ig
 
@@ -13,6 +10,7 @@ def test_init_op():
     assert isinstance(ip, Model)
     assert isinstance(ip, ig.OP)
     assert ip.params.outputflag == 0
+
 
 def test_add_node_variables():
     ip = ig.OP()
@@ -28,6 +26,7 @@ def test_add_node_variables():
     for v in ip.getVars():
         assert int(v.varName[1:]) in G.nodes()
 
+
 def test_add_edge_variables():
     ip = ig.OP()
     G = gg.random_weighted_path(100, 50)
@@ -42,6 +41,7 @@ def test_add_edge_variables():
     for v in ip.getVars():
         z = v.varName.split('_')
         assert (int(z[0][1:]), int(z[1])) in G.edges()
+
 
 def test_op_model():
     m = Model("mip1")
@@ -69,5 +69,3 @@ def test_op_model():
     
     assert x == y
     assert m.objVal == op.objVal
-        
-    

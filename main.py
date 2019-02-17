@@ -39,7 +39,7 @@ def main():
             
             if DRAW:
                 dic = nx.spring_layout(G)
-                draw_weighted_subgraph(G, H, dic, weight, 'an IP', end-start)
+                draw_weighted_subgraph(G, H, dic, weight, 'IP', end-start)
             
         elif choice == 'b':            
             G = gg.random_weighted_path(10, 10)
@@ -49,19 +49,19 @@ def main():
             (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'an IP (rooted)', end-start)
+                draw_weighted_subgraph(G, H, dic, weight, 'IP (rooted)', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_full_ip(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'an IP', end-start)
+                draw_weighted_subgraph(G, H, dic, weight, 'IP', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_ip_on_path(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'an IP (path)', end-start)
+                draw_weighted_subgraph(G, H, dic, weight, 'IP (path)', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_on_path__all_subpaths(G, MODE)
@@ -73,7 +73,7 @@ def main():
             (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'a dynamic programm', end-start)
+                draw_weighted_subgraph(G, H, dic, weight, 'dynamic programm', end-start)
         
         elif choice == 'c':            
             G = gg.random_weighted_binary_tree(10, 10)
@@ -83,13 +83,13 @@ def main():
             (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'an IP (rooted)', end-start)
+                draw_weighted_subgraph(G, H, dic, weight, 'IP (rooted)', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_full_ip(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'an IP', end-start)
+                draw_weighted_subgraph(G, H, dic, weight, 'IP', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_on_tree__all_subtrees(G, MODE)
@@ -101,16 +101,7 @@ def main():
             (H, weight) = wsp.solve_dynamic_prog_on_tree(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'a dynamic programm', end-start)
-        
-        elif choice == 'd':
-            G = gg.random_weighted_tree(6, 10)
-            H = gh.direct_tree(G)
-            
-            nx.draw(G)
-            plt.show()
-            nx.draw(H)
-            plt.show()
+                draw_weighted_subgraph(G, H, dic, weight, 'dynamic programm', end-start)
 
 
 def draw_weighted_subgraph(G, H, dic=None, weight=None, method='', time=None):
@@ -136,14 +127,14 @@ def draw_weighted_subgraph(G, H, dic=None, weight=None, method='', time=None):
     
     # Show plot
     plt.axis('off')
-    title = 'Computed WSP (blue) with weight ' + str(weight) + ' using ' + method
+    title = method + ': weight ' + str(weight)
     if time:
-        title += ' in ' + str(round(time,3)) + 's'
+        title += ', time ' + str(round(time, 3)) + 's'
     plt.title(title)
     plt.show()
 
     
-text ='''
+text = '''
 -------------------------------------------------------------------------------------
 Algorithms for Weighted Subgraph Problems
 

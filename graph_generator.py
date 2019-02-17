@@ -22,7 +22,8 @@ def weight_edges(G, min_weight, max_weight):
             G[u][v]['weight'] = random.randint(min_weight, max_weight)
         
     return G
-    
+
+
 def weight_nodes(G, min_weight, max_weight):
     """Randomly weight nodes of given graph
     Parameters:
@@ -36,7 +37,8 @@ def weight_nodes(G, min_weight, max_weight):
         nx.set_node_attributes(G, {v: {'weight': random.randint(min_weight, max_weight)}})
         
     return G
-    
+
+
 def random_weighted_path_coinfilp(p, max_weight):
     """Generates random weighted graph of arbitrary lenght.
     Parameters:
@@ -95,6 +97,7 @@ def random_weighted_graph(number_of_nodes, p, max_weight):
         nx.set_node_attributes(G, {v: {'weight': random.randint(1, max_weight)}})
     return G
 
+
 def random_weighted_binary_tree(number_of_nodes, max_weight):
     """Generates random weighted binary tree graph.
     Parameters:
@@ -119,6 +122,7 @@ def random_weighted_binary_tree(number_of_nodes, max_weight):
         free_edges.remove((u, v))
         
     return T
+
 
 def random_weighted_binary_tree2(number_of_nodes, max_weight):
     """Generates random weighted binary tree graph.
@@ -157,6 +161,7 @@ def random_weighted_binary_tree2(number_of_nodes, max_weight):
         
     return T
 
+
 def random_weighted_tree(number_of_nodes, max_weight):
     """Generates random weighted binary tree graph.
     Parameters:
@@ -173,6 +178,7 @@ def random_weighted_tree(number_of_nodes, max_weight):
     for v in T.nodes():
         nx.set_node_attributes(T, {v: {'weight': random.randint(1, max_weight)}})
     return T
+
 
 def random_weighted_spg(number_of_edges, max_weight):
     """Generates random weighted sp graph.
@@ -261,6 +267,7 @@ def random_weighted_grid(m, n, max_weight):
         nx.set_node_attributes(G, {v: {'weight': random.randint(1, max_weight)}})
     dic = dict(zip(G, G))
     return G, dic
+
 
 def ex_graph_path():
     P = nx.empty_graph()

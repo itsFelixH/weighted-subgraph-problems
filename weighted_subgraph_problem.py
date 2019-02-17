@@ -1,8 +1,6 @@
-from itertools import *
+from itertools import chain, combinations
 import networkx as nx
-
 from gurobipy import *
-
 import graph_helper as gh
 import ip_generator as ig
 
@@ -55,17 +53,15 @@ def solve_rooted_ip(G, root, mode='max'):
     
     # Construct subgraph
     H = nx.empty_graph()
-    weight = 0
-    
-    if ip.objVal > 0:
-        weight = ip.objVal
-        for v, w in G.nodes.data('weight'):
-            if y[v].x > 0.5:
-                H.add_node(v, weight=w)
-    
-        for u, v, w in G.edges.data('weight'):
-            if z[u][v].x > 0.5:
-                H.add_edge(u, v, weight=w)
+    weight = ip.objVal
+
+    for v, w in G.nodes.data('weight'):
+        if y[v].x > 0.5:
+            H.add_node(v, weight=w)
+
+    for u, v, w in G.edges.data('weight'):
+        if z[u][v].x > 0.5:
+            H.add_edge(u, v, weight=w)
     
     return H, weight
 
@@ -144,8 +140,7 @@ def solve_full_ip(G, mode='max'):
             if v in s:
                 elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
                 
-                ip.addConstr(y[v] <= (quicksum(x[u] for u in s))
-                    + (quicksum(z[u][v] for u, v in elist)))
+                ip.addConstr(y[v] <= (quicksum(x[u] for u in s)) + (quicksum(z[u][v] for u, v in elist)))
     
     # Solve
     ip.optimize()
@@ -188,11 +183,11 @@ def solve_ip_on_path(G, mode='max'):
     
     # Set objective      
     if mode == 'max':
-        ip.setObjective((quicksum(z[u][v]*w for u,v,w in G.edges.data('weight')))
-            - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
+        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
+                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
     elif mode == 'min':
-        ip.setObjective((quicksum(z[u][v]*w for u,v,w in G.edges.data('weight')))
-            - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
+        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
+                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
     
     # Add induce constraints
     for u, v in G.edges():
@@ -220,13 +215,8 @@ def solve_ip_on_path(G, mode='max'):
         for s in subpaths:
             if v in s:
                 elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
-                
-                #t = [v for v in G.nodes() if v not in s]
-                #ip.addConstraint((quicksum(z[u][v]*n for u, v in elist))
-                #>= (quicksum(y[v] for v in t)))
             
-                ip.addConstr(y[v] <= (quicksum(x[u] for u in G.nodes()))
-                    + (quicksum(z[u][v] for u, v in elist)))
+                ip.addConstr(y[v] <= (quicksum(x[u] for u in s)) + (quicksum(z[u][v] for u, v in elist)))
     
     # Solve
     ip.optimize()
@@ -310,7 +300,6 @@ def solve_on_tree__all_subtrees(G, mode='max'):
     root = [v for v, d in G.in_degree() if d == 0]
     Q = gh.level_order_list(G, root[0])[::-1]
     
-    i=1
     tree_map = dict()
     for v in Q:
         tree_map[v] = [[v]]
@@ -352,7 +341,8 @@ def solve_on_tree__all_subtrees(G, mode='max'):
     
     H = G.subgraph(nodelist)
     
-    return (H, weight)
+    return H, weight
+
 
 def solve_dynamic_prog_on_path(G, mode='max'):
     """Compute weighted subgraph in graph G.
@@ -372,10 +362,10 @@ def solve_dynamic_prog_on_path(G, mode='max'):
     
     H_out = []
     weight_H_out = 0
-        
+
     for (u, v) in G.edges():
         if weight_H_in > weight_H_out:
-            H_out = H_in
+            H_out = H_in.copy()
             weight_H_out = weight_H_in
         
         weight1 = weight_H_in + G[u][v]['weight'] - G.node[v]['weight']
@@ -395,7 +385,7 @@ def solve_dynamic_prog_on_path(G, mode='max'):
             else:
                 H_in = [v]
                 weight_H_in = weight2
-    
+
     if mode == 'max':
         if weight_H_in > weight_H_out:
             nodelist = H_in
@@ -413,7 +403,8 @@ def solve_dynamic_prog_on_path(G, mode='max'):
     
     H = G.subgraph(nodelist)
     
-    return (H, weight)
+    return H, weight
+
 
 def solve_dynamic_prog_on_tree(G, mode='max'):
     """Compute weighted subgraph in graph G.
@@ -460,11 +451,11 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
                 if max_weight:
                     if weight > max_weight:
                         max_weight = weight
-                        H_out[v] = H_in[w]
+                        H_out[v] = H_in[w].copy()
                         weight_H_out[v] = weight_H_in[w]
                 else:
                     max_weight = weight
-                    H_out[v] = H_in[w]
+                    H_out[v] = H_in[w].copy()
                     weight_H_out[v] = weight_H_in[w]
                 if weight + G[v][w]['weight'] > 0:
                     H_in[v].extend(H_in[w])
@@ -481,4 +472,4 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
         H = nx.empty_graph()
         weight = 0
     
-    return (H, weight)
+    return H, weight

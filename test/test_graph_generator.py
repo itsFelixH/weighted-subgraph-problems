@@ -1,8 +1,4 @@
 import networkx as nx
-import numpy as np
-import pytest
-
-import graph_helper as gh
 import graph_generator as gg
 from decomposition_tree import DecompositionTree
 
@@ -18,7 +14,8 @@ def test_weight_edges():
         assert data['weight'] <= 100
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']
-        
+
+
 def test_weight_edges__multigraph():
     G = nx.MultiDiGraph()
     G.add_edges_from([(1, 2), (3, 4), (1, 3), (2, 5)])
@@ -35,6 +32,7 @@ def test_weight_edges__multigraph():
         assert data['weight'] >= 15
         assert data['weight'] <= 30
 
+
 def test_weight_edges__directed():
     G = nx.generators.directed.random_k_out_graph(10, 3, 0.5)
     G = gg.weight_edges(G, 15, 30)
@@ -48,7 +46,8 @@ def test_weight_edges__directed():
         assert isinstance(data['weight'], int)
         assert data['weight'] >= 15
         assert data['weight'] <= 30
-    
+
+
 def test_weight_nodes():
     G = nx.complete_graph(6)
     G = gg.weight_nodes(G, 10, 100)
@@ -58,7 +57,8 @@ def test_weight_nodes():
         assert isinstance(data['weight'], int)
         assert data['weight'] >= 10
         assert data['weight'] <= 100
-        
+
+
 def test_random_weighted_path_coinfilp():
     G = gg.random_weighted_path_coinfilp(0.9, 50)
     
@@ -83,6 +83,7 @@ def test_random_weighted_path_coinfilp():
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']
 
+
 def test_random_weighted_path():
     G = gg.random_weighted_path(100, 50)
     
@@ -106,6 +107,7 @@ def test_random_weighted_path():
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']
 
+
 def test_random_weighted_graph():
     G = gg.random_weighted_graph(100, 0.1, 50)
     
@@ -126,7 +128,8 @@ def test_random_weighted_graph():
         assert data['weight'] <= 50
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']
-        
+
+
 def test_random_weighted_binary_tree():
     G = gg.random_weighted_binary_tree(100, 40)
     
@@ -151,6 +154,7 @@ def test_random_weighted_binary_tree():
         assert data['weight'] >= 1
         assert data['weight'] <= 40
 
+
 def test_random_weighted_tree():
     G = gg.random_weighted_tree(100, 660)
     
@@ -174,6 +178,7 @@ def test_random_weighted_tree():
         assert data['weight'] <= 660
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']
+
 
 def test_random_weighted_spg():
     (G, D) = gg.random_weighted_spg(100, 50)
@@ -201,6 +206,7 @@ def test_random_weighted_spg():
         assert isinstance(data['weight'], int)
         assert data['weight'] >= 1
         assert data['weight'] <= 50
+
 
 def test_random_weighted_grid():
     (G, dic) = gg.random_weighted_grid(50, 50, 10)
