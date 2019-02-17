@@ -38,8 +38,10 @@ def main():
             end = timer()
             
             if DRAW:
+                ax = plt.subplot(1, 1, 1)
                 dic = nx.spring_layout(G)
-                draw_weighted_subgraph(G, H, dic, weight, 'IP', end-start)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end-start)
+                plt.show()
             
         elif choice == 'b':            
             G = gg.random_weighted_path(10, 10)
@@ -49,33 +51,64 @@ def main():
             (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'IP (rooted)', end-start)
+                ax = plt.subplot(2, 3, 1)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (rooted)', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_full_ip(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'IP', end-start)
+                ax = plt.subplot(2, 3, 2)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_ip_on_path(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'IP (path)', end-start)
+                ax = plt.subplot(2, 3, 3)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (path)', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_on_path__all_subpaths(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'subpath iteration', end-start)
+                ax = plt.subplot(2, 3, 4)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'subpath iteration', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'dynamic programm', end-start)
+                ax = plt.subplot(2, 3, 5)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic programm', end-start)
+
+            # Results
+            if DRAW:
+                plt.show()
+
+        elif choice == 'c':
+            G = gg.random_weighted_path(500, 50)
+            dic = nx.circular_layout(G)
+
+            start = timer()
+            (H, weight) = wsp.solve_on_path__all_subpaths(G, 'max')
+            end = timer()
+            if DRAW:
+                ax = plt.subplot(2, 1, 1)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'iterating subpaths', end - start)
+
+            start = timer()
+            (H, weight) = wsp.solve_dynamic_prog_on_path(G, 'max')
+            end = timer()
+            if DRAW:
+                ax = plt.subplot(2, 1, 2)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic programm', end - start)
+
+            #Results
+            if DRAW:
+                plt.show()
         
-        elif choice == 'c':            
+        elif choice == 'd':
             G = gg.random_weighted_binary_tree(10, 10)
             dic = nx.spring_layout(G)
             
@@ -83,28 +116,37 @@ def main():
             (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'IP (rooted)', end-start)
+                ax = plt.subplot(2, 2, 1)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (rooted)', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_full_ip(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'IP', end-start)
+                ax = plt.subplot(2, 2, 2)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_on_tree__all_subtrees(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'subtree iteration', end-start)
+                ax = plt.subplot(2, 2, 3)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'subtree iteration', end-start)
             
             start = timer()
             (H, weight) = wsp.solve_dynamic_prog_on_tree(G, MODE)
             end = timer()
             if DRAW:
-                draw_weighted_subgraph(G, H, dic, weight, 'dynamic programm', end-start)
+                ax = plt.subplot(2, 2, 4)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic programm', end-start)
+
+            # Results
+            if DRAW:
+                plt.axis('off')
+                plt.show()
 
 
-def draw_weighted_subgraph(G, H, dic=None, weight=None, method='', time=None):
+def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
     if not dic:
         dic = nx.spring_layout()
     
@@ -125,15 +167,14 @@ def draw_weighted_subgraph(G, H, dic=None, weight=None, method='', time=None):
     nx.draw_networkx_edge_labels(G, pos=dic, edge_labels=edge_labels)
     nx.draw_networkx_labels(G, pos=dic, labels=node_labels)
     
-    # Show plot
-    plt.axis('off')
+    # Label
     title = method + ': weight ' + str(weight)
     if time:
-        title += ', time ' + str(round(time, 3)) + 's'
-    plt.title(title)
-    plt.show()
+        title += ', time ' + str(round(time, 5)) + 's'
+    plot.set_title(title)
+    plot.axis('off')
 
-    
+
 text = '''
 -------------------------------------------------------------------------------------
 Algorithms for Weighted Subgraph Problems
@@ -143,7 +184,8 @@ Press a button.
 
 a) Compute WSP on random weighted graph using an IP formulation
 b) Compare WSP algorithms and their running times for paths
-c) Compare WSP algorithms and their running times for trees
+c) Compute WSP on big path
+d) Compare WSP algorithms and their running times for trees
       
 z) End program...
 
