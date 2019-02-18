@@ -10,26 +10,34 @@ class OP(Model):
         self._y = dict()
         self._z = dict()
 
-    def add_node_variables(self, G, name='y'):
-        if name == 'y':
-            for v in G.nodes():
-                self._y[v] = self.addVar(vtype=GRB.BINARY, name=name+str(v))
+    def get_x(self):
+        return self._x
 
-            self.update()
-            return self._y
+    def get_y(self):
+        return self._y
 
-        elif name == 'x':
-            for v in G.nodes():
-                self._x[v] = self.addVar(vtype=GRB.BINARY, name=name + str(v))
+    def get_z(self):
+        return self._z
 
-            self.update()
-            return self._x
+    def add_node_variables(self, G):
+        for v in G.nodes():
+            self._y[v] = self.addVar(vtype=GRB.BINARY, name='y' + str(v))
+
+        self.update()
+        return self._y
+
+    def add_root_variables(self, G):
+        for v in G.nodes():
+            self._x[v] = self.addVar(vtype=GRB.BINARY, name='x' + str(v))
+
+        self.update()
+        return self._x
 
     def add_edge_variables(self, G, name='z'):
         for u, v in G.edges():
             if u not in self._z:
                 self._z[u] = dict()
-            self._z[u][v] = self.addVar(vtype=GRB.BINARY, name=name+str(u)+'_'+str(v))
+            self._z[u][v] = self.addVar(vtype=GRB.BINARY, name=name + str(u) + '_' + str(v))
         
         self.update()
         return self._z
@@ -48,6 +56,12 @@ class OP(Model):
             self.addConstr(self._z[u][v] >= self._y[u] + self._y[v] - 1)
             self.addConstr(self._z[u][v] <= self._y[v])
             self.addConstr(self._z[u][v] <= self._y[u])
+
+    def add_root_constraint(self, G):
+        self.addConstr((quicksum(self._x[v] for v in G.nodes())) == 1)
+
+        for v in G.nodes():
+            self.addConstr(self._x[v] <= self._y[v])
 
     def add_violated_constraint(self, G, s):
         elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]

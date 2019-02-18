@@ -138,7 +138,7 @@ def test_random_weighted_binary_tree():
     assert G.number_of_nodes() == 100
     
     assert nx.is_tree(G)
-    assert nx.is_directed(G)
+    assert not nx.is_directed(G)
     
     for (v, data) in G.nodes(data=True):
         assert G.degree[v] >= 1

@@ -5,6 +5,41 @@ import graph_helper as gh
 import ip_generator as ig
 
 
+def setup_ip(G, mode='max', rooted=False):
+    ip = ig.OP()
+
+    # Create variables
+    ip.add_node_variables(G)
+    ip.add_edge_variables(G)
+    if rooted:
+        ip.add_root_variables(G)
+
+    # Set objective function
+    ip.set_wsp_objective(G, mode)
+
+    # Add constraints
+    ip.add_induce_constraints(G)
+    if rooted:
+        ip.add_root_constraint(G)
+
+    return ip
+
+
+def construct_weighted_subgraph(G, ip):
+
+    # Construct subgraph
+    H = nx.empty_graph()
+    for v, w in G.nodes.data('weight'):
+        if ip.get_y()[v].x > 0.5:
+            H.add_node(v, weight=w)
+
+    for u, v, w in G.edges.data('weight'):
+        if ip.get_z()[u][v].x > 0.5:
+            H.add_edge(u, v, weight=w)
+
+    return H
+
+
 def solve_rooted_ip(G, root, mode='max'):
     """Compute maximum weighted subgraph in graph G.
     Parameters:
@@ -14,32 +49,15 @@ def solve_rooted_ip(G, root, mode='max'):
     H : NetworkX graph (maximum weighted subgraph)
     objVal: objective value (weight of H)"""
     
-    ip = ig.OP()
-    
-    # Create variables
-    y = ip.add_node_variables(G)
-    z = ip.add_edge_variables(G)
-    
-    # Set objective      
-    if mode == 'max':
-        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
-                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
-    elif mode == 'min':
-        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
-                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
-    
-    # Add induce constraints
-    for u, v in G.edges():
-        ip.addConstr(z[u][v] >= y[u] + y[v] - 1)
-        ip.addConstr(z[u][v] <= y[v])
-        ip.addConstr(z[u][v] <= y[u])
+    ip = setup_ip(G, mode)
+    y = ip.get_y()
+    z = ip.get_z()
 
     # Add connectivity constraints
-    nodes = list(G.nodes)
     ip.addConstr(y[root] >= 1)
     
     n = G.number_of_nodes()
-    subsets = list(chain.from_iterable(combinations(nodes,i) for i in range(n + 1) if root in nodes))
+    subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1) if root in G.nodes)
     
     for s in subsets:
         if root in s:           
@@ -50,19 +68,10 @@ def solve_rooted_ip(G, root, mode='max'):
     
     # Solve
     ip.optimize()
-    
-    # Construct subgraph
-    H = nx.empty_graph()
+
+    H = construct_weighted_subgraph(G, ip)
     weight = ip.objVal
 
-    for v, w in G.nodes.data('weight'):
-        if y[v].x > 0.5:
-            H.add_node(v, weight=w)
-
-    for u, v, w in G.edges.data('weight'):
-        if z[u][v].x > 0.5:
-            H.add_edge(u, v, weight=w)
-    
     return H, weight
 
 
@@ -82,6 +91,7 @@ def solve_full_ip__rooted(G, mode='max'):
                 if H1.number_of_nodes() < H.number_of_nodes():
                     H = H1
                     weight = objVal
+
         elif mode == 'min':
             if objVal < weight:
                 H = H1
@@ -103,37 +113,14 @@ def solve_full_ip(G, mode='max'):
     H : NetworkX graph (maximum weighted subgraph)
     objVal: objective value (weight of H)"""
     
-    ip = ig.OP()
-    
-    # Create variables
-    x = ip.add_node_variables(G, 'x')
-    y = ip.add_node_variables(G)
-    z = ip.add_edge_variables(G)
-    
-    # Set objective      
-    if mode == 'max':
-        ip.setObjective((quicksum(z[u][v]*w for u,v,w in G.edges.data('weight')))
-            - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
-    elif mode == 'min':
-        ip.setObjective((quicksum(z[u][v]*w for u,v,w in G.edges.data('weight')))
-            - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
-    
-    # Add induce constraints
-    for u, v in G.edges():
-        ip.addConstr(z[u][v] >= y[u] + y[v] - 1)
-        ip.addConstr(z[u][v] <= y[v])
-        ip.addConstr(z[u][v] <= y[u])
-        
-    # Add root constraints
-    ip.addConstr((quicksum(x[v] for v in G.nodes())) == 1)
-    
-    for v in G.nodes():
-        ip.addConstr(x[v] <= y[v])
+    ip = setup_ip(G, mode, rooted=True)
+    x = ip.get_x()
+    y = ip.get_y()
+    z = ip.get_z()
 
     # Add connectivity constraints    
     n = G.number_of_nodes()
-    nodes = list(G.nodes)
-    subsets = list(chain.from_iterable(combinations(nodes,i) for i in range(n + 1)))
+    subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1))
     
     for v in G.nodes():
         for s in subsets:
@@ -144,63 +131,45 @@ def solve_full_ip(G, mode='max'):
     
     # Solve
     ip.optimize()
-    
-    # Construct subgraph
-    H = nx.empty_graph()
-    weight = 0
-    
-    if ip.objVal > 0:
-        weight = ip.objVal
-        for v, w in G.nodes.data('weight'):
-            if y[v].x > 0.5:
-                H.add_node(v, weight=w)
-    
-        for u, v, w in G.edges.data('weight'):
-            if z[u][v].x > 0.5:
-                H.add_edge(u, v, weight=w)
+
+    H = construct_weighted_subgraph(G, ip)
+    weight = ip.objVal
+
+    if (mode == 'max' and weight < 0) or (mode == 'min' and weight > 0):
+        H = nx.empty_graph()
+        weight = 0
 
     return H, weight
-
-
-def setup_ip(G, mode='max'):
-    ip = ig.OP()
-
-    # Create variables
-    y = ip.add_node_variables(G)
-    z = ip.add_edge_variables(G)
-
-    ip.set_wsp_objective(G, mode)
-    ip.add_induce_constraints(G)
-
-    return ip
 
 
 def solve_separation(G, mode='max'):
     ip = setup_ip(G, mode)
     connected = False
 
+    i = 0
     while not connected:
         ip.optimize()
 
         # Construct subgraph
-        H = nx.empty_graph()
-        for v, w in G.nodes.data('weight'):
-            if ip._y[v].x > 0.5:
-                H.add_node(v, weight=w)
-
-        for u, v, w in G.edges.data('weight'):
-            if ip._z[u][v].x > 0.5:
-                H.add_edge(u, v, weight=w)
+        H = construct_weighted_subgraph(G, ip)
 
         # Check if connected
         if nx.is_connected(H):
             connected = True
         else:
             ip.add_violated_constraint(G, H.nodes())
+        i += 1
 
     weight = ip.objVal
 
-    return H, weight
+    return H, weight, i
+
+
+def solve_flow_ip(G, mode='max'):
+    ip = setup_ip(G, mode)
+
+    y = ip.get_y()
+    z = ip.get_z()
 
 
 def solve_ip_on_path(G, mode='max'):
@@ -215,32 +184,10 @@ def solve_ip_on_path(G, mode='max'):
     if not gh.is_path(G):
         print('G is not a path!')
     
-    ip = ig.OP()
-    
-    # Create variables
-    x = ip.add_node_variables(G, 'x')
-    y = ip.add_node_variables(G)
-    z = ip.add_edge_variables(G)
-    
-    # Set objective      
-    if mode == 'max':
-        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
-                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
-    elif mode == 'min':
-        ip.setObjective((quicksum(z[u][v]*w for u, v, w in G.edges.data('weight')))
-                        - (quicksum(y[v]*w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
-    
-    # Add induce constraints
-    for u, v in G.edges():
-        ip.addConstr(z[u][v] >= y[u] + y[v] - 1)
-        ip.addConstr(z[u][v] <= y[v])
-        ip.addConstr(z[u][v] <= y[u])
-        
-    # Add root constraints
-    ip.addConstr((quicksum(x[v] for v in G.nodes())) == 1)
-    
-    for v in G.nodes():
-        ip.addConstr(x[v] <= y[v])
+    ip = setup_ip(G, mode, rooted=True)
+    x = ip.get_x()
+    y = ip.get_y()
+    z = ip.get_z()
 
     # Add connectivity constraints
     path = list(G.nodes)    
@@ -263,18 +210,8 @@ def solve_ip_on_path(G, mode='max'):
     ip.optimize()
     
     # Construct subgraph
-    H = nx.empty_graph()
-    weight = 0
-    
-    if ip.objVal > 0:
-        weight = ip.objVal
-        for v, w in G.nodes.data('weight'):
-            if y[v].x > 0.5:
-                H.add_node(v, weight=w)
-    
-        for u, v, w in G.edges.data('weight'):
-            if z[u][v].x > 0.5:
-                H.add_edge(u, v, weight=w)
+    H = construct_weighted_subgraph(G, ip)
+    weight = ip.objVal
 
     return H, weight
 
@@ -337,9 +274,13 @@ def solve_on_tree__all_subtrees(G, mode='max'):
     
     if not nx.is_tree(G):
         print('G is not a tree!')
-    
+
+    if not G.is_directed():
+        G = gh.direct_tree(G)
     root = [v for v, d in G.in_degree() if d == 0]
-    Q = gh.level_order_list(G, root[0])[::-1]
+    root = root[0]
+
+    Q = gh.level_order_list(G, root)[::-1]
     
     tree_map = dict()
     for v in Q:
@@ -380,7 +321,7 @@ def solve_on_tree__all_subtrees(G, mode='max'):
                         weight = weight1
                         nodelist = tree
     
-    H = G.subgraph(nodelist)
+    H = G.subgraph(nodelist).to_undirected()
     
     return H, weight
 
@@ -462,7 +403,7 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
     
     if not G.is_directed():
         G = gh.direct_tree(G)
-    root = [v for v, d in G.in_degree() if d==0]
+    root = [v for v, d in G.in_degree() if d == 0]
     root = root[0]
     
     h = gh.height(G, root)
@@ -503,10 +444,10 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
                     weight_H_in[v] += weight + G[v][w]['weight']
     
     if weight_H_in[root] > weight_H_out[root]:
-        H = G.subgraph(H_in[root])
+        H = G.subgraph(H_in[root]).to_undirected()
         weight = weight_H_in[root]
     else:
-        H = G.subgraph(H_out[root])
+        H = G.subgraph(H_out[root]).to_undirected()
         weight = weight_H_out[root]
     
     if weight < 0:

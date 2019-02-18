@@ -44,7 +44,7 @@ def main():
                 plt.show()
             
         elif choice == 'b':            
-            G = gg.random_weighted_path(10, 10)
+            G = gg.random_weighted_path(12, 40)
             dic = nx.circular_layout(G)
             
             start = timer()
@@ -87,7 +87,7 @@ def main():
                 plt.show()
 
         elif choice == 'c':
-            G = gg.random_weighted_path(500, 50)
+            G = gg.random_weighted_path(400, 50)
             dic = nx.circular_layout(G)
 
             start = timer()
@@ -104,7 +104,7 @@ def main():
                 ax = plt.subplot(2, 1, 2)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic programm', end - start)
 
-            #Results
+            # Results
             if DRAW:
                 plt.show()
         
@@ -146,15 +146,15 @@ def main():
                 plt.show()
 
         elif choice == 'e':
-            G = gg.random_weighted_tree(100, 30)
+            G = gg.random_weighted_tree(30, 30)
             dic = nx.spring_layout(G)
 
             start = timer()
-            (H, weight) = wsp.solve_separation(G, MODE)
+            (H, weight, i) = wsp.solve_separation(G, MODE)
             end = timer()
             if DRAW:
                 ax = plt.subplot(2, 1, 1)
-                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (separation)', end - start)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (' + str(i) + ' iterations)', end - start)
 
             start = timer()
             (H, weight) = wsp.solve_dynamic_prog_on_tree(G, MODE)
@@ -181,8 +181,8 @@ def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=No
     nx.draw_networkx_edges(G, pos=dic, edge_color='r')
     
     # Draw subgraph H (blue)
-    nx.draw_networkx_nodes(G, pos=dic, nodelist=H.nodes(), node_color='b')
-    nx.draw_networkx_edges(G, pos=dic, edgelist=H.edges(), edge_color='b')
+    nx.draw_networkx_nodes(G, pos=dic, nodelist=H.nodes(), node_color='g')
+    nx.draw_networkx_edges(G, pos=dic, edgelist=H.edges(), edge_color='g')
     
     # Label nodes and edges with weights
     edge_labels = dict(((u, v), str(d['weight'])) for u, v, d in G.edges(data=True))
@@ -191,7 +191,7 @@ def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=No
     nx.draw_networkx_labels(G, pos=dic, labels=node_labels)
     
     # Label
-    title = method + ': weight ' + str(weight)
+    title = method + ': weight ' + str(int(weight))
     if time:
         title += ', time ' + str(round(time, 5)) + 's'
     plot.set_title(title)

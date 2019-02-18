@@ -107,7 +107,7 @@ def random_weighted_binary_tree(number_of_nodes, max_weight):
     Returns:
     T : NetworkX graph"""
     
-    T = nx.DiGraph()
+    T = nx.Graph()
     T.add_node(0, weight=random.randint(1, max_weight))
     
     free_edges = [(0, 1), (0, 2)]
@@ -140,7 +140,7 @@ def random_weighted_binary_tree2(number_of_nodes, max_weight):
     i = 1
     while T.number_of_nodes() < number_of_nodes:
         changed = 0
-        backup = current_leaves
+        backup = current_leaves.copy()
         for v in current_leaves:
             if random.random() > 0.5:
                 T.add_node(i, weight=random.randint(1, max_weight))
@@ -157,13 +157,13 @@ def random_weighted_binary_tree2(number_of_nodes, max_weight):
             current_leaves.remove(v)
             
 #        if not changed:
-#            current_leaves = backup
+#            current_leaves = backup.copy()
         
     return T
 
 
 def random_weighted_tree(number_of_nodes, max_weight):
-    """Generates random weighted binary tree graph.
+    """Generates random weighted tree graph.
     Parameters:
     number_of_nodes: int (number of nodes in the graph)
     max_weight : int (maximum weight for edges)
