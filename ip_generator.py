@@ -9,6 +9,7 @@ class OP(Model):
         self._x = dict()
         self._y = dict()
         self._z = dict()
+        self._f = dict()
 
     def get_x(self):
         return self._x
@@ -18,6 +19,9 @@ class OP(Model):
 
     def get_z(self):
         return self._z
+
+    def get_f(self):
+        return self._f
 
     def add_node_variables(self, G):
         for v in G.nodes():
@@ -33,14 +37,22 @@ class OP(Model):
         self.update()
         return self._x
 
-    def add_edge_variables(self, G, name='z'):
+    def add_edge_variables(self, G):
         for u, v in G.edges():
             if u not in self._z:
                 self._z[u] = dict()
-            self._z[u][v] = self.addVar(vtype=GRB.BINARY, name=name + str(u) + '_' + str(v))
+            self._z[u][v] = self.addVar(vtype=GRB.BINARY, name='z' + str(u) + '_' + str(v))
         
         self.update()
         return self._z
+
+    def add_flow_variables(self, G_f):
+        for u, v in G_f.edges():
+            if u not in self._f:
+                self._f[u] = dict()
+            self._f[u][v] = self.addVar(vtype=GRB.INTEGER, name='f' + str(u) + '_' + str(v))
+        self.update()
+        return self._f
 
     def set_wsp_objective(self, G, mode='max'):
         # Set objective

@@ -168,6 +168,22 @@ def main():
                 plt.axis('off')
                 plt.show()
 
+        elif choice == 'f':
+            G = gg.random_weighted_graph(10, 0.3, 20)
+            dic = nx.spring_layout(G)
+
+            start = timer()
+            (H, weight, i) = wsp.solve_flow_ip(G, MODE)
+            end = timer()
+            if DRAW:
+                ax = plt.subplot(2, 1, 1)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
+
+            # Results
+            if DRAW:
+                plt.axis('off')
+                plt.show()
+
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
     if not dic:

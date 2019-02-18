@@ -128,7 +128,7 @@ def solve_full_ip(G, mode='max'):
                 elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
                 
                 ip.addConstr(y[v] <= (quicksum(x[u] for u in s)) + (quicksum(z[u][v] for u, v in elist)))
-    
+
     # Solve
     ip.optimize()
 
@@ -166,10 +166,45 @@ def solve_separation(G, mode='max'):
 
 
 def solve_flow_ip(G, mode='max'):
-    ip = setup_ip(G, mode)
+    ip = setup_ip(G, mode, rooted=True)
 
+    x = ip.get_x()
     y = ip.get_y()
     z = ip.get_z()
+
+
+    # Add connectivity constraints
+    G_f = G.to_directed()
+    ip.add_flow_variables(G_f)
+    f = ip.get_f()
+
+    print(f)
+    print(z)
+
+    for u, v in G_f.edges():
+        ip.addConstr(f[u][v] >= 0)
+        print(u, v)
+        if u in z and v in z[u]:
+            ip.addConstr(f[u][v] <= G.number_of_nodes() * z[u][v])
+        else:
+            ip.addConstr(f[u][v] <= G.number_of_nodes() * z[v][u])
+
+    for v in G_f.nodes():
+        ip.addConstr(-quicksum(f[v][w] for w in G_f.successors(v)) + quicksum(f[w][v] for w in G_f.predecessors(v))
+                     >= y[v] + x[v] * (G.number_of_nodes() + 1))
+
+    # Solve
+    ip.optimize()
+
+    # Construct subgraph
+    H = construct_weighted_subgraph(G, ip)
+    weight = ip.objVal
+
+    if (mode == 'max' and weight < 0) or (mode == 'min' and weight > 0):
+        H = nx.empty_graph()
+        weight = 0
+
+    return H, weight
 
 
 def solve_ip_on_path(G, mode='max'):
@@ -192,7 +227,6 @@ def solve_ip_on_path(G, mode='max'):
     # Add connectivity constraints
     path = list(G.nodes)    
     subpaths = [[]]
-    n = G.number_of_nodes()
     
     for i in range(len(path) + 1): 
         for j in range(i + 1, len(path) + 1): 
@@ -212,6 +246,10 @@ def solve_ip_on_path(G, mode='max'):
     # Construct subgraph
     H = construct_weighted_subgraph(G, ip)
     weight = ip.objVal
+
+    if (mode == 'max' and weight < 0) or (mode == 'min' and weight > 0):
+        H = nx.empty_graph()
+        weight = 0
 
     return H, weight
 
@@ -449,9 +487,5 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
     else:
         H = G.subgraph(H_out[root]).to_undirected()
         weight = weight_H_out[root]
-    
-    if weight < 0:
-        H = nx.empty_graph()
-        weight = 0
     
     return H, weight
