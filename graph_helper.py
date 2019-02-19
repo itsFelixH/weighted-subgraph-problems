@@ -20,7 +20,7 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
         G.add_node(new_node, weight=node_weight)
     else:
         G.add_node(new_node)
-    
+
     edges = list(G.edges.data('weight'))
     for u, v, weight in edges:
         if multigraph:
@@ -61,6 +61,7 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
 
     return G
 
+
 def createSubgraph(G, node, mode='sucessors'):
     if mode == 'sucessors':
         edges = nx.dfs_successors(G, node)
@@ -72,6 +73,7 @@ def createSubgraph(G, node, mode='sucessors'):
         nodes.extend(v)
     return G.subgraph(nodes)
 
+
 def createSubgraphsBetweenNodes(G, s, t):
     S = []
     for v in G.successors(s):
@@ -81,13 +83,16 @@ def createSubgraphsBetweenNodes(G, s, t):
         S.append(G.subgraph(nodes))
     return S
 
+
 def is_path(G):
     G = nx.convert_node_labels_to_integers(G)
     N = G.number_of_nodes()
     return all([G.has_edge(i, i+1) for i in range(N-1)])
 
+
 def direct_tree(G, root=None):
-    root = random.choice(list(G.nodes))
+
+    root = random.choice([v for (v, d) in G.degree() if d == 2])
     
     H = nx.DiGraph()
     H.add_nodes_from(G.nodes(data=True))

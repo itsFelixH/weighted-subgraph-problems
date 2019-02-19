@@ -120,14 +120,23 @@ def solve_full_ip(G, mode='max'):
 
     # Add connectivity constraints    
     n = G.number_of_nodes()
+    m = G.number_of_edges()
     subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1))
-    
+
     for v in G.nodes():
         for s in subsets:
             if v in s:
                 elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
-                
+
                 ip.addConstr(y[v] <= (quicksum(x[u] for u in s)) + (quicksum(z[u][v] for u, v in elist)))
+
+#    for s in subsets:
+#        elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
+#        t = [v for v in G.nodes() if v not in s]
+#
+#        for r in G.nodes():
+#            ip.addConstr((x[r]*m + (quicksum(z[u][v] * n for u, v in elist))) >= (quicksum(y[v] for v in t)))
+#            ip.addConstr(((quicksum(z[u][v] * n for u, v in elist))) >= (quicksum(y[v] for v in t)))
 
     # Solve
     ip.optimize()
@@ -171,7 +180,6 @@ def solve_flow_ip(G, mode='max'):
     x = ip.get_x()
     y = ip.get_y()
     z = ip.get_z()
-
 
     # Add connectivity constraints
     G_f = G.to_directed()
@@ -337,6 +345,20 @@ def solve_on_tree__all_subtrees(G, mode='max'):
                     new_tree.extend(tree2)
                     tree_map[v].append(new_tree)
 
+#        if G.out_degree(v) > 1:
+#            k = G.out_degree(v)
+#            successors = list(G.successors(v))
+#            sets = chain.from_iterable(combinations(successors, i) for i in range(2, k))
+#            for s in sets:
+#                tree_list = []
+#                for w in s:
+#                    tree_list.append(tree_map[w])
+#                tree_comb = list(itertools.product(*tree_list))
+#                for tree in tree_comb:
+#                    new_tree = [v]
+#                    new_tree.extend(tree)
+#                    tree_map[v].append(new_tree)
+
     weight = 0
     nodelist = []
     for v in tree_map:
@@ -384,14 +406,14 @@ def solve_dynamic_prog_on_path(G, mode='max'):
     weight_H_out = 0
 
     for (u, v) in G.edges():
-        if weight_H_in > weight_H_out:
-            H_out = H_in.copy()
-            weight_H_out = weight_H_in
-        
         weight1 = weight_H_in + G[u][v]['weight'] - G.node[v]['weight']
         weight2 = -G.node[v]['weight']
         
         if mode == 'max':
+            if weight_H_in > weight_H_out:
+                H_out = H_in.copy()
+                weight_H_out = weight_H_in
+
             if weight1 > weight2:
                 H_in.append(v)
                 weight_H_in = weight1
@@ -399,6 +421,10 @@ def solve_dynamic_prog_on_path(G, mode='max'):
                 H_in = [v]
                 weight_H_in = weight2
         elif mode == 'min':
+            if weight_H_in < weight_H_out:
+                H_out = H_in.copy()
+                weight_H_out = weight_H_in
+
             if weight1 < weight2:
                 H_in.append(v)
                 weight_H_in = weight1
@@ -465,23 +491,30 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
             H_in[v] = [v]
             weight_H_in[v] = -G.node[v]['weight']
             successors = G.successors(v)
-            max_weight = None
+            best_weight = None
             for w in successors:
                 weight = weight_H_in[w]
-                if max_weight:
-                    if weight > max_weight:
-                        max_weight = weight
+                if best_weight:
+                    if mode == 'max' and weight > best_weight:
+                        best_weight = weight
+                        H_out[v] = H_in[w].copy()
+                        weight_H_out[v] = weight_H_in[w]
+                    elif mode == 'min' and weight < best_weight:
+                        best_weight = weight
                         H_out[v] = H_in[w].copy()
                         weight_H_out[v] = weight_H_in[w]
                 else:
-                    max_weight = weight
+                    best_weight = weight
                     H_out[v] = H_in[w].copy()
                     weight_H_out[v] = weight_H_in[w]
-                if weight + G[v][w]['weight'] > 0:
+                if mode == 'max' and weight + G[v][w]['weight'] > 0:
+                    H_in[v].extend(H_in[w])
+                    weight_H_in[v] += weight + G[v][w]['weight']
+                elif mode == 'min' and weight + G[v][w]['weight'] < 0:
                     H_in[v].extend(H_in[w])
                     weight_H_in[v] += weight + G[v][w]['weight']
     
-    if weight_H_in[root] > weight_H_out[root]:
+    if (mode == 'max' and weight_H_in[root] > weight_H_out[root]) or (mode == 'min' and weight_H_in[root] < weight_H_out[root]):
         H = G.subgraph(H_in[root]).to_undirected()
         weight = weight_H_in[root]
     else:

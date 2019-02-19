@@ -34,7 +34,7 @@ def main():
         if choice == 'a':
             G = gg.random_weighted_graph(10, 0.33, 10)
             start = timer()            
-            (H, weight) = wsp.solve_full_ip(G, 'max')
+            (H, weight) = wsp.solve_full_ip(G, MODE)
             end = timer()
             
             if DRAW:
@@ -91,14 +91,14 @@ def main():
             dic = nx.circular_layout(G)
 
             start = timer()
-            (H, weight) = wsp.solve_on_path__all_subpaths(G, 'max')
+            (H, weight) = wsp.solve_on_path__all_subpaths(G, MODE)
             end = timer()
             if DRAW:
                 ax = plt.subplot(2, 1, 1)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'iterating subpaths', end - start)
 
             start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_path(G, 'max')
+            (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
             end = timer()
             if DRAW:
                 ax = plt.subplot(2, 1, 2)
