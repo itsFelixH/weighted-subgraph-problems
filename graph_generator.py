@@ -39,6 +39,23 @@ def weight_nodes(G, min_weight, max_weight):
     return G
 
 
+def weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
+    """Randomly weight nodes and edges of given graph
+    Parameters:
+    min_node_weight : int (minimum weight for nodes)
+    max_node_weight : int (maximum weight for nodes)
+    min_edge_weight : int (minimum weight for edges)
+    max_edge_weight : int (maximum weight for edges)
+
+    Returns:
+    G : NetworkX graph"""
+
+    G = weight_edges(G, min_edge_weight, max_edge_weigth)
+    G = weight_nodes(G, min_node_weight, max_node_weight)
+
+    return G
+
+
 def random_weighted_path_coinfilp(p, max_weight):
     """Generates random weighted graph of arbitrary lenght.
     Parameters:
