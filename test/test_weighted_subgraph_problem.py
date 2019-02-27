@@ -25,7 +25,6 @@ def test_solve_rooted_ip__max():
     (H4, objVal4) = wsp.solve_rooted_ip(G4, root4, mode)
     (H5, objVal5) = wsp.solve_rooted_ip(G5, root5, mode)
 
-
     assert nx.is_connected(H1)
     assert objVal1 == gh.weight(H1)
     assert H1.has_node(root1)
