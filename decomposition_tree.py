@@ -73,33 +73,41 @@ class DecompositionTree:
         _get_leaf_nodes(self)
         return leaves
     
-    def depth(tree): 
-        if tree is None: 
-            return 0;
-        else:
-            lDepth = depth(tree.left)
-            rDepth = depth(tree.right)
-      
-            if (lDepth > rDepth): 
+    def depth(self):
+        if not self.children():
+            return 1
+
+        lDepth = 0
+        rDepth = 0
+
+        if self.left:
+            lDepth = self.left.depth()
+            if not self.right:
                 return lDepth + 1
-            else:
+        if self.right:
+            rDepth = self.right.depth()
+            if not self.left:
                 return rDepth + 1
+        if lDepth > rDepth:
+            return lDepth + 1
+        else:
+            return rDepth + 1
   
-    def get_level(tree, node):
+    def get_level(self, node):
         def _get_level_util(tree, node, level): 
-            if (tree == None): 
+            if not tree:
                 return 0
           
-            if (tree == node):
+            if tree == node:
                 return level
           
             downlevel = _get_level_util(tree.left, node, level + 1)  
-            if (downlevel != 0): 
+            if downlevel != 0:
                 return downlevel
           
             downlevel = _get_level_util(tree.right, node, level + 1)  
             return downlevel
-        return _get_level_util(tree, node, 1)
+        return _get_level_util(self, node, 1)
     
     def get_left(self):
         if self.left is not None:

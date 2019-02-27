@@ -62,7 +62,7 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
     return G
 
 
-def createSubgraph(G, node, mode='sucessors'):
+def create_subgraph(G, node, mode='sucessors'):
     if mode == 'sucessors':
         edges = nx.dfs_successors(G, node)
     elif mode == 'predecessors':
@@ -74,7 +74,7 @@ def createSubgraph(G, node, mode='sucessors'):
     return G.subgraph(nodes)
 
 
-def createSubgraphsBetweenNodes(G, s, t):
+def create_subgraphs_between_nodes(G, s, t):
     S = []
     for v in G.successors(s):
         paths_between = nx.all_simple_paths(G,source=v,target=t)

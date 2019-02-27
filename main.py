@@ -54,6 +54,7 @@ def main():
             
         elif choice == 'b':            
             G = gg.random_weighted_path(12, 40)
+            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             dic = nx.circular_layout(G)
             
@@ -108,6 +109,8 @@ def main():
 
         elif choice == 'c':
             G = gg.random_weighted_path(400, 50)
+            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+
             dic = nx.circular_layout(G)
 
             start = timer()
@@ -134,6 +137,8 @@ def main():
         
         elif choice == 'd':
             G = gg.random_weighted_binary_tree(10, 10)
+            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+
             dic = nx.spring_layout(G)
             
             start = timer()
@@ -179,6 +184,8 @@ def main():
 
         elif choice == 'e':
             G = gg.random_weighted_tree(30, 30)
+            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+
             dic = nx.spring_layout(G)
 
             start = timer()
@@ -206,6 +213,8 @@ def main():
 
         elif choice == 'f':
             G = gg.random_weighted_graph(10, 0.3, 20)
+            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+
             dic = nx.spring_layout(G)
 
             start = timer()

@@ -3,6 +3,25 @@ import graph_generator as gg
 from decomposition_tree import DecompositionTree
 
 
+def test_weight_graph():
+    G = nx.complete_graph(6)
+    G = gg.weight_graph(G, 10, 100, 20, 50)
+
+    for (v, data) in G.nodes(data=True):
+        assert data['weight']
+        assert isinstance(data['weight'], int)
+        assert data['weight'] >= 10
+        assert data['weight'] <= 100
+
+    for (u, v, data) in G.edges(data=True):
+        assert data['weight']
+        assert isinstance(data['weight'], int)
+        assert data['weight'] >= 20
+        assert data['weight'] <= 50
+        assert G[v][u]
+        assert data['weight'] == G[v][u]['weight']
+
+
 def test_weight_edges():
     G = nx.complete_graph(6)
     G = gg.weight_edges(G, 10, 100)
