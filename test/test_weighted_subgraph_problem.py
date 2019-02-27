@@ -138,7 +138,6 @@ def test_solve_full_ip__max():
     G3 = gg.random_weighted_path(10, 40)
     G4, dic = gg.random_weighted_grid(2, 5, 20)
     G5 = gg.random_weighted_graph(10, 0.3, 40)
-
     mode = 'max'
 
     (H1, objVal1) = wsp.solve_full_ip(G1, mode)
