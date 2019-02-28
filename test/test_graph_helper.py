@@ -164,9 +164,11 @@ def test_construct_flow_graph():
 
     assert G_flow.is_directed()
 
+    assert G_flow.number_of_nodes() == G.number_of_nodes()
     for v in G.nodes():
         assert v in G_flow.nodes()
 
+    assert G_flow.number_of_edges() == 2 * G.number_of_edges()
     for u, v in G.edges():
         assert G_flow.has_edge(u, v)
         assert G_flow.has_edge(v, u)
@@ -180,9 +182,11 @@ def test_construct_flow_graph__multigraph():
 
     assert G_flow.is_directed()
 
+    assert G_flow.number_of_nodes() == G.number_of_nodes()
     for v in G.nodes():
         assert v in G_flow.nodes()
 
+    assert G_flow.number_of_edges() == 2 * G.number_of_edges()
     for u, v, k in G.edges(keys=True):
         assert G_flow.has_edge(u, v, k)
         assert G_flow.has_edge(v, u, k)

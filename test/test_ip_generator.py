@@ -251,7 +251,7 @@ def test_add_flow_constraints():
     ip.add_edge_variables(G)
     ip.add_flow_variables(G_flow)
 
-    ip.add_flow_constraints(G, G_flow)
+    ip.add_flow_constraints(G_flow)
     assert ip.numConstrs == 2 * G.number_of_edges() + G.number_of_nodes()
 
     for u, v in G.edges():
@@ -274,7 +274,7 @@ def test_add_flow_constraints__multigraph():
     ip.add_edge_variables(G)
     ip.add_flow_variables(G_flow)
 
-    ip.add_flow_constraints(G, G_flow)
+    ip.add_flow_constraints(G_flow)
     assert ip.numConstrs == 2 * G.number_of_edges() + G.number_of_nodes()
 
     for u, v, k in G.edges(keys=True):

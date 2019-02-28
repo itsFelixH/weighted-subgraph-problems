@@ -17,9 +17,9 @@ PRINT_SOLUTION = 1
 ASK_USER = 1
 CHOICE = 'a'
 MIN_NODE_WEIGHT = 0
-MAX_NODE_WEIGHT = 20
+MAX_NODE_WEIGHT = 30
 MIN_EDGE_WEIGHT = 0
-MAX_EDGE_WEIGHT = 15
+MAX_EDGE_WEIGHT = 20
 
 # --------------------------
 # USER INPUT
@@ -84,6 +84,15 @@ def main():
             if DRAW:
                 ax = plt.subplot(2, 3, 3)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (path)', end-start)
+
+            start = timer()
+            (H, weight) = wsp.solve_flow_ip(G, MODE)
+            end = timer()
+            if PRINT_SOLUTION:
+                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+            if DRAW:
+                ax = plt.subplot(2, 3, 4)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
             
             start = timer()
             (H, weight) = wsp.solve_on_path__all_subpaths(G, MODE)
@@ -91,7 +100,7 @@ def main():
             if PRINT_SOLUTION:
                 print('subpath iteration: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
             if DRAW:
-                ax = plt.subplot(2, 3, 4)
+                ax = plt.subplot(2, 3, 5)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'subpath iteration', end-start)
             
             start = timer()
@@ -100,7 +109,7 @@ def main():
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
             if DRAW:
-                ax = plt.subplot(2, 3, 5)
+                ax = plt.subplot(2, 3, 6)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic program', end-start)
 
             # Results
@@ -114,13 +123,13 @@ def main():
             dic = nx.circular_layout(G)
 
             start = timer()
-            (H, weight) = wsp.solve_on_path__all_subpaths(G, MODE)
+            (H, weight) = wsp.solve_flow_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
-                print('subpath iteration: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
+                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
             if DRAW:
                 ax = plt.subplot(2, 1, 1)
-                draw_weighted_subgraph(ax, G, H, dic, weight, 'iterating subpaths', end - start)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
 
             start = timer()
             (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
@@ -189,7 +198,7 @@ def main():
             dic = nx.spring_layout(G)
 
             start = timer()
-            (H, weight, i) = wsp.solve_separation(G, MODE)
+            (H, weight, i) = wsp.solve_separation_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -212,13 +221,13 @@ def main():
                 plt.show()
 
         elif choice == 'f':
-            G = gg.random_weighted_graph(10, 0.3, 20)
+            G = gg.random_weighted_graph(80, 0.1, 20)
             G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             dic = nx.spring_layout(G)
 
             start = timer()
-            (H, weight, i) = wsp.solve_flow_ip(G, MODE)
+            (H, weight) = wsp.solve_flow_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')

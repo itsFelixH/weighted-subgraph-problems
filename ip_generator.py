@@ -45,12 +45,14 @@ class OP(Model):
                 if v not in self._z[u]:
                     self._z[u][v] = dict()
                 self._z[u][v][k] = self.addVar(vtype=GRB.BINARY, name='z' + str(u) + '_' + str(v) + '_' + str(k))
+                self._z[u][v][k].BranchPriority = 9
 
         else:
             for u, v in G.edges():
                 if u not in self._z:
                     self._z[u] = dict()
                 self._z[u][v] = self.addVar(vtype=GRB.BINARY, name='z' + str(u) + '_' + str(v))
+                self._z[u][v].BranchPriority = 9
 
         self.update()
         return self._z
@@ -101,46 +103,68 @@ class OP(Model):
                 self.addConstr(self._z[u][v] <= self._y[u], name='I'+str(u)+'_'+str(v)+'_3')
         self.update()
 
-    def add_root_constraints(self, G):
-        self.addConstr((quicksum(self._x[v] for v in G.nodes())) == 1, name='R_sum')
+    def add_root_constraints(self, G, root=None):
+        if root:
+            self.addConstr(self._y[root] == 1, name='R')
+        else:
+            self.addConstr((quicksum(self._x[v] for v in G.nodes())) == 1, name='R_sum')
 
-        for v in G.nodes():
-            self.addConstr(self._x[v] <= self._y[v], name='R'+str(v))
+            for v in G.nodes():
+                self.addConstr(self._x[v] <= self._y[v], name='R'+str(v))
         self.update()
 
-    def add_flow_constraints(self, G, G_flow):
+    def add_flow_constraints(self, G_flow, root=None):
         if G_flow.is_multigraph():
             for u, v, k in G_flow.edges(keys=True):
                 if u in self._z and v in self._z[u] and k in self._z[u][v]:
-                    self.addConstr(self._f[u][v][k] <= G.number_of_nodes() * self._z[u][v][k],
-                                   name='F'+str(u)+'_'+str(v)+'_'+str(k)+'_1')
+                    self.addConstr(self._f[u][v][k] <= G_flow.number_of_nodes() * self._z[u][v][k],
+                                   name='F' + str(u) + '_' + str(v) + '_' + str(k) + '_1')
                 else:
-                    self.addConstr(self._f[u][v][k] <= G.number_of_nodes() * self._z[v][u][k],
-                                   name='F'+str(v)+'_'+str(u)+'_'+str(k)+'_2')
-
-            arcs = G_flow.edges(keys=True)
-            for r in G.nodes():
-                incoming = [(u, v, k) for u, v, k in arcs if v == r]
-                outgoing = [(v, w, k) for v, w, k in arcs if v == r]
-                self.addConstr(quicksum(self._f[u][v][k] for u, v, k in incoming)
-                               - quicksum(self._f[v][w][k] for v, w, k in outgoing)
-                               >= self._y[v] + self._x[v] * (G.number_of_nodes() + 1), name='F'+str(r))
+                    self.addConstr(self._f[u][v][k] <= G_flow.number_of_nodes() * self._z[v][u][k],
+                                   name='F' + str(v) + '_' + str(u) + '_' + str(k) + '_2')
+            if root:
+                arcs = G_flow.edges(keys=True)
+                for r in G_flow.nodes():
+                    if r != root:
+                        incoming = [(u, v, k) for u, v, k in arcs if v == r]
+                        outgoing = [(v, w, k) for v, w, k in arcs if v == r]
+                        self.addConstr(quicksum(self._f[u][v][k] for u, v, k in incoming)
+                                       - quicksum(self._f[v][w][k] for v, w, k in outgoing)
+                                       >= self._y[v], name='F' + str(r))
+            else:
+                arcs = G_flow.edges(keys=True)
+                for r in G_flow.nodes():
+                    incoming = [(u, v, k) for u, v, k in arcs if v == r]
+                    outgoing = [(v, w, k) for v, w, k in arcs if v == r]
+                    self.addConstr(quicksum(self._f[u][v][k] for u, v, k in incoming)
+                                   - quicksum(self._f[v][w][k] for v, w, k in outgoing)
+                                   >= self._y[v] + self._x[v] * (G_flow.number_of_nodes() + 1), name='F'+str(r))
         else:
             for u, v in G_flow.edges():
                 if u in self._z and v in self._z[u]:
-                    self.addConstr(self._f[u][v] <= G.number_of_nodes() * self._z[u][v],
+                    self.addConstr(self._f[u][v] <= G_flow.number_of_nodes() * self._z[u][v],
                                    name='F'+str(u)+'_'+str(v)+'_1')
                 else:
-                    self.addConstr(self._f[u][v] <= G.number_of_nodes() * self._z[v][u],
+                    self.addConstr(self._f[u][v] <= G_flow.number_of_nodes() * self._z[v][u],
                                    name='F'+str(v)+'_'+str(u)+'_2')
 
-            arcs = G_flow.edges()
-            for r in G.nodes():
-                incoming = [(u, v) for u, v in arcs if v == r]
-                outgoing = [(v, w) for v, w in arcs if v == r]
-                self.addConstr(quicksum(self._f[u][v] for u, v in incoming)
-                               - quicksum(self._f[v][w] for v, w in outgoing)
-                               >= self._y[v] + self._x[v] * (G.number_of_nodes() + 1), name='F'+str(r))
+            if root:
+                arcs = G_flow.edges()
+                for r in G_flow.nodes():
+                    if r != root:
+                        incoming = [(u, v) for u, v in arcs if v == r]
+                        outgoing = [(v, w) for v, w in arcs if v == r]
+                        self.addConstr(quicksum(self._f[u][v] for u, v in incoming)
+                                       - quicksum(self._f[v][w] for v, w in outgoing)
+                                       >= self._y[v], name='F'+str(r))
+            else:
+                arcs = G_flow.edges()
+                for r in G_flow.nodes():
+                    incoming = [(u, v) for u, v in arcs if v == r]
+                    outgoing = [(v, w) for v, w in arcs if v == r]
+                    self.addConstr(quicksum(self._f[u][v] for u, v in incoming)
+                                   - quicksum(self._f[v][w] for v, w in outgoing)
+                                   >= self._y[v] + self._x[v] * (G_flow.number_of_nodes() + 1), name='F' + str(r))
         self.update()
 
     def add_violated_constraint(self, G, s):

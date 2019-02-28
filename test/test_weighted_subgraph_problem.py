@@ -5,6 +5,43 @@ import graph_helper as gh
 import weighted_subgraph_problem as wsp
 
 
+def test_setup_ip():
+    G = gg.random_weighted_graph(80, 0.1, 20)
+    ip = wsp.setup_ip(G)
+
+    assert ip.numVars == 2 * G.number_of_nodes() + G.number_of_edges()
+    assert ip.numConstrs == 3 * G.number_of_edges() + G.number_of_nodes() + 1
+
+
+def test_setup_ip__not_induced():
+    G = gg.random_weighted_graph(80, 0.1, 20)
+    ip = wsp.setup_ip(G, induced=False)
+
+    assert ip.numVars == 2 * G.number_of_nodes() + G.number_of_edges()
+    assert ip.numConstrs == G.number_of_nodes() + 1
+
+
+def test_setup_ip__rooted():
+    G = gg.random_weighted_graph(80, 0.1, 20)
+    ip = wsp.setup_ip(G, root=20)
+
+    assert ip.numVars == G.number_of_nodes() + G.number_of_edges()
+    assert ip.numConstrs == 3 * G.number_of_edges() + 1
+
+
+def test_setup_ip__flow():
+    G = gg.random_weighted_graph(80, 0.1, 20)
+    ip = wsp.setup_ip(G, flow=True)
+
+    assert ip.numVars == 2 * G.number_of_nodes() + 3 * G.number_of_edges()
+    assert ip.numConstrs == 5 * G.number_of_edges() + 2 * G.number_of_nodes() + 1
+
+    ip2 = wsp.setup_ip(G, root=30, flow=True)
+
+    assert ip2.numVars == G.number_of_nodes() + 3 * G.number_of_edges()
+    assert ip2.numConstrs == 5 * G.number_of_edges() + G.number_of_nodes()
+
+
 def test_solve_rooted_ip__max():
     G1 = gg.random_weighted_tree(10, 40)
     G2 = gg.random_weighted_binary_tree(10, 40)

@@ -5,29 +5,56 @@ import graph_helper as gh
 import ip_generator as ig
 
 
-def setup_ip(G, mode='max', rooted=False):
+def setup_ip(G, mode='max', root=None, induced=True, flow=False):
+    """Setup IP for WSP on graph G.
+    Parameters:
+    G : NetworkX graph
+    mode : 'max' or 'min'
+    root : root node for solution
+    induced : bool for induced solution
+    flow : bool for using flow formulation
+
+    Returns:
+    ip : integer program"""
+
     ip = ig.OP()
 
     # Create variables
     ip.add_node_variables(G)
     ip.add_edge_variables(G)
-    if rooted:
+    if not root:
         ip.add_root_variables(G)
+    if flow:
+        G_flow = gh.construct_flow_graph(G)
+        ip.add_flow_variables(G_flow)
 
     # Set objective function
     ip.set_wsp_objective(G, mode)
 
     # Add constraints
-    ip.add_induce_constraints(G)
-    if rooted:
+    if induced:
+        ip.add_induce_constraints(G)
+    if not root:
         ip.add_root_constraints(G)
+        if flow:
+            ip.add_flow_constraints(G_flow)
+    else:
+        ip.add_root_constraints(G, root)
+        if flow:
+            ip.add_flow_constraints(G_flow, root)
 
     return ip
 
 
 def construct_weighted_subgraph(G, ip):
+    """Construct weighted subgraph from IP.
+    Parameters:
+    G : NetworkX graph
+    ip : integer program (solved)
 
-    # Construct subgraph
+    Returns:
+    H : NetworkX graph"""
+
     H = nx.empty_graph()
     for v, w in G.nodes.data('weight'):
         if ip.get_y()[v].x > 0.5:
@@ -41,21 +68,20 @@ def construct_weighted_subgraph(G, ip):
 
 
 def solve_rooted_ip(G, root, mode='max'):
-    """Compute maximum weighted subgraph in graph G.
+    """Compute opt weighted subgraph in graph G containing root.
     Parameters:
     G : NetworkX graph
+    root : root node for solution
+    mode : 'min' or 'max'
 
     Returns:
-    H : NetworkX graph (maximum weighted subgraph)
-    objVal: objective value (weight of H)"""
+    H : NetworkX graph (opt weighted subgraph containing root)
+    weight: objective value (weight of H)"""
     
-    ip = setup_ip(G, mode)
+    ip = setup_ip(G, mode, root)
     y = ip.get_y()
     z = ip.get_z()
 
-    # Add connectivity constraints
-    ip.addConstr(y[root] >= 1)
-    
     n = G.number_of_nodes()
     subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1) if root in G.nodes)
     
@@ -75,7 +101,49 @@ def solve_rooted_ip(G, root, mode='max'):
     return H, weight
 
 
+def solve_rooted_ip(G, root, mode='max'):
+    """Compute opt weighted subgraph in graph G containing root.
+    Parameters:
+    G : NetworkX graph
+    root : root node for solution
+    mode : 'min' or 'max'
+
+    Returns:
+    H : NetworkX graph (opt weighted subgraph containing root)
+    weight: objective value (weight of H)"""
+
+    ip = setup_ip(G, mode, root)
+    y = ip.get_y()
+    z = ip.get_z()
+
+    n = G.number_of_nodes()
+    subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1) if root in G.nodes)
+
+    for s in subsets:
+        if root in s:
+            elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
+            t = [v for v in G.nodes() if v not in s]
+
+            ip.addConstr((quicksum(z[u][v] * n for u, v in elist)) >= (quicksum(y[v] for v in t)))
+
+    # Solve
+    ip.optimize()
+
+    H = construct_weighted_subgraph(G, ip)
+    weight = ip.objVal
+
+    return H, weight
+
+
 def solve_full_ip__rooted(G, mode='max'):
+    """Compute opt weighted subgraph in graph G using multiple IPs.
+    Parameters:
+    G : NetworkX graph
+    mode : 'min' or 'max'
+
+    Returns:
+    H : NetworkX graph (opt weighted subgraph)
+    weight: objective value (weight of H)"""
     
     H = nx.empty_graph()
     weight = 0
@@ -105,22 +173,21 @@ def solve_full_ip__rooted(G, mode='max'):
 
 
 def solve_full_ip(G, mode='max'):
-    """Compute maximum weighted subgraph in graph G.
+    """Compute opt weighted subgraph in graph G with an IP.
     Parameters:
     G : NetworkX graph
 
     Returns:
-    H : NetworkX graph (maximum weighted subgraph)
+    H : NetworkX graph (opt weighted subgraph)
     objVal: objective value (weight of H)"""
     
-    ip = setup_ip(G, mode, rooted=True)
+    ip = setup_ip(G, mode)
     x = ip.get_x()
     y = ip.get_y()
     z = ip.get_z()
 
     # Add connectivity constraints    
     n = G.number_of_nodes()
-    m = G.number_of_edges()
     subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1))
 
     for v in G.nodes():
@@ -129,15 +196,6 @@ def solve_full_ip(G, mode='max'):
                 elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
 
                 ip.addConstr(y[v] <= (quicksum(x[u] for u in s)) + (quicksum(z[u][v] for u, v in elist)))
-
-#    for s in subsets:
-#        elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
-#        t = [v for v in G.nodes() if v not in s]
-#
-#        for r in G.nodes():
-#            ip.addConstr((x[r]*m + (quicksum(z[u][v] * n for u, v in elist))) >= (quicksum(y[v] for v in t)))
-#            ip.addConstr(((quicksum(z[u][v] * n for u, v in elist))) >= (quicksum(y[v] for v in t)))
-
     # Solve
     ip.optimize()
 
@@ -151,7 +209,16 @@ def solve_full_ip(G, mode='max'):
     return H, weight
 
 
-def solve_separation(G, mode='max'):
+def solve_separation_ip(G, mode='max'):
+    """Compute opt weighted subgraph in graph G by separating the connectivity constraints.
+    Parameters:
+    G : NetworkX graph
+    mode : 'min' or 'max'
+
+    Returns:
+    H : NetworkX graph (opt weighted subgraph)
+    weight: objective value (weight of H)"""
+
     ip = setup_ip(G, mode)
     connected = False
 
@@ -174,30 +241,59 @@ def solve_separation(G, mode='max'):
     return H, weight, i
 
 
+def solve_flow_ip__rooted(G, mode='max'):
+    """Compute opt weighted subgraph in graph G using multiple flow IPs.
+    Parameters:
+    G : NetworkX graph
+    mode : 'min' or 'max'
+
+    Returns:
+    H : NetworkX graph (opt weighted subgraph)
+    weight: objective value (weight of H)"""
+
+    H = nx.empty_graph()
+    weight = 0
+
+    for v in G.nodes():
+        (H1, objVal) = solve_rooted_ip(G, v, mode)
+
+        if mode == 'max':
+            if objVal > weight:
+                H = H1
+                weight = objVal
+            elif objVal == weight:
+                if H1.number_of_nodes() < H.number_of_nodes():
+                    H = H1
+                    weight = objVal
+
+        elif mode == 'min':
+            if objVal < weight:
+                H = H1
+                weight = objVal
+            elif objVal == weight:
+                if H1.number_of_nodes() < H.number_of_nodes():
+                    H = H1
+                    weight = objVal
+
+    return H, weight
+
+
 def solve_flow_ip(G, mode='max'):
-    ip = setup_ip(G, mode, rooted=True)
+    """Compute opt weighted subgraph in graph G using a flow IP.
+    Parameters:
+    G : NetworkX graph
+    mode : 'min' or 'max'
 
-    x = ip.get_x()
-    y = ip.get_y()
-    z = ip.get_z()
+    Returns:
+    H : NetworkX graph (opt weighted subgraph)
+    weight: objective value (weight of H)"""
 
-    # Add connectivity constraints
-    G_f = gh.construct_flow_graph(G)
-    ip.add_flow_variables(G_f)
-
-    for u, v in G_f.edges():
-        ip.addConstr(f[u][v] >= 0)
-        if u in z and v in z[u]:
-            ip.addConstr(f[u][v] <= G.number_of_nodes() * z[u][v])
-        else:
-            ip.addConstr(f[u][v] <= G.number_of_nodes() * z[v][u])
-
-    for v in G_f.nodes():
-        ip.addConstr(-quicksum(f[v][w] for w in G_f.successors(v)) + quicksum(f[w][v] for w in G_f.predecessors(v))
-                     >= y[v] + x[v] * (G.number_of_nodes() + 1))
+    ip = setup_ip(G, mode, flow=True)
 
     # Solve
     ip.optimize()
+
+    ip.write("flow.lp")
 
     # Construct subgraph
     H = construct_weighted_subgraph(G, ip)
@@ -211,18 +307,19 @@ def solve_flow_ip(G, mode='max'):
 
 
 def solve_ip_on_path(G, mode='max'):
-    """Compute maximum weighted subgraph in graph G.
+    """Compute opt weighted subgraph on path G using a IP.
     Parameters:
     G : NetworkX graph
+    mode : 'min' or 'max'
 
     Returns:
-    H : NetworkX graph (maximum weighted subgraph)
-    objVal: objective value (weight of H)"""
+    H : NetworkX graph (opt weighted subgraph)
+    weight: objective value (weight of H)"""
     
     if not gh.is_path(G):
         print('G is not a path!')
     
-    ip = setup_ip(G, mode, rooted=True)
+    ip = setup_ip(G, mode)
     x = ip.get_x()
     y = ip.get_y()
     z = ip.get_z()
