@@ -119,8 +119,11 @@ def test_direct_tree():
     D = gh.direct_tree(T)
     
     assert nx.is_tree(D)
-    assert T.number_of_nodes() ==  D.number_of_nodes()
-    assert T.number_of_edges() ==  D.number_of_edges()
+    assert T.number_of_nodes() == D.number_of_nodes()
+    assert T.number_of_edges() == D.number_of_edges()
+
+    roots = [d for (v, d) in D.in_degree() if d == 0]
+    assert len(roots) == 1
     
     for (v, w) in T.nodes.data('weight'):
         assert D.has_node(v)
@@ -131,6 +134,78 @@ def test_direct_tree():
             assert D[u][v]['weight'] == w
         else:
             assert D[v][u]['weight'] == w
+
+
+def test_direct_tree__root():
+    T = gg.random_weighted_tree(50, 20)
+    D = gh.direct_tree(T, 20)
+
+    assert nx.is_tree(D)
+    assert D.in_degree(20) == 0
+    assert T.number_of_nodes() == D.number_of_nodes()
+    assert T.number_of_edges() == D.number_of_edges()
+
+    for (v, w) in T.nodes.data('weight'):
+        assert D.has_node(v)
+        if v != 20:
+            assert D.in_degree(v) == 1
+        assert D.node[v]['weight'] == w
+    for (u, v, w) in T.edges.data('weight'):
+        assert D.has_edge(u, v) ^ D.has_edge(v, u)
+        if D.has_edge(u, v):
+            assert D[u][v]['weight'] == w
+        else:
+            assert D[v][u]['weight'] == w
+
+
+def test_construct_flow_graph():
+    G = nx.complete_graph(6)
+    G_flow = gh.construct_flow_graph(G)
+
+    assert G_flow.is_directed()
+
+    for v in G.nodes():
+        assert v in G_flow.nodes()
+
+    for u, v in G.edges():
+        assert G_flow.has_edge(u, v)
+        assert G_flow.has_edge(v, u)
+
+
+def test_construct_flow_graph__multigraph():
+    G, D = gg.random_weighted_spg(50, 10)
+    G = nx.convert_node_labels_to_integers(G)
+    G = G.to_undirected()
+    G_flow = gh.construct_flow_graph(G)
+
+    assert G_flow.is_directed()
+
+    for v in G.nodes():
+        assert v in G_flow.nodes()
+
+    for u, v, k in G.edges(keys=True):
+        assert G_flow.has_edge(u, v, k)
+        assert G_flow.has_edge(v, u, k)
+
+
+def test_weight():
+    G = nx.empty_graph()
+    G.add_node(0, weight=3333)
+    G.add_node(1, weight=4)
+    G.add_node(2, weight=2203)
+    G.add_node(3, weight=7830)
+    G.add_node(4, weight=0)
+    G.add_node(5, weight=23)
+    G.add_node(6, weight=89)
+    G.add_edge(0, 2, weight=35)
+    G.add_edge(1, 3, weight=4)
+    G.add_edge(2, 5, weight=23)
+    G.add_edge(3, 5, weight=78)
+    G.add_edge(4, 0, weight=2)
+
+    edges = 35 + 4 + 23 + 78 + 2
+    nodes = 3333 + 4 + 2203 + 7830 + 23 + 89
+    assert gh.weight(G) == (edges - nodes)
 
 
 def test_sum_node_weights():
@@ -186,16 +261,20 @@ def test_level_order_list():
     assert order_list == [0, 1, 2, 3, 4, 5, 6]
     assert order_list1 == [1, 3, 4]
     assert order_list2 == [2, 5, 6]
+    assert gh.level_order_list(G, 3) == [3]
+    assert gh.level_order_list(G, 4) == [4]
+    assert gh.level_order_list(G, 5) == [5]
+    assert gh.level_order_list(G, 6) == [6]
 
 
 def test_level_list():
     G = nx.DiGraph()
     G.add_edges_from([(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)])
-    
+
     level1 = gh.level_list(G, 0, 1)
     level2 = gh.level_list(G, 0, 2)
     level3 = gh.level_list(G, 0, 3)
-    
+
     assert level1 == [0]
     assert level2 == [1, 2]
     assert level3 == [3, 4, 5, 6]
@@ -204,9 +283,14 @@ def test_level_list():
 def test_height():
     G = nx.DiGraph()
     G.add_edges_from([(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)])
-    height = gh.height(G, 0)
     
-    assert height == 3 
+    assert gh.height(G, 0) == 3
+    assert gh.height(G, 1) == 2
+    assert gh.height(G, 2) == 2
+    assert gh.height(G, 3) == 1
+    assert gh.height(G, 4) == 1
+    assert gh.height(G, 5) == 1
+    assert gh.height(G, 6) == 1
 
 
 def test_get_edgelist_from_nodelist():

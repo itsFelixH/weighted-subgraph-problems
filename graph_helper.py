@@ -62,13 +62,14 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
     return G
 
 
-def create_subgraph(G, node, mode='sucessors'):
-    if mode == 'sucessors':
+def create_subgraph(G, node, mode='successors'):
+    edges = []
+    if mode == 'successors':
         edges = nx.dfs_successors(G, node)
     elif mode == 'predecessors':
         edges = nx.dfs_predecessors(G, node)
     nodes = []
-    for k,v in edges.items():
+    for k, v in edges.items():
         nodes.extend([k])
         nodes.extend(v)
     return G.subgraph(nodes)
@@ -91,8 +92,8 @@ def is_path(G):
 
 
 def direct_tree(G, root=None):
-
-    root = random.choice([v for (v, d) in G.degree() if d == 2])
+    if not root:
+        root = random.choice([v for (v, d) in G.degree() if d == 2])
     
     H = nx.DiGraph()
     H.add_nodes_from(G.nodes(data=True))
@@ -109,7 +110,13 @@ def direct_tree(G, root=None):
         Q.remove(u)
     
     return H
-    
+
+
+def construct_flow_graph(G):
+    G_flow = G.to_directed()
+    return G_flow
+
+
 def weight(G):
     """Computes wsp-weight of a given graph.
     Parameters:
@@ -122,6 +129,7 @@ def weight(G):
 
     return weight
 
+
 def sum_node_weights(G):
     """Computes sum of node weights of a graph.
     Parameters:
@@ -132,7 +140,8 @@ def sum_node_weights(G):
 
     weight = 0
     for v, w in G.nodes.data('weight'):
-        weight += w
+        if w:
+            weight += w
 
     return weight   
 
@@ -149,12 +158,14 @@ def sum_edge_weights(G):
 
     return weight
 
+
 def level_order_list(G, root):
     h = height(G, root)
     l = []
     for i in range(1, h+1):
         l.extend(level_list(G, root, i))
     return l
+
 
 def level_list(G, root , level):
     """Returns nodes at a given level"""
@@ -169,6 +180,7 @@ def level_list(G, root , level):
         for v in G.successors(root):
             l.extend(level_list(G, v, level-1))
         return l
+
 
 def height(G, root):
     """Computes the height of a tree."""
@@ -190,6 +202,7 @@ def height(G, root):
             if height2 > height1:
                 height1 = height2
     return height1 + 1
+
 
 def get_edgelist_from_nodelist(nodelist):
     """Computes edgelist from nodelist.

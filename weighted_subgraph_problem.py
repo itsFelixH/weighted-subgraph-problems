@@ -20,7 +20,7 @@ def setup_ip(G, mode='max', rooted=False):
     # Add constraints
     ip.add_induce_constraints(G)
     if rooted:
-        ip.add_root_constraint(G)
+        ip.add_root_constraints(G)
 
     return ip
 
@@ -182,16 +182,11 @@ def solve_flow_ip(G, mode='max'):
     z = ip.get_z()
 
     # Add connectivity constraints
-    G_f = G.to_directed()
+    G_f = gh.construct_flow_graph(G)
     ip.add_flow_variables(G_f)
-    f = ip.get_f()
-
-    print(f)
-    print(z)
 
     for u, v in G_f.edges():
         ip.addConstr(f[u][v] >= 0)
-        print(u, v)
         if u in z and v in z[u]:
             ip.addConstr(f[u][v] <= G.number_of_nodes() * z[u][v])
         else:

@@ -320,3 +320,9 @@ def ex_graph_path():
     P.add_edge(13, 14, weight=9)
     
     return P
+
+
+def ex_graph_tree():
+    T = nx.empty_graph()
+
+    return T
