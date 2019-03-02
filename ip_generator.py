@@ -128,17 +128,17 @@ class OP(Model):
                     if r != root:
                         incoming = [(u, v, k) for u, v, k in arcs if v == r]
                         outgoing = [(v, w, k) for v, w, k in arcs if v == r]
-                        self.addConstr(quicksum(self._f[u][v][k] for u, v, k in incoming)
-                                       - quicksum(self._f[v][w][k] for v, w, k in outgoing)
-                                       >= self._y[v], name='F' + str(r))
+                        self.addConstr(quicksum(self._f[u][v][k] for u, v, k in incoming[:])
+                                       - quicksum(self._f[v][w][k] for v, w, k in outgoing[:])
+                                       == self._y[r], name='F' + str(r))
             else:
                 arcs = G_flow.edges(keys=True)
                 for r in G_flow.nodes():
                     incoming = [(u, v, k) for u, v, k in arcs if v == r]
                     outgoing = [(v, w, k) for v, w, k in arcs if v == r]
-                    self.addConstr(quicksum(self._f[u][v][k] for u, v, k in incoming)
-                                   - quicksum(self._f[v][w][k] for v, w, k in outgoing)
-                                   >= self._y[v] + self._x[v] * (G_flow.number_of_nodes() + 1), name='F'+str(r))
+                    self.addConstr(quicksum(self._f[u][v][k] for u, v, k in incoming[:])
+                                   - quicksum(self._f[v][w][k] for v, w, k in outgoing[:])
+                                   >= self._y[r] - self._x[r] * (G_flow.number_of_nodes() + 1), name='F'+str(r))
         else:
             for u, v in G_flow.edges():
                 if u in self._z and v in self._z[u]:
@@ -154,28 +154,26 @@ class OP(Model):
                     if r != root:
                         incoming = [(u, v) for u, v in arcs if v == r]
                         outgoing = [(v, w) for v, w in arcs if v == r]
-                        self.addConstr(quicksum(self._f[u][v] for u, v in incoming)
-                                       - quicksum(self._f[v][w] for v, w in outgoing)
-                                       >= self._y[v], name='F'+str(r))
+                        self.addConstr(quicksum(self._f[u][v] for u, v in incoming[:])
+                                       - quicksum(self._f[v][w] for v, w in outgoing[:])
+                                       == self._y[v], name='F'+str(r))
             else:
                 arcs = G_flow.edges()
                 for r in G_flow.nodes():
                     incoming = [(u, v) for u, v in arcs if v == r]
                     outgoing = [(v, w) for v, w in arcs if v == r]
-                    self.addConstr(quicksum(self._f[u][v] for u, v in incoming)
-                                   - quicksum(self._f[v][w] for v, w in outgoing)
-                                   >= self._y[v] + self._x[v] * (G_flow.number_of_nodes() + 1), name='F' + str(r))
+                    self.addConstr(quicksum(self._f[u][v] for u, v in incoming[:])
+                                   - quicksum(self._f[v][w] for v, w in outgoing[:])
+                                   >= self._y[r] - self._x[r] * (G_flow.number_of_nodes() + 1), name='F' + str(r))
         self.update()
 
     def add_violated_constraint(self, G, s):
         if G.is_multigraph():
             elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
-
             for v in s:
                 self.addConstr(self._y[v] <= quicksum(self._z[u][v][k] for u, v, k in elist))
         else:
             elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
-
             for v in s:
                 self.addConstr(self._y[v] <= quicksum(self._z[u][v] for u, v in elist))
         self.update()
