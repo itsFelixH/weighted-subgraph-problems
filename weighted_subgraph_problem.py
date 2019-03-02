@@ -604,3 +604,59 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
         weight = weight_H_out[root]
     
     return H, weight
+
+
+def solve_dynamic_prog_on_spg(G, D, mode='max'):
+    """Compute weighted subgraph in graph G.
+    Parameters:
+    G : NetworkX graph
+    D : Decomposition tree of G
+    mode : 'max' or 'min'
+
+    Returns:
+    H : NetworkX graph (maximum/minimum weighted subgraph)
+    weight: objective value (weight of H)"""
+
+    H_s = dict()
+    weight_H_s = dict()
+    H_t = dict()
+    weight_H_t = dict()
+    H_empty= dict()
+    weight_H_empty= dict()
+    H_stc = dict()
+    weight_H_stc = dict()
+    H_stn = dict()
+    weight_H_stn = dict()
+
+    for tree in D.level_list(D.depth()):
+        G = tree.graph
+        s = D.s
+        t = D.t
+
+        H_s[tree] = D.s
+        weight_H_s[tree] = G.node[s]['weight']
+        H_t[tree] = t
+        weight_H_t[tree] = G.node[t]['weight']
+        H_empty[tree] = []
+        weight_H_empty[tree] = 0
+        H_stc[tree] = [s, t]
+        weight_H_stc[tree] = G.node[s]['weight'] + G.node[t]['weight']
+        H_stn[tree] = []
+        weight_H_stn[tree] = 0
+
+    for i in reversed(range(1, D.depth())):
+        for tree in D.level_list(i):
+            G = tree.graph
+            s = D.s
+            t = D.t
+
+            H_s[tree] = D.s
+            weight_H_s[tree] = G.node[s]['weight']
+            H_t[tree] = t
+            weight_H_t[tree] = G.node[t]['weight']
+            H_empty[tree] = []
+            weight_H_empty[tree] = 0
+            H_stc[tree] = [s, t]
+            weight_H_stc[tree] = G.node[s]['weight'] + G.node[t]['weight']
+            H_stn[tree] = []
+            weight_H_stn[tree] = 0

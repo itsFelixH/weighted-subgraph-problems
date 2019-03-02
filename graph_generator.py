@@ -211,15 +211,15 @@ def random_weighted_spg(number_of_edges, max_weight):
     source = dict()
     sink = dict()
     node_map = dict()
-    
+
     for i in range(0, number_of_edges):
         sp_list[i] = nx.MultiDiGraph()
         sp_list[i].add_node(str(i)+'_1')
         sp_list[i].add_node(str(i)+'_2')
-        sp_list[i].add_edge(str(i)+'_1', str(i)+'_2')
+        sp_list[i].add_edge(str(i)+'_1', str(i)+'_2', weight=random.randint(0, max_weight))
         source[i] = str(i)+'_1'
         sink[i] = str(i)+'_2'
-        tree_list[i] = DecompositionTree()
+        tree_list[i] = DecompositionTree(graph=sp_list[i], s=str(i)+'_1', t=str(i)+'_2')
     k = 0
     while len(sp_list) > 1:
         key1 = random.choice(list(sp_list.keys()))
@@ -227,16 +227,18 @@ def random_weighted_spg(number_of_edges, max_weight):
         del sp_list[key1]
         D1 = tree_list[key1]
         del tree_list[key1]
-        
+
         key2 = random.choice(list(sp_list.keys()))
         G2 = sp_list[key2]
         D2 = tree_list[key2]
-        
+
         G = nx.union(G1, G2)
         if random.random() < 0.5:
             combine = [sink[key1], source[key2]]
             G = gh.merge_nodes(G, combine, 's_' + str(k))
-            D = DecompositionTree('S', ['s_' + str(k)],D1, D2)
+            D = DecompositionTree(composition='S', s=D1.s, t=D2.t, graph=G, left=D1, right=D2)
+            D1.set_parent(D)
+            D2.set_parent(D)
             node_map['s_' + str(k)] = [sink[key1], source[key2]]
             source[key2] = source[key1]
         else:
@@ -244,7 +246,9 @@ def random_weighted_spg(number_of_edges, max_weight):
             combine2 = [sink[key1], sink[key2]]
             G = gh.merge_nodes(G, combine1, 'p1_' + str(k))
             G = gh.merge_nodes(G, combine2, 'p2_' + str(k))
-            D = DecompositionTree('P', ['p1_' + str(k), 'p2_' + str(k)], D1, D2)
+            D = DecompositionTree(composition='P', s='p1_'+str(k), t='p2_'+str(k), graph=G, left=D1, right=D2)
+            D1.set_parent(D)
+            D2.set_parent(D)
             node_map['p1_' + str(k)] = [source[key1], source[key2]]
             node_map['p2_' + str(k)] = [sink[key1], sink[key2]]
             source[key2] = 'p1_' + str(k)
@@ -255,14 +259,27 @@ def random_weighted_spg(number_of_edges, max_weight):
         del sink[key1]
         tree_list[key2] = D
         k += 1
-    
+
     key = list(sp_list.keys())[0]
-    SPG = sp_list[key]
+    SPG = sp_list[key].copy()
     DT = tree_list[key]
-    
-    SPG = weight_nodes(SPG, 1, max_weight)
-    SPG = weight_edges(SPG, 1, max_weight)
-        
+
+    SPG = weight_nodes(SPG, 0, max_weight)
+    DT.set_graph(SPG)
+
+    for i in range(2, DT.depth() + 1):
+        for tree in DT.level_list(i):
+            G = tree.parent.graph
+            for node in G.nodes():
+                if node in tree.graph.nodes():
+                    nx.set_node_attributes(tree.graph, {node: {'weight': G.node[node]['weight']}})
+                else:
+                    if node in node_map:
+                        nodes = node_map[node]
+                        for v in nodes:
+                            if v in tree.graph.nodes():
+                                nx.set_node_attributes(tree.graph, {v: {'weight': G.node[node]['weight']}})
+
     return SPG, DT
 
 

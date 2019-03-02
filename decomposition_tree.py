@@ -1,36 +1,19 @@
-import graph_helper as gh
-
-
 class DecompositionTree:
 
-    def __init__(self, composition=None, joinNode=None, left=None, right=None):
+    def __init__(self, composition=None, s=None, t=None, graph=None, parent=None, left=None, right=None):
         self.composition = composition
-        self.joinNode = joinNode
+        self.s = s
+        self.t = t
+        self.graph = graph
+        self.parent = parent
         self.left = left
         self.right = right
-        
-    def get_graph(self, node, G):
-        path = self.get_path_in_tree_as_string(node)
-        currentNode = self
-        while path != '':
-            if path[0] == 'l':
-                currentNode = self.left
-                if currentNode.composition == 'S':
-                    G = gh.createSubgraph(G, currentNode.joinNode[0], 'predecessors')
-                else:
-                    s = currentNode.joinNodes[0]
-                    t = currentNode.joinNodes[1]
-                    (G, H) = gh.createSubgraphsBetweenNodes(G, s, t)
-            elif path[0] == 'r':
-                currentNode = self.right
-                if currentNode.composition == 'S':
-                    G = gh.createSubgraph(G, currentNode.joinNode[0])
-                else:
-                    s = currentNode.joinNodes[0]
-                    t = currentNode.joinNodes[1]
-                    (H, G) = gh.createSubgraphsBetweenNodes(G, s, t)
-            path = path[1:]
-        return G
+
+    def set_parent(self, parent):
+        self.parent = parent
+
+    def set_graph(self, graph):
+        self.graph = graph
 
     def is_leaf(self):
         if self.left is None and self.right is None:
@@ -51,7 +34,7 @@ class DecompositionTree:
     def contains(self, node):
         if self == node:
             return True
-        if self.children != []:
+        if self.children:
             in_left_tree = False
             in_right_tree = False
             if self.left:
@@ -64,6 +47,7 @@ class DecompositionTree:
 
     def get_leaves(self):
         leaves = []
+
         def _get_leaf_nodes(node):
             if node is not None:
                 if len(node.children()) == 0:
@@ -77,23 +61,24 @@ class DecompositionTree:
         if not self.children():
             return 1
 
-        lDepth = 0
-        rDepth = 0
+        l_depth = 0
+        r_depth = 0
 
         if self.left:
-            lDepth = self.left.depth()
+            l_depth = self.left.depth()
             if not self.right:
-                return lDepth + 1
+                return l_depth + 1
         if self.right:
-            rDepth = self.right.depth()
+            r_depth = self.right.depth()
             if not self.left:
-                return rDepth + 1
-        if lDepth > rDepth:
-            return lDepth + 1
+                return r_depth + 1
+        if l_depth > r_depth:
+            return l_depth + 1
         else:
-            return rDepth + 1
+            return r_depth + 1
   
-    def get_level(self, node):
+    def get_level_of_node(self, node):
+
         def _get_level_util(tree, node, level): 
             if not tree:
                 return 0
@@ -124,7 +109,19 @@ class DecompositionTree:
         if self.right is not None:
             childlist.append(self.right)
         return childlist
-        
+
+    def level_list(self, level):
+        """Returns nodes at a given level"""
+        if level == 1:
+            return [self]
+        elif level > 1:
+            l = []
+            if self.left:
+                l.extend(self.left.level_list(level - 1))
+            if self.right:
+                l.extend(self.right.level_list(level - 1))
+            return l
+
     def size(self):
         n = 1
         if self.left is not None:

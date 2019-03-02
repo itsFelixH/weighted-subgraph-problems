@@ -81,8 +81,8 @@ def create_subgraphs_between_nodes(G, s, t):
         paths_between = nx.all_simple_paths(G,source=v,target=t)
         nodes = {node for path in paths_between for node in path}
         nodes.add(s)
-        S.append(G.subgraph(nodes))
-    return S
+        S.extend(nodes)
+    return G.subgraph(S)
 
 
 def is_path(G):

@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
+import random
 
 import graph_generator as gg
 import graph_helper as gh
@@ -241,6 +242,12 @@ def main():
                 plt.axis('off')
                 plt.show()
 
+        elif choice == 'g':
+            G, D = gg.random_weighted_spg(9, 30)
+            dic = nx.spring_layout(G)
+
+            wsp.solve_dynamic_prog_on_spg(G, D, MODE)
+
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
     if not dic:
@@ -253,7 +260,7 @@ def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=No
     nx.draw_networkx_nodes(G, pos=dic)
     nx.draw_networkx_edges(G, pos=dic, edge_color='r')
     
-    # Draw subgraph H (blue)
+    # Draw subgraph H (green)
     nx.draw_networkx_nodes(G, pos=dic, nodelist=H.nodes(), node_color='g')
     nx.draw_networkx_edges(G, pos=dic, edgelist=H.edges(), edge_color='g')
     
