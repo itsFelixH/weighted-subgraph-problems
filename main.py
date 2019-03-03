@@ -243,7 +243,7 @@ def main():
                 plt.show()
 
         elif choice == 'g':
-            G, D = gg.random_weighted_spg(10, 30)
+            G, D = gg.random_weighted_spg(40, 30)
             dic = nx.spring_layout(G)
 
             start = timer()
