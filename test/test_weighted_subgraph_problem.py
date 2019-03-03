@@ -538,6 +538,32 @@ def test_flow_ip__min():
         assert e in G5.edges()
 
 
+def test_flow_ip__multigraph():
+    G, D = gg.random_weighted_spg(3, 30)
+    G = G.to_undirected()
+
+    (H1, objVal1) = wsp.solve_flow_ip(G, 'max')
+    (H2, objVal2) = wsp.solve_flow_ip(G, 'min')
+
+    if H1.number_of_nodes() > 0:
+        assert nx.is_connected(H1)
+    assert objVal1 == gh.weight(H1)
+
+    if H2.number_of_nodes() > 0:
+        assert nx.is_connected(H2)
+    assert objVal2 == gh.weight(H2)
+
+    for v in H1.nodes():
+        assert v in G.nodes()
+    for e in H1.edges():
+        assert e in G.edges()
+
+    for v in H2.nodes():
+        assert v in G.nodes()
+    for e in H2.edges():
+        assert e in G.edges()
+
+
 def test_solve_ip_on_path():
     G = gg.random_weighted_path(10, 40)
     mode = 'max'
@@ -802,6 +828,54 @@ def test_solve_dynamic_prog_on_tree__big():
         assert v in G2.nodes()
     for e in H2.edges():
         assert e in G2.edges()
+
+
+def test_solve_dynamic_prog_on_spg():
+    G, D = gg.random_weighted_spg(20, 30)
+    mode = 'max'
+
+    (H, objVal) = wsp.solve_dynamic_prog_on_spg(G, D, mode)
+
+    if H.number_of_nodes() > 0:
+        assert nx.is_connected(H.to_undirected())
+    assert objVal == gh.weight(H)
+
+    for v in H.nodes():
+        assert v in G.nodes()
+    for e in H.edges():
+        assert e in G.edges()
+
+
+def test_solve_dynamic_prog_on_spg__min():
+    G, D = gg.random_weighted_spg(20, 30)
+    mode = 'min'
+
+    (H, objVal) = wsp.solve_dynamic_prog_on_spg(G, D, mode)
+
+    if H.number_of_nodes() > 0:
+        assert nx.is_connected(H.to_undirected())
+    assert objVal == gh.weight(H)
+
+    for v in H.nodes():
+        assert v in G.nodes()
+    for e in H.edges():
+        assert e in G.edges()
+
+
+def test_solve_dynamic_prog_on_spg__big():
+    G, D = gg.random_weighted_spg(100, 30)
+    mode = 'min'
+
+    (H, objVal) = wsp.solve_dynamic_prog_on_spg(G, D, mode)
+
+    if H.number_of_nodes() > 0:
+        assert nx.is_connected(H.to_undirected())
+    assert objVal == gh.weight(H)
+
+    for v in H.nodes():
+        assert v in G.nodes()
+    for e in H.edges():
+        assert e in G.edges()
 
 
 def test_compare_path_results():

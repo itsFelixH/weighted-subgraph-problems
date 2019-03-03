@@ -215,15 +215,13 @@ def test_random_weighted_spg():
     assert nx.is_directed_acyclic_graph(G)
     
     for (v, data) in G.nodes(data=True):
-        assert data['weight']
         assert isinstance(data['weight'], int)
-        assert data['weight'] >= 1
+        assert data['weight'] >= 0
         assert data['weight'] <= 50
 
     for (u, v, data) in G.edges(data=True):
-        assert data['weight']
         assert isinstance(data['weight'], int)
-        assert data['weight'] >= 1
+        assert data['weight'] >= 0
         assert data['weight'] <= 50
 
 

@@ -4,6 +4,7 @@ import numpy as np
 from gurobipy import *
 import graph_helper as gh
 import ip_generator as ig
+import decomposition_tree as dt
 
 
 def setup_ip(G, mode='max', root=None, induced=True, flow=False):
@@ -56,14 +57,24 @@ def construct_weighted_subgraph(G, ip):
     Returns:
     H : NetworkX graph"""
 
-    H = nx.empty_graph()
-    for v, w in G.nodes.data('weight'):
-        if ip.get_y()[v].x > 0.5:
-            H.add_node(v, weight=w)
+    if G.is_multigraph():
+        H = nx.MultiGraph()
+        for v, w in G.nodes.data('weight'):
+            if ip.get_y()[v].x > 0.5:
+                H.add_node(v, weight=w)
 
-    for u, v, w in G.edges.data('weight'):
-        if ip.get_z()[u][v].x > 0.5:
-            H.add_edge(u, v, weight=w)
+        for u, v, k, w in G.edges(keys=True, data='weight'):
+            if ip.get_z()[u][v][k].x > 0.5:
+                H.add_edge(u, v, weight=w)
+    else:
+        H = nx.empty_graph()
+        for v, w in G.nodes.data('weight'):
+            if ip.get_y()[v].x > 0.5:
+                H.add_node(v, weight=w)
+
+        for u, v, w in G.edges.data('weight'):
+            if ip.get_z()[u][v].x > 0.5:
+                H.add_edge(u, v, weight=w)
 
     return H
 
@@ -170,20 +181,7 @@ def solve_full_ip(G, mode='max'):
     objVal: objective value (weight of H)"""
     
     ip = setup_ip(G, mode)
-    x = ip.get_x()
-    y = ip.get_y()
-    z = ip.get_z()
-
-    # Add connectivity constraints    
-    n = G.number_of_nodes()
-    subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1))
-
-    for s in subsets:
-        elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
-        for v in s:
-            ip.addConstr(y[v] <= (quicksum(x[u] for u in s)) + (quicksum(z[v1][v2] for v1, v2 in elist[:])))
-
-    # Solve
+    ip.add_connectivity_constraints(G)
     ip.optimize()
 
     H = construct_weighted_subgraph(G, ip)
@@ -279,9 +277,6 @@ def solve_flow_ip(G, mode='max'):
 
     # Solve
     ip.optimize()
-
-    # ip.write("flow.lp")
-    # ip.write("flow.sol")
 
     # Construct subgraph
     H = construct_weighted_subgraph(G, ip)
@@ -629,122 +624,276 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
     H_stn = dict()
     weight_H_stn = dict()
 
-    for tree in D.level_list(D.depth()):
+    for tree in D.get_leaves():
         GD = tree.graph
         s = tree.s
         t = tree.t
 
-        H_s[tree] = s
-        weight_H_s[tree] = GD.node[s]['weight']
-        H_t[tree] = t
-        weight_H_t[tree] = GD.node[t]['weight']
-        H_empty[tree] = []
+        H_s[tree] = {s}
+        weight_H_s[tree] = - GD.node[s]['weight']
+        H_t[tree] = {t}
+        weight_H_t[tree] = - GD.node[t]['weight']
+        H_empty[tree] = set()
         weight_H_empty[tree] = 0
-        H_stc[tree] = [s, t]
-        weight_H_stc[tree] = GD.node[s]['weight'] + GD.node[t]['weight']
-        H_stn[tree] = []
+        H_stc[tree] = {s, t}
+        weight_H_stc[tree] = GD[s][t][0]['weight'] - GD.node[s]['weight'] - GD.node[t]['weight']
+        H_stn[tree] = set()
         weight_H_stn[tree] = 0
 
     for i in reversed(range(1, D.depth())):
         for tree in D.level_list(i):
-            # children
-            D1 = tree.left
-            D2 = tree.right
+            if not dt.DecompositionTree.is_leaf(tree):
+                # children
+                GD = tree.graph
+                D1 = tree.left
+                D2 = tree.right
+                s = GD.node[tree.s]
+                t = GD.node[tree.t]
 
-            if tree.composition == 'P':  # parallel composition
-                # H_s
-                weights = [weight_H_s[D1], weight_H_s[D2], weight_H_s[D1] + weight_H_s[D2]]
-                nodelist = [H_s[D1], H_s[D2], H_s[D1].extend(H_s[D2])]
-                ind = np.argmax(weights)
-                H_s[tree] = nodelist[ind]
-                weight_H_s[tree] = weights[ind]
+                if tree.composition == 'P':  # parallel composition
+                    # H_s
+                    weights = [weight_H_s[D1], weight_H_s[D2], weight_H_s[D1] + weight_H_s[D2] + s['weight']]
+                    nodelist = [H_s[D1], H_s[D2], H_s[D1].union(H_s[D2])]
 
-                # H_t
-                weights = [weight_H_t[D1], weight_H_t[D2], weight_H_t[D1] + weight_H_t[D2]]
-                nodelist = [H_t[D1], H_t[D2], H_t[D1].extend(H_t[D2])]
-                ind = np.argmax(weights)
-                H_t[tree] = nodelist[ind]
-                weight_H_t[tree] = weights[ind]
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
 
-                # H_empty
-                weights = [weight_H_empty[D1], weight_H_empty[D2]]
-                nodelist = [H_empty[D1], H_empty[D2]]
-                ind = np.argmax(weights)
-                H_empty[tree] = nodelist[ind]
-                weight_H_empty[tree] = weights[ind]
+                    new_nodelist = nodelist[ind]
+                    if D1.s in new_nodelist:
+                        new_nodelist.remove(D1.s)
+                        new_nodelist.add(tree.s)
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.t)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.s)
+                    if D2.t in new_nodelist:
+                        new_nodelist.remove(D2.t)
+                        new_nodelist.add(tree.t)
 
-                # H_stc
-                weights = [weight_H_stc[D1], weight_H_stc[D2], weight_H_stc[D1] + weight_H_stc[D2],
-                           weight_H_stc[D1] + weight_H_s[D2], weight_H_stc[D1] + weight_H_t[D2],
-                           weight_H_s[D1] + weight_H_stc[D2], weight_H_t[D1] + weight_H_stc[D2],
-                           weight_H_stc[D1] + weight_H_stn[D2], weight_H_stn[D1] + weight_H_stc[D2]]
-                nodelist = [H_stc[D1], H_stc[D2], H_stc[D1].extend(H_stc[D2]), H_stc[D1].extend(H_s[D2]),
-                            H_stc[D1].extend(H_t[D2]), H_s[D1].extend(H_stc[D2]), H_t[D1].extend(H_stc[D2]),
-                            H_stc[D1].extend(H_stn[D2]), H_stn[D1].extend(H_stc[D2])]
+                    H_s[tree] = new_nodelist
+                    weight_H_s[tree] = weights[ind]
 
-                ind = np.argmax(weights)
-                H_stc[tree] = nodelist[ind]
-                weight_H_stc[tree] = weights[ind]
+                    # H_t
+                    weights = [weight_H_t[D1], weight_H_t[D2], weight_H_t[D1] + weight_H_t[D2] + t['weight']]
+                    nodelist = [H_t[D1], H_t[D2], H_t[D1].union(H_t[D2])]
 
-                # H_stn
-                weights = [weight_H_stn[D1], weight_H_stn[D2], weight_H_stn[D1] + weight_H_stn[D2],
-                           weight_H_stn[D1] + weight_H_s[D2], weight_H_stn[D1] + weight_H_t[D2],
-                           weight_H_s[D1] + weight_H_stn[D2], weight_H_t[D1] + weight_H_stn[D2]]
-                nodelist = [H_stn[D1], H_stn[D2], H_stn[D1].extend(H_stn[D2]), H_stn[D1].extend(H_s[D2]),
-                            H_stn[D1].extend(H_t[D2]), H_s[D1].extend(H_stn[D2]), H_t[D1].extend(H_stn[D2])]
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
 
-                ind = np.argmax(weights)
-                H_stn[tree] = nodelist[ind]
-                weight_H_stn[tree] = weights[ind]
+                    new_nodelist = nodelist[ind]
+                    if D1.s in new_nodelist:
+                        new_nodelist.remove(D1.s)
+                        new_nodelist.add(tree.s)
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.t)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.s)
+                    if D2.t in new_nodelist:
+                        new_nodelist.remove(D2.t)
+                        new_nodelist.add(tree.t)
 
-            else:  # series composition
-                # H_s
-                weights = [weight_H_s[D1], weight_H_stc[D1] + weight_H_s[D2]]
-                nodelist = [H_s[D1], H_stc[D1].extend(H_s[D2])]
-                ind = np.argmax(weights)
-                H_s[tree] = nodelist[ind]
-                weight_H_s[tree] = weights[ind]
+                    H_t[tree] = new_nodelist
+                    weight_H_t[tree] = weights[ind]
 
-                # H_t
-                weights = [weight_H_t[D2], weight_H_t[D1] + weight_H_stc[D2]]
-                nodelist = [H_t[D2], H_t[D1].extend(H_stc[D2])]
-                ind = np.argmax(weights)
-                H_t[tree] = nodelist[ind]
-                weight_H_t[tree] = weights[ind]
+                    # H_empty
+                    weights = [weight_H_empty[D1], weight_H_empty[D2]]
+                    nodelist = [H_empty[D1], H_empty[D2]]
 
-                # H_empty
-                weights = [weight_H_t[D1] + weight_H_s[D2], weight_H_empty[D1], weight_H_empty[D2]]
-                nodelist = [H_t[D1].extend(H_s[D2]), H_empty[D1], H_empty[D2]]
-                ind = np.argmax(weights)
-                H_empty[tree] = nodelist[ind]
-                weight_H_empty[tree] = weights[ind]
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
 
-                # H_stc
-                H_stc[tree] = H_stc[D1].extend(H_stc[D2])
-                weight_H_stc[tree] = weight_H_stc[D1] + weight_H_stc[D2]
+                    new_nodelist = nodelist[ind]
+                    if D1.s in new_nodelist:
+                        new_nodelist.remove(D1.s)
+                        new_nodelist.add(tree.s)
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.t)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.s)
+                    if D2.t in new_nodelist:
+                        new_nodelist.remove(D2.t)
+                        new_nodelist.add(tree.t)
 
-                # H_stn
-                weights = [weight_H_stn[D1] + weight_H_stc[D2], weight_H_stc[D1] + weight_H_stn[D2],
-                           weight_H_s[D1] + weight_H_t[D2], weight_H_stc[D1] + weight_H_t[D2],
-                           weight_H_s[D1] + weight_H_stc[D2]]
-                nodelist = [H_stn[D1].extend(H_stc[D2]), H_stc[D1].extend(H_stn[D2]), H_s[D1].extend(H_t[D2]),
-                            H_stc[D1].extend(H_t[D2]), H_s[D1].extend(H_stc[D2])]
+                    H_empty[tree] = new_nodelist
+                    weight_H_empty[tree] = weights[ind]
 
-                ind = np.argmax(weights)
-                H_stn[tree] = nodelist[ind]
-                weight_H_stn[tree] = weights[ind]
+                    # H_stc
+                    weights = [weight_H_stc[D1], weight_H_stc[D2], weight_H_stc[D1] + weight_H_stc[D2] + s['weight']
+                               + t['weight'], weight_H_stc[D1] + weight_H_s[D2] + s['weight'], weight_H_stc[D1] +
+                               weight_H_t[D2] + t['weight'], weight_H_s[D1] + weight_H_stc[D2] + s['weight'], weight_H_t[D1]
+                               + weight_H_stc[D2] + t['weight'], weight_H_stc[D1] + weight_H_stn[D2] + s['weight'] -
+                               t['weight'], weight_H_stn[D1] + weight_H_stc[D2] + s['weight'] + t['weight']]
+                    nodelist = [H_stc[D1], H_stc[D2], H_stc[D1].union(H_stc[D2]), H_stc[D1].union(H_s[D2]),
+                                H_stc[D1].union(H_t[D2]), H_s[D1].union(H_stc[D2]), H_t[D1].union(H_stc[D2]),
+                                H_stc[D1].union(H_stn[D2]), H_stn[D1].union(H_stc[D2])]
+
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
+
+                    new_nodelist = nodelist[ind]
+                    if D1.s in new_nodelist:
+                        new_nodelist.remove(D1.s)
+                        new_nodelist.add(tree.s)
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.t)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.s)
+                    if D2.t in new_nodelist:
+                        new_nodelist.remove(D2.t)
+                        new_nodelist.add(tree.t)
+
+                    H_stc[tree] = new_nodelist
+                    weight_H_stc[tree] = weights[ind]
+
+                    # H_stn
+                    weights = [weight_H_stn[D1], weight_H_stn[D2], weight_H_stn[D1] + weight_H_stn[D2] + s['weight']
+                               + t['weight'], weight_H_stn[D1] + weight_H_s[D2] + s['weight'], weight_H_stn[D1]
+                               + weight_H_t[D2] + t['weight'], weight_H_s[D1] + weight_H_stn[D2] + s['weight'],
+                               weight_H_t[D1] + weight_H_stn[D2] + t['weight']]
+                    nodelist = [H_stn[D1], H_stn[D2], H_stn[D1].union(H_stn[D2]), H_stn[D1].union(H_s[D2]),
+                                H_stn[D1].union(H_t[D2]), H_s[D1].union(H_stn[D2]), H_t[D1].union(H_stn[D2])]
+
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
+
+                    new_nodelist = nodelist[ind]
+                    if D1.s in new_nodelist:
+                        new_nodelist.remove(D1.s)
+                        new_nodelist.add(tree.s)
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.t)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.s)
+                    if D2.t in new_nodelist:
+                        new_nodelist.remove(D2.t)
+                        new_nodelist.add(tree.t)
+
+                    H_stn[tree] = new_nodelist
+                    weight_H_stn[tree] = weights[ind]
+
+                else:  # series composition
+                    join = GD.node[tree.join]
+
+                    # H_s
+                    weights = [weight_H_s[D1], weight_H_stc[D1] + weight_H_s[D2] + join['weight']]
+                    nodelist = [H_s[D1], H_stc[D1].union(H_s[D2])]
+
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
+
+                    new_nodelist = nodelist[ind]
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.join)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.join)
+
+                    H_s[tree] = new_nodelist
+                    weight_H_s[tree] = weights[ind]
+
+                    # H_t
+                    weights = [weight_H_t[D2], weight_H_t[D1] + weight_H_stc[D2] + join['weight']]
+                    nodelist = [H_t[D2], H_t[D1].union(H_stc[D2])]
+
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
+
+                    new_nodelist = nodelist[ind]
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.join)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.join)
+
+                    H_t[tree] = new_nodelist
+                    weight_H_t[tree] = weights[ind]
+
+                    # H_empty
+                    weights = [weight_H_t[D1] + weight_H_s[D2] + join['weight'], weight_H_empty[D1], weight_H_empty[D2]]
+                    nodelist = [H_t[D1].union(H_s[D2]), H_empty[D1], H_empty[D2]]
+
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
+
+                    new_nodelist = nodelist[ind]
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.join)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.join)
+
+                    H_empty[tree] = new_nodelist
+                    weight_H_empty[tree] = weights[ind]
+
+                    # H_stc
+                    new_nodelist = H_stc[D1].union(H_stc[D2])
+                    new_nodelist.remove(D1.t)
+                    new_nodelist.remove(D2.s)
+                    new_nodelist.add(tree.join)
+                    H_stc[tree] = new_nodelist
+                    weight_H_stc[tree] = weight_H_stc[D1] + weight_H_stc[D2] + join['weight']
+
+                    # H_stn
+                    weights = [weight_H_stn[D1] + weight_H_stc[D2] + join['weight'], weight_H_stc[D1] + weight_H_stn[D2]
+                               + join['weight'], weight_H_s[D1] + weight_H_t[D2], weight_H_stc[D1] + weight_H_t[D2],
+                               weight_H_s[D1] + weight_H_stc[D2]]
+                    nodelist = [H_stn[D1].union(H_stc[D2]), H_stc[D1].union(H_stn[D2]), H_s[D1].union(H_t[D2]),
+                                H_stc[D1].union(H_t[D2]), H_s[D1].union(H_stc[D2])]
+
+                    if mode == 'max':
+                        ind = np.argmax(weights)
+                    else:
+                        ind = np.argmin(weights)
+
+                    new_nodelist = nodelist[ind]
+                    if D1.t in new_nodelist:
+                        new_nodelist.remove(D1.t)
+                        new_nodelist.add(tree.join)
+                    if D2.s in new_nodelist:
+                        new_nodelist.remove(D2.s)
+                        new_nodelist.add(tree.join)
+
+                    H_stn[tree] = new_nodelist
+                    weight_H_stn[tree] = weights[ind]
 
     # compute solution
-    weights = [weight_H_s[D], weight_H_t[D], weight_H_empty[D], weight_H_stc[D], weight_H_stn[D]]
-    nodelist = [H_s[D], H_t[D], H_empty[D], H_stc[D], H_stn[D]]
+    weights = [weight_H_s[D], weight_H_t[D], weight_H_empty[D], weight_H_stc[D]]
+    nodelist = [H_s[D], H_t[D], H_empty[D], H_stc[D]]
 
-    weight = 0
-    H = nx.empty_graph()
     if mode == 'max':
         ind = np.argmax(weights)
         weight = weights[ind]
         H = G.subgraph(nodelist[ind])
-    elif mode == 'min':
+    else:
         ind = np.argmin(weights)
         weight = weights[ind]
         H = G.subgraph(nodelist[ind])

@@ -236,7 +236,7 @@ def random_weighted_spg(number_of_edges, max_weight):
         if random.random() < 0.5:
             combine = [sink[key1], source[key2]]
             G = gh.merge_nodes(G, combine, 's_' + str(k))
-            D = DecompositionTree(composition='S', s=D1.s, t=D2.t, graph=G, left=D1, right=D2)
+            D = DecompositionTree(composition='S', s=D1.s, t=D2.t, join='s_' + str(k), graph=G, left=D1, right=D2)
             D1.set_parent(D)
             D2.set_parent(D)
             node_map['s_' + str(k)] = [sink[key1], source[key2]]

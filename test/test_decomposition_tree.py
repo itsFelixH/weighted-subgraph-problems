@@ -7,7 +7,6 @@ def test_init_tree():
     assert D
     assert isinstance(D, DecompositionTree)
     assert not D.composition
-    assert not D.joinNode
     assert not D.left
     assert not D.right
     
@@ -16,19 +15,17 @@ def test_init_tree():
     D5 = DecompositionTree()
     D6 = DecompositionTree()
     D1 = DecompositionTree('s', left=D3, right=D4)
-    D2 = DecompositionTree('p', joinNode=4, left=D5, right=D6)
+    D2 = DecompositionTree('p', left=D5, right=D6)
     
     assert D1
     assert isinstance(D1, DecompositionTree)
     assert D1.composition == 's'
-    assert not D1.joinNode
     assert D1.left == D3
     assert D1.right == D4
     
     assert D2
     assert isinstance(D2, DecompositionTree)
     assert D2.composition == 'p'
-    assert D2.joinNode == 4
     assert D2.left == D5
     assert D2.right == D6
 
@@ -62,7 +59,7 @@ def test_is_leaf():
     assert not D0.right.is_leaf()
 
 
-def test_get_level():
+def test_get_level_of_node():
     D3 = DecompositionTree()
     D4 = DecompositionTree()
     D5 = DecompositionTree()
@@ -73,13 +70,13 @@ def test_get_level():
 
     D0 = DecompositionTree('s', left=D1, right=D2)
 
-    assert D0.get_level(D0) == 1
-    assert D0.get_level(D1) == 2
-    assert D0.get_level(D2) == 2
-    assert D0.get_level(D3) == 3
-    assert D0.get_level(D4) == 3
-    assert D0.get_level(D5) == 3
-    assert D0.get_level(D5) == 3
+    assert D0.get_level_of_node(D0) == 1
+    assert D0.get_level_of_node(D1) == 2
+    assert D0.get_level_of_node(D2) == 2
+    assert D0.get_level_of_node(D3) == 3
+    assert D0.get_level_of_node(D4) == 3
+    assert D0.get_level_of_node(D5) == 3
+    assert D0.get_level_of_node(D5) == 3
 
 
 

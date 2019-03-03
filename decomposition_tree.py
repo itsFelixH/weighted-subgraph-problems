@@ -1,9 +1,10 @@
 class DecompositionTree:
 
-    def __init__(self, composition=None, s=None, t=None, graph=None, parent=None, left=None, right=None):
+    def __init__(self, composition=None, s=None, t=None, join=None, graph=None, parent=None, left=None, right=None):
         self.composition = composition
         self.s = s
         self.t = t
+        self.join = join
         self.graph = graph
         self.parent = parent
         self.left = left

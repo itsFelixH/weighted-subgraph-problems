@@ -1,4 +1,5 @@
 from gurobipy import *
+from itertools import chain, combinations
 
 
 class OP(Model):
@@ -112,6 +113,21 @@ class OP(Model):
             for v in G.nodes():
                 self.addConstr(self._x[v] <= self._y[v], name='R'+str(v))
         self.update()
+
+    def add_connectivity_constraints(self, G):
+        n = G.number_of_nodes()
+        subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(n + 1))
+        for s in subsets:
+            if G.is_multigraph():
+                elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
+                for v in s:
+                    self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
+                                   + (quicksum(self._z[v1][v2][k] for v1, v2, k in elist[:])))
+            else:
+                elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
+                for v in s:
+                    self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
+                                   + (quicksum(self._z[v1][v2] for v1, v2 in elist[:])))
 
     def add_flow_constraints(self, G_flow, root=None):
         if G_flow.is_multigraph():

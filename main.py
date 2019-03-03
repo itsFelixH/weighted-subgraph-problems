@@ -243,10 +243,34 @@ def main():
                 plt.show()
 
         elif choice == 'g':
-            G, D = gg.random_weighted_spg(9, 30)
+            G, D = gg.random_weighted_spg(10, 30)
             dic = nx.spring_layout(G)
 
-            wsp.solve_dynamic_prog_on_spg(G, D, MODE)
+            start = timer()
+            (H, weight) = wsp.solve_dynamic_prog_on_spg(G, D, MODE)
+            end = timer()
+            if PRINT_SOLUTION:
+                print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+                print(gh.weight(H))
+            if DRAW:
+                ax = plt.subplot(2, 1, 1)
+                draw_weighted_subgraph(ax, G.to_undirected(), H.to_undirected(), dic, weight, 'dynamic program', end - start)
+
+            G = G.to_undirected()
+            start = timer()
+            (H, weight) = wsp.solve_flow_ip(G, MODE)
+            end = timer()
+            if PRINT_SOLUTION:
+                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+                print(gh.weight(H))
+            if DRAW:
+                ax = plt.subplot(2, 1, 2)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
+
+            # Results
+            if DRAW:
+                plt.axis('off')
+                plt.show()
 
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
