@@ -1,7 +1,8 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
-import random
+import os
+import time
 
 import graph_generator as gg
 import graph_helper as gh
@@ -14,14 +15,16 @@ import weighted_subgraph_problem as wsp
 
 MODE = 'max'
 DRAW = 1
+SAVE_PLOT = 0
 PRINT_SOLUTION = 1
 ASK_USER = 1
 CHOICE = 'a'
+DEBUG = 0
+
 MIN_NODE_WEIGHT = 0
 MAX_NODE_WEIGHT = 25
 MIN_EDGE_WEIGHT = 0
 MAX_EDGE_WEIGHT = 20
-DEBUG = 0
 
 # --------------------------
 # USER INPUT
@@ -39,33 +42,47 @@ def main():
     if choice != 'z':
         
         if choice == 'a':
-            G = gg.random_weighted_graph(10, 0.33, 10)
+            G = gg.random_weighted_graph(50, 0.08, 10)
             G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             start = timer()            
-            (H, weight) = wsp.solve_full_ip(G, MODE)
+            (H, weight) = wsp.solve_flow_ip(G, MODE)
             end = timer()
 
             if PRINT_SOLUTION:
                 print('IP: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(1, 1, 1)
                 dic = nx.spring_layout(G)
-                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end-start)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
+            if SAVE_PLOT:
+                dir = "SavedPlots"
+                if not os.path.exists(dir):
+                    os.makedirs(dir)
+                time_str = time.strftime("%Y%m%d-%H%M%S")
+                name = 'Figure-' + time_str + '.png'
+                file_path = os.path.join(dir, name)
+                plt.savefig(file_path)
+            if DRAW:
                 plt.show()
             
         elif choice == 'b':            
             G = gg.random_weighted_path(12, 40)
             G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
-            dic = nx.circular_layout(G)
-            
+            if DRAW or SAVE_PLOT:
+                dic = nx.circular_layout(G)
+                plt.rc('axes', titlesize=8)
+                plt.rcParams['figure.figsize'] = 10, 5
+                fig = plt.figure()
+                fig.suptitle(MODE + '-WSP on a path')
+
             start = timer()
             (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (rooted): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 3, 1)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (rooted)', end-start)
             
@@ -74,7 +91,7 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('IP: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 3, 2)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end-start)
             
@@ -83,7 +100,7 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (path): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 3, 3)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (path)', end-start)
 
@@ -92,7 +109,7 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 3, 4)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
             
@@ -101,7 +118,7 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('subpath iteration: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 3, 5)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'subpath iteration', end-start)
             
@@ -110,11 +127,19 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 3, 6)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic program', end-start)
 
             # Results
+            if SAVE_PLOT:
+                dir = "SavedPathPlots"
+                if not os.path.exists(dir):
+                    os.makedirs(dir)
+                time_str = time.strftime("%Y%m%d-%H%M%S")
+                name = 'Figure-' + time_str + '.png'
+                file_path = os.path.join(dir, name)
+                plt.savefig(file_path)
             if DRAW:
                 plt.show()
 
@@ -150,14 +175,19 @@ def main():
             G = gg.random_weighted_binary_tree(10, 10)
             G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
-            dic = nx.spring_layout(G)
-            
+            if DRAW or SAVE_PLOT:
+                dic = nx.spring_layout(G)
+                plt.rc('axes', titlesize=8)
+                plt.rcParams['figure.figsize'] = 10, 5
+                fig = plt.figure()
+                fig.suptitle(MODE + '-WSP on a tree')
+
             start = timer()
             (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (rooted): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 2, 1)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (rooted)', end-start)
             
@@ -175,7 +205,7 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('subtree iteration: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 2, 3)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'subtree iteration', end-start)
             
@@ -184,11 +214,19 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
+            if DRAW or SAVE_PLOT:
                 ax = plt.subplot(2, 2, 4)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic program', end-start)
 
             # Results
+            if SAVE_PLOT:
+                dir = "SavedTreePlots"
+                if not os.path.exists(dir):
+                    os.makedirs(dir)
+                time_str = time.strftime("%Y%m%d-%H%M%S")
+                name = 'Figure-' + time_str + '.png'
+                file_path = os.path.join(dir, name)
+                plt.savefig(file_path)
             if DRAW:
                 plt.axis('off')
                 plt.show()
@@ -243,8 +281,13 @@ def main():
                 plt.show()
 
         elif choice == 'g':
-            G, D = gg.random_weighted_spg(40, 30)
-            dic = nx.spring_layout(G)
+            G, D = gg.random_weighted_spg(600, 30)
+
+            if DRAW or SAVE_PLOT:
+                dic = nx.spring_layout(G)
+                plt.rc('axes', titlesize=10)
+                fig = plt.figure()
+                fig.suptitle(MODE + '-WSP on a SPG')
 
             start = timer()
             (H, weight) = wsp.solve_dynamic_prog_on_spg(G, D, MODE)
@@ -268,6 +311,14 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
 
             # Results
+            if SAVE_PLOT:
+                dir = "SavedSPGPlots"
+                if not os.path.exists(dir):
+                    os.makedirs(dir)
+                time_str = time.strftime("%Y%m%d-%H%M%S")
+                name = 'Figure-' + time_str + '.png'
+                file_path = os.path.join(dir, name)
+                plt.savefig(file_path)
             if DRAW:
                 plt.axis('off')
                 plt.show()
@@ -281,18 +332,18 @@ def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=No
         weight = gh.weight(H)
     
     # Draw graph G
-    nx.draw_networkx_nodes(G, pos=dic)
-    nx.draw_networkx_edges(G, pos=dic, edge_color='r')
+    nx.draw_networkx_nodes(G, pos=dic, node_size=200)
+    nx.draw_networkx_edges(G, pos=dic, edge_color='r', node_size=200)
     
     # Draw subgraph H (green)
-    nx.draw_networkx_nodes(G, pos=dic, nodelist=H.nodes(), node_color='g')
-    nx.draw_networkx_edges(G, pos=dic, edgelist=H.edges(), edge_color='g')
+    nx.draw_networkx_nodes(G, pos=dic, nodelist=H.nodes(), node_color='g', node_size=200)
+    nx.draw_networkx_edges(G, pos=dic, edgelist=H.edges(), edge_color='g', node_size=200)
     
     # Label nodes and edges with weights
     edge_labels = dict(((u, v), str(d['weight'])) for u, v, d in G.edges(data=True))
     node_labels = dict((v, str(d['weight'])) for v, d in G.nodes(data=True))
-    nx.draw_networkx_edge_labels(G, pos=dic, edge_labels=edge_labels)
-    nx.draw_networkx_labels(G, pos=dic, labels=node_labels)
+    nx.draw_networkx_edge_labels(G, pos=dic, edge_labels=edge_labels, font_size=8)
+    nx.draw_networkx_labels(G, pos=dic, labels=node_labels, font_size=8)
     
     # Label
     title = method + ': weight ' + str(int(weight))
