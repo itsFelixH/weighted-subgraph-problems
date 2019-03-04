@@ -89,6 +89,7 @@ class OP(Model):
             elif mode == 'min':
                 self.setObjective((quicksum(self._z[u][v] * w for u, v, w in G.edges.data('weight')))
                                   - (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
+        self.update()
 
     def add_induce_constraints(self, G):
         if G.is_multigraph():
@@ -141,6 +142,7 @@ class OP(Model):
                     for v in s:
                         self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
                                        + (quicksum(self._z[v1][v2] for v1, v2 in elist[:])))
+        self.update()
 
     def add_flow_constraints(self, G_flow, root=None):
         if G_flow.is_multigraph():
@@ -200,9 +202,11 @@ class OP(Model):
         if G.is_multigraph():
             elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
             for v in s:
-                self.addConstr(self._y[v] <= quicksum(self._z[u][v][k] for u, v, k in elist))
+                self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
+                               + (quicksum(self._z[v1][v2][k] for v1, v2, k in elist[:])))
         else:
             elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
             for v in s:
-                self.addConstr(self._y[v] <= quicksum(self._z[u][v] for u, v in elist))
+                self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
+                               + (quicksum(self._z[v1][v2] for v1, v2 in elist[:])))
         self.update()

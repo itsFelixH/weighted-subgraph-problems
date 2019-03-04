@@ -20,6 +20,7 @@ PRINT_SOLUTION = 1
 ASK_USER = 1
 CHOICE = 'a'
 DEBUG = 0
+ITERATIONS = 100
 
 MIN_NODE_WEIGHT = 0
 MAX_NODE_WEIGHT = 25
@@ -142,36 +143,8 @@ def main():
                 plt.savefig(file_path)
             if DRAW:
                 plt.show()
-
-        elif choice == 'c':
-            G = gg.random_weighted_path(400, 50)
-            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-
-            dic = nx.circular_layout(G)
-
-            start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
-            end = timer()
-            if PRINT_SOLUTION:
-                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
-                ax = plt.subplot(2, 1, 1)
-                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
-
-            start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
-            end = timer()
-            if PRINT_SOLUTION:
-                print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
-                ax = plt.subplot(2, 1, 2)
-                draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic program', end - start)
-
-            # Results
-            if DRAW:
-                plt.show()
         
-        elif choice == 'd':
+        elif choice == 'c':
             G = gg.random_weighted_binary_tree(10, 10)
             G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
@@ -231,17 +204,51 @@ def main():
                 plt.axis('off')
                 plt.show()
 
+        elif choice == 'd':
+            G = gg.random_weighted_path(400, 50)
+            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+
+            if DRAW:
+                dic = nx.circular_layout(G)
+                fig = plt.figure()
+                fig.suptitle(MODE + '-WSP on a path')
+
+            start = timer()
+            (H, weight) = wsp.solve_flow_ip(G, MODE)
+            end = timer()
+            if PRINT_SOLUTION:
+                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
+            if DRAW:
+                ax = plt.subplot(2, 1, 1)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
+
+            start = timer()
+            (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
+            end = timer()
+            if PRINT_SOLUTION:
+                print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
+            if DRAW:
+                ax = plt.subplot(2, 1, 2)
+                draw_weighted_subgraph(ax, G, H, dic, weight, 'dynamic program', end - start)
+
+            # Results
+            if DRAW:
+                plt.show()
+
         elif choice == 'e':
             G = gg.random_weighted_tree(30, 30)
             G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
-            dic = nx.spring_layout(G)
+            if DRAW:
+                dic = nx.spring_layout(G)
+                fig = plt.figure()
+                fig.suptitle(MODE + '-WSP on a tree')
 
             start = timer()
             (H, weight, i) = wsp.solve_separation_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
-                print('IP: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
+                print('IP (sep): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
             if DRAW:
                 ax = plt.subplot(2, 1, 1)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (' + str(i) + ' iterations)', end - start)
@@ -261,27 +268,7 @@ def main():
                 plt.show()
 
         elif choice == 'f':
-            G = gg.random_weighted_graph(80, 0.1, 20)
-            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-
-            dic = nx.spring_layout(G)
-
-            start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
-            end = timer()
-            if PRINT_SOLUTION:
-                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
-            if DRAW:
-                ax = plt.subplot(2, 1, 1)
-                draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
-
-            # Results
-            if DRAW:
-                plt.axis('off')
-                plt.show()
-
-        elif choice == 'g':
-            G, D = gg.random_weighted_spg(600, 30)
+            G, D = gg.random_weighted_spg(60, 30)
 
             if DRAW or SAVE_PLOT:
                 dic = nx.spring_layout(G)
@@ -294,7 +281,6 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
-                print(gh.weight(H))
             if DRAW:
                 ax = plt.subplot(2, 1, 1)
                 draw_weighted_subgraph(ax, G.to_undirected(), H.to_undirected(), dic, weight, 'dynamic program', end - start)
@@ -305,7 +291,6 @@ def main():
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
-                print(gh.weight(H))
             if DRAW:
                 ax = plt.subplot(2, 1, 2)
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
@@ -322,6 +307,19 @@ def main():
             if DRAW:
                 plt.axis('off')
                 plt.show()
+
+        elif choice == 'statistics':
+            sizes = [10, 20, 30, 40, 50, 60, 75, 100]
+
+            for n in sizes:
+                print('Starting size ' + n + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
+                G, = gg.random_weighted_graph(n, 0.3, 30)
+                G = gg.weight_graph(G, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+
+                times = dict()
+                times2 = dict()
+
+                # for k in range(ITERATIONS):
 
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
@@ -360,11 +358,12 @@ Algorithms for Weighted Subgraph Problems
   
 Press a button.
 
-a) Compute WSP on random weighted graph using an IP formulation
+a) Compute WSP on random weighted graph using IP (flow)
 b) Compare WSP algorithms and their running times for paths
-c) Compute WSP on big path
 d) Compare WSP algorithms and their running times for trees
+d) Compare IP (flow) and dynamic program for paths
 e) Compare IP (separation) and dynamic program for trees
+f) Compare IP (flow) and dynamic program for SPGs
       
 z) End program...
 
