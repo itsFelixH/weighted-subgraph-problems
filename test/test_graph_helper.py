@@ -5,6 +5,12 @@ import graph_helper as gh
 import graph_generator as gg
 
 
+min_node_weight = -50
+max_node_weight = -1
+min_edge_weight = 1
+max_edge_weight = 50
+
+
 def test_merge_nodes():
     G1 = nx.Graph()
     G1.add_edge(1, 2)
@@ -53,7 +59,7 @@ def test_merge_nodes__multigraph():
 
 
 def test_merge_nodes__weights():
-    (G_old, dic) = gg.random_weighted_grid(50, 50, 1, 50, 1, 50)
+    (G_old, dic) = gg.random_weighted_grid(50, 50, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     G = G_old.copy()
     
     selected_nodes = random.sample(G.nodes(), np.random.randint(2, G.number_of_nodes() / 2))
@@ -77,7 +83,7 @@ def test_merge_nodes__weights():
 
 
 def test_merge_nodes__random():
-    G_old = gg.random_weighted_graph(100, 0.1, 1, 50, 1, 50)
+    G_old = gg.random_weighted_graph(100, 0.1, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     G = G_old.copy()
 
     selected_nodes = random.sample(G.nodes(), np.random.randint(2, G.number_of_nodes() / 2))
@@ -100,9 +106,45 @@ def test_merge_nodes__random():
                 assert G_old[node][successor]['weight'] in weights
 
 
+def test_merge_edges_between_u_and_v():
+    G = nx.MultiGraph()
+    G.add_edges_from([(1, 2), (3, 4), (1, 3), (2, 5)])
+    G.add_edge(1, 2)
+
+    assert G.number_of_nodes() == 5
+    assert G.number_of_edges() == 5
+    assert G.number_of_edges(1, 2) == 2
+    assert G.is_multigraph()
+
+    G = gh.merge_edges_between_u_and_v(G, 1, 2)
+
+    assert G.is_multigraph()
+    assert G.number_of_nodes() == 5
+    assert G.number_of_edges() == 4
+    assert G.number_of_edges(1, 2) == 1
+
+
+def test_merge_edges_between_u_and_v__weighted():
+    G = nx.MultiGraph()
+    G.add_weighted_edges_from([(1, 2, 5), (3, 4, 4.5), (1, 3, 2.7), (2, 5, 1.4)])
+    G.add_edge(1, 2, 3.2)
+
+    assert G.number_of_nodes() == 5
+    assert G.number_of_edges() == 5
+    assert G.number_of_edges(1, 2) == 2
+    assert G.is_multigraph()
+
+    G = gh.merge_edges_between_u_and_v(G, 1, 2)
+
+    assert G.is_multigraph()
+    assert G.number_of_nodes() == 5
+    assert G.number_of_edges() == 4
+    assert G.number_of_edges(1, 2) == 1
+
+
 def test_is_path():
-    G1 = gg.random_weighted_path(100, 1, 20, 1, 20)
-    G2 = gg.random_weighted_graph(20, 0.3, 1, 30, 1, 30)
+    G1 = gg.random_weighted_path(100, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_graph(20, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     G3 = nx.Graph()
     G3.add_nodes_from([1, 7, 4, 'a'])
     G3.add_edges_from([(1, 7), (7, 4), (4, 'a')])
@@ -115,7 +157,7 @@ def test_is_path():
 
 
 def test_direct_tree():
-    T = gg.random_weighted_tree(50, 1, 20, 1, 20)
+    T = gg.random_weighted_tree(50, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     D = gh.direct_tree(T)
     
     assert nx.is_tree(D)
@@ -137,7 +179,7 @@ def test_direct_tree():
 
 
 def test_direct_tree__root():
-    T = gg.random_weighted_tree(50, 1, 20, 1, 20)
+    T = gg.random_weighted_tree(50, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     D = gh.direct_tree(T, 20)
 
     assert nx.is_tree(D)
@@ -175,7 +217,7 @@ def test_construct_flow_graph():
 
 
 def test_construct_flow_graph__multigraph():
-    G, D = gg.random_weighted_spg(50, 1, 10, 1, 10)
+    G, D = gg.random_weighted_spg(50, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     G = nx.convert_node_labels_to_integers(G)
     G = G.to_undirected()
     G_flow = gh.construct_flow_graph(G)

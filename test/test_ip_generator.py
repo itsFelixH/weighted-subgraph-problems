@@ -5,6 +5,12 @@ import graph_helper as gh
 import ip_generator as ig
 
 
+min_node_weight = -50
+max_node_weight = -1
+min_edge_weight = 1
+max_edge_weight = 50
+
+
 def test_init_op():
     ip = ig.OP()
     
@@ -15,6 +21,7 @@ def test_init_op():
     assert ip._x == dict()
     assert ip._y == dict()
     assert ip._z == dict()
+    assert ip._f == dict()
 
 
 def test_add_node_variables():

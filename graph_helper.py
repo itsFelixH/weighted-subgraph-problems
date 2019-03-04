@@ -62,6 +62,32 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
     return G
 
 
+def merge_edges_between_u_and_v(G, u, v):
+    """Merges edges between u and v into a single edge.
+    Parameters:
+    G : NetworkX graph
+    u : node
+    v : node
+
+    Returns:
+    G : NetworkX graph"""
+
+    w = 0
+    weighted = False
+    edges = G[u][v].copy()
+    for edge in edges:
+        if 'weight' in G[u][v][edge]:
+            weighted = True
+            w += G[u][v][edge]['weight']
+        G.remove_edge(u, v, edge)
+
+    if weighted:
+        G.add_edge(u, v, weight=w)
+    else:
+        G.add_edge(u, v)
+    return G
+
+
 def create_subgraph(G, node, mode='successors'):
     edges = []
     if mode == 'successors':

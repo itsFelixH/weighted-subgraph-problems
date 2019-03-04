@@ -13,13 +13,12 @@ import weighted_subgraph_problem as wsp
 # PARAMETERS
 # --------------------------
 
-MODE = 'max'
+MODE = 'min'
+ASK_USER = 1
+CHOICE = 'a'
 DRAW = 1
 SAVE_PLOT = 0
 PRINT_SOLUTION = 1
-ASK_USER = 1
-CHOICE = 'a'
-DEBUG = 0
 ITERATIONS = 100
 
 MIN_NODE_WEIGHT = -25
@@ -232,7 +231,7 @@ def main():
                 plt.show()
 
         elif choice == 'e':
-            G = gg.random_weighted_tree(30, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_tree(15, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW:
                 dic = nx.spring_layout(G)
@@ -302,6 +301,22 @@ def main():
             if DRAW:
                 plt.axis('off')
                 plt.show()
+
+        elif choice == 'g':
+            G, D = gg.random_weighted_spg(60, -20, 10, -10, 20)
+            dic = nx.spring_layout(G)
+
+            R, node_map, edge_map = wsp.preprocessing(G)
+
+            # Draw graph G
+            ax = plt.subplot(2, 1, 1)
+            nx.draw(G)
+
+            # Draw R
+            ax = plt.subplot(2, 1, 2)
+            nx.draw(R)
+            plt.show()
+
 
         elif choice == 'statistics':
             sizes = [10, 20, 30, 40, 50, 60, 75, 100]

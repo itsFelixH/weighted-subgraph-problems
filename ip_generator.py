@@ -124,24 +124,24 @@ class OP(Model):
                         elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
                         t = [v for v in G.nodes() if v not in s]
                         self.addConstr((quicksum(self._z[u][v][k] * G.number_of_nodes() for u, v, k in elist[:]))
-                                       >= (quicksum(self._y[v] for v in t[:])))
+                                       >= (quicksum(self._y[v] for v in t[:])), name='Conn')
                     else:
                         elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
                         t = [v for v in G.nodes() if v not in s]
                         self.addConstr((quicksum(self._z[u][v] * G.number_of_nodes() for u, v in elist[:]))
-                                       >= (quicksum(self._y[v] for v in t[:])))
+                                       >= (quicksum(self._y[v] for v in t[:])), name='Conn')
         else:
             for s in subsets:
                 if G.is_multigraph():
                     elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
                     for v in s:
                         self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
-                                       + (quicksum(self._z[v1][v2][k] for v1, v2, k in elist[:])))
+                                       + (quicksum(self._z[v1][v2][k] for v1, v2, k in elist[:])), name='Conn')
                 else:
                     elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
                     for v in s:
                         self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
-                                       + (quicksum(self._z[v1][v2] for v1, v2 in elist[:])))
+                                       + (quicksum(self._z[v1][v2] for v1, v2 in elist[:])), name='Conn')
         self.update()
 
     def add_flow_constraints(self, G_flow, root=None):
@@ -202,11 +202,11 @@ class OP(Model):
         if G.is_multigraph():
             elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
             for v in s:
-                self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
-                               + (quicksum(self._z[v1][v2][k] for v1, v2, k in elist[:])))
+                self.addConstr(self._y[v] <= # (quicksum(self._x[u] for u in s)) +
+                               (quicksum(self._z[v1][v2][k] for v1, v2, k in elist[:])), name='Conn')
         else:
             elist = [e for e in G.edges() if (e[0] in s) ^ (e[1] in s)]
             for v in s:
-                self.addConstr(self._y[v] <= (quicksum(self._x[u] for u in s))
-                               + (quicksum(self._z[v1][v2] for v1, v2 in elist[:])))
+                self.addConstr(self._y[v] <= # (quicksum(self._x[u] for u in s)) +
+                               (quicksum(self._z[v1][v2] for v1, v2 in elist[:])), name='Conn')
         self.update()
