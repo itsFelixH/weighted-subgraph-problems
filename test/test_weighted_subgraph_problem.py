@@ -4,9 +4,14 @@ import graph_generator as gg
 import graph_helper as gh
 import weighted_subgraph_problem as wsp
 
+min_node_weight = -40
+max_node_weight = -1
+min_edge_weight = 1
+max_edge_weight = 40
+
 
 def test_setup_ip():
-    G = gg.random_weighted_graph(80, 0.1, 20)
+    G = gg.random_weighted_graph(80, 0.1, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     ip = wsp.setup_ip(G)
 
     assert ip.numVars == 2 * G.number_of_nodes() + G.number_of_edges()
@@ -14,7 +19,7 @@ def test_setup_ip():
 
 
 def test_setup_ip__not_induced():
-    G = gg.random_weighted_graph(80, 0.1, 20)
+    G = gg.random_weighted_graph(80, 0.1, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     ip = wsp.setup_ip(G, induced=False)
 
     assert ip.numVars == 2 * G.number_of_nodes() + G.number_of_edges()
@@ -22,7 +27,7 @@ def test_setup_ip__not_induced():
 
 
 def test_setup_ip__rooted():
-    G = gg.random_weighted_graph(80, 0.1, 20)
+    G = gg.random_weighted_graph(80, 0.1, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     ip = wsp.setup_ip(G, root=20)
 
     assert ip.numVars == G.number_of_nodes() + G.number_of_edges()
@@ -30,7 +35,7 @@ def test_setup_ip__rooted():
 
 
 def test_setup_ip__flow():
-    G = gg.random_weighted_graph(80, 0.1, 20)
+    G = gg.random_weighted_graph(80, 0.1, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     ip = wsp.setup_ip(G, flow=True)
 
     assert ip.numVars == 2 * G.number_of_nodes() + 3 * G.number_of_edges()
@@ -43,11 +48,11 @@ def test_setup_ip__flow():
 
 
 def test_solve_rooted_ip():
-    G1 = gg.random_weighted_tree(10, 40)
-    G2 = gg.random_weighted_binary_tree(10, 40)
-    G3 = gg.random_weighted_path(10, 40)
-    G4, dic = gg.random_weighted_grid(2, 5, 20)
-    G5 = gg.random_weighted_graph(10, 0.3, 40)
+    G1 = gg.random_weighted_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(2, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(10, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     root1 = random.choice(list(G1.nodes()))
     root2 = random.choice(list(G2.nodes()))
     root3 = random.choice(list(G3.nodes()))
@@ -109,11 +114,11 @@ def test_solve_rooted_ip():
 
 
 def test_solve_rooted_ip__min():
-    G1 = gg.random_weighted_tree(10, 40)
-    G2 = gg.random_weighted_binary_tree(10, 40)
-    G3 = gg.random_weighted_path(10, 40)
-    G4, dic = gg.random_weighted_grid(2, 5, 20)
-    G5 = gg.random_weighted_graph(10, 0.3, 40)
+    G1 = gg.random_weighted_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(2, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(10, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     root1 = random.choice(list(G1.nodes()))
     root2 = random.choice(list(G2.nodes()))
     root3 = random.choice(list(G3.nodes()))
@@ -175,11 +180,11 @@ def test_solve_rooted_ip__min():
 
 
 def test_solve_full_ip__rooted():
-    G1 = gg.random_weighted_tree(10, 40)
-    G2 = gg.random_weighted_binary_tree(10, 40)
-    G3 = gg.random_weighted_path(10, 40)
-    G4, dic = gg.random_weighted_grid(2, 5, 20)
-    G5 = gg.random_weighted_graph(10, 0.3, 40)
+    G1 = gg.random_weighted_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(2, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(10, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
 
     mode = 'max'
 
@@ -236,11 +241,11 @@ def test_solve_full_ip__rooted():
 
 
 def test_solve_full_ip__rooted__min():
-    G1 = gg.random_weighted_tree(10, 40)
-    G2 = gg.random_weighted_binary_tree(10, 40)
-    G3 = gg.random_weighted_path(10, 40)
-    G4, dic = gg.random_weighted_grid(2, 5, 20)
-    G5 = gg.random_weighted_graph(10, 0.3, 40)
+    G1 = gg.random_weighted_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(2, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(10, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
 
     mode = 'min'
 
@@ -297,11 +302,11 @@ def test_solve_full_ip__rooted__min():
 
 
 def test_solve_full_ip():
-    G1 = gg.random_weighted_tree(10, 40)
-    G2 = gg.random_weighted_binary_tree(10, 40)
-    G3 = gg.random_weighted_path(10, 40)
-    G4, dic = gg.random_weighted_grid(2, 5, 20)
-    G5 = gg.random_weighted_graph(10, 0.3, 40)
+    G1 = gg.random_weighted_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(2, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(10, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H1, objVal1) = wsp.solve_full_ip(G1, mode)
@@ -357,11 +362,11 @@ def test_solve_full_ip():
 
 
 def test_solve_full_ip__min():
-    G1 = gg.random_weighted_tree(10, 40)
-    G2 = gg.random_weighted_binary_tree(10, 40)
-    G3 = gg.random_weighted_path(10, 40)
-    G4, dic = gg.random_weighted_grid(2, 5, 20)
-    G5 = gg.random_weighted_graph(10, 0.3, 40)
+    G1 = gg.random_weighted_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(2, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(10, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H1, objVal1) = wsp.solve_full_ip(G1, mode)
@@ -417,11 +422,11 @@ def test_solve_full_ip__min():
 
 
 def test_flow_ip():
-    G1 = gg.random_weighted_tree(30, 40)
-    G2 = gg.random_weighted_binary_tree(30, 40)
-    G3 = gg.random_weighted_path(30, 40)
-    G4, dic = gg.random_weighted_grid(10, 5, 20)
-    G5 = gg.random_weighted_graph(40, 0.3, 40)
+    G1 = gg.random_weighted_tree(30, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(30, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(30, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(10, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(40, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
 
     mode = 'max'
 
@@ -478,11 +483,11 @@ def test_flow_ip():
 
 
 def test_flow_ip__min():
-    G1 = gg.random_weighted_tree(20, 40)
-    G2 = gg.random_weighted_binary_tree(20, 40)
-    G3 = gg.random_weighted_path(20, 40)
-    G4, dic = gg.random_weighted_grid(5, 5, 20)
-    G5 = gg.random_weighted_graph(20, 0.3, 40)
+    G1 = gg.random_weighted_tree(20, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(20, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G3 = gg.random_weighted_path(20, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G4, dic = gg.random_weighted_grid(5, 5, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G5 = gg.random_weighted_graph(20, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
 
     mode = 'min'
 
@@ -539,7 +544,7 @@ def test_flow_ip__min():
 
 
 def test_flow_ip__multigraph():
-    G, D = gg.random_weighted_spg(3, 30)
+    G, D = gg.random_weighted_spg(3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     G = G.to_undirected()
 
     (H1, objVal1) = wsp.solve_flow_ip(G, 'max')
@@ -565,7 +570,7 @@ def test_flow_ip__multigraph():
 
 
 def test_solve_ip_on_path():
-    G = gg.random_weighted_path(10, 40)
+    G = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_ip_on_path(G, mode)
@@ -581,7 +586,7 @@ def test_solve_ip_on_path():
 
 
 def test_solve_ip_on_path__min():
-    G = gg.random_weighted_path(10, 40)
+    G = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H, objVal) = wsp.solve_ip_on_path(G, mode)
@@ -597,7 +602,7 @@ def test_solve_ip_on_path__min():
 
 
 def test_solve_on_path__all_subpaths():
-    G = gg.random_weighted_path(15, 40)
+    G = gg.random_weighted_path(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_on_path__all_subpaths(G, mode)
@@ -613,7 +618,7 @@ def test_solve_on_path__all_subpaths():
 
 
 def test_solve_on_path__all_subpaths__min():
-    G = gg.random_weighted_path(15, 40)
+    G = gg.random_weighted_path(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H, objVal) = wsp.solve_on_path__all_subpaths(G, mode)
@@ -629,7 +634,7 @@ def test_solve_on_path__all_subpaths__min():
 
 
 def test_solve_on_tree__all_subtrees():
-    G = gg.random_weighted_tree(15, 40)
+    G = gg.random_weighted_tree(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_on_tree__all_subtrees(G, mode)
@@ -645,7 +650,7 @@ def test_solve_on_tree__all_subtrees():
 
 
 def test_solve_on_tree__all_subtrees__binary():
-    G = gg.random_weighted_binary_tree(15, 40)
+    G = gg.random_weighted_binary_tree(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_on_tree__all_subtrees(G, mode)
@@ -661,8 +666,8 @@ def test_solve_on_tree__all_subtrees__binary():
 
 
 def test_solve_on_tree__all_subtrees__min():
-    G1 = gg.random_weighted_path(15, 40)
-    G2 = gg.random_weighted_binary_tree(15, 40)
+    G1 = gg.random_weighted_path(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H1, objVal1) = wsp.solve_on_tree__all_subtrees(G1, mode)
@@ -688,7 +693,7 @@ def test_solve_on_tree__all_subtrees__min():
 
 
 def test_solve_dynamic_prog_on_path():
-    G = gg.random_weighted_path(15, 40)
+    G = gg.random_weighted_path(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_dynamic_prog_on_path(G, mode)
@@ -704,7 +709,7 @@ def test_solve_dynamic_prog_on_path():
 
 
 def test_solve_dynamic_prog_on_path__min():
-    G = gg.random_weighted_path(15, 40)
+    G = gg.random_weighted_path(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H, objVal) = wsp.solve_dynamic_prog_on_path(G, mode)
@@ -720,8 +725,8 @@ def test_solve_dynamic_prog_on_path__min():
 
 
 def test_solve_dynamic_prog_on_path__big():
-    G1 = gg.random_weighted_path(100, 40)
-    G2 = gg.random_weighted_path(80, 60)
+    G1 = gg.random_weighted_path(100, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_path(80, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
 
     (H1, objVal1) = wsp.solve_dynamic_prog_on_path(G1, 'max')
     (H2, objVal2) = wsp.solve_dynamic_prog_on_path(G2, 'max')
@@ -746,7 +751,7 @@ def test_solve_dynamic_prog_on_path__big():
 
 
 def test_solve_dynamic_prog_on_tree():
-    G = gg.random_weighted_tree(15, 40)
+    G = gg.random_weighted_tree(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_dynamic_prog_on_tree(G, mode)
@@ -762,7 +767,7 @@ def test_solve_dynamic_prog_on_tree():
 
 
 def test_solve_dynamic_prog_on_tree__binary():
-    G = gg.random_weighted_binary_tree(15, 40)
+    G = gg.random_weighted_binary_tree(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_dynamic_prog_on_tree(G, mode)
@@ -778,8 +783,8 @@ def test_solve_dynamic_prog_on_tree__binary():
 
 
 def test_solve_dynamic_prog_on_tree__min():
-    G1 = gg.random_weighted_path(15, 40)
-    G2 = gg.random_weighted_binary_tree(15, 40)
+    G1 = gg.random_weighted_path(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(15, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H1, objVal1) = wsp.solve_dynamic_prog_on_tree(G1, mode)
@@ -805,8 +810,8 @@ def test_solve_dynamic_prog_on_tree__min():
 
 
 def test_solve_dynamic_prog_on_tree__big():
-    G1 = gg.random_weighted_tree(100, 40)
-    G2 = gg.random_weighted_binary_tree(100, 40)
+    G1 = gg.random_weighted_tree(100, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_binary_tree(100, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
 
     (H1, objVal1) = wsp.solve_dynamic_prog_on_tree(G1, 'max')
     (H2, objVal2) = wsp.solve_dynamic_prog_on_tree(G2, 'max')
@@ -831,7 +836,7 @@ def test_solve_dynamic_prog_on_tree__big():
 
 
 def test_solve_dynamic_prog_on_spg():
-    G, D = gg.random_weighted_spg(20, 30)
+    G, D = gg.random_weighted_spg(20, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_dynamic_prog_on_spg(G, D, mode)
@@ -864,7 +869,7 @@ def test_solve_dynamic_prog_on_spg():
 
 
 def test_solve_dynamic_prog_on_spg__big():
-    G, D = gg.random_weighted_spg(100, 30)
+    G, D = gg.random_weighted_spg(100, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H, objVal) = wsp.solve_dynamic_prog_on_spg(G, D, mode)
@@ -880,7 +885,7 @@ def test_solve_dynamic_prog_on_spg__big():
 
 
 def test_compare_path_results():
-    G = gg.random_weighted_path(10, 40)
+    G = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
     
     (H1, objValIpRoot) = wsp.solve_full_ip__rooted(G, mode)
@@ -898,7 +903,7 @@ def test_compare_path_results():
 
 
 def test_compare_path_results__min():
-    G = gg.random_weighted_path(10, 40)
+    G = gg.random_weighted_path(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H1, objValIpRoot) = wsp.solve_full_ip__rooted(G, mode)
@@ -916,7 +921,7 @@ def test_compare_path_results__min():
 
 
 def test_compare_tree_results():
-    G = gg.random_weighted_binary_tree(10, 40)
+    G = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'max'
 
     (H1, objValIpRoot) = wsp.solve_full_ip__rooted(G, mode)
@@ -932,7 +937,7 @@ def test_compare_tree_results():
 
 
 def test_compare_tree_results__min():
-    G = gg.random_weighted_binary_tree(10, 40)
+    G = gg.random_weighted_binary_tree(10, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     mode = 'min'
 
     (H1, objValIpRoot) = wsp.solve_full_ip__rooted(G, mode)

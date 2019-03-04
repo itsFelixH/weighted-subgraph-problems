@@ -78,17 +78,17 @@ class OP(Model):
         if G.is_multigraph():
             if mode == 'max':
                 self.setObjective((quicksum(self._z[u][v][k] * w for u, v, k, w in G.edges(keys=True, data='weight')))
-                                  - (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
+                                  + (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
             elif mode == 'min':
                 self.setObjective((quicksum(self._z[u][v][k] * w for u, v, k, w in G.edges(keys=True, data='weight')))
-                                  - (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
+                                  + (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
         else:
             if mode == 'max':
                 self.setObjective((quicksum(self._z[u][v] * w for u, v, w in G.edges.data('weight')))
-                                  - (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
+                                  + (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MAXIMIZE)
             elif mode == 'min':
                 self.setObjective((quicksum(self._z[u][v] * w for u, v, w in G.edges.data('weight')))
-                                  - (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
+                                  + (quicksum(self._y[v] * w for v, w in G.nodes.data('weight'))), GRB.MINIMIZE)
         self.update()
 
     def add_induce_constraints(self, G):

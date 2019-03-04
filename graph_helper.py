@@ -125,7 +125,7 @@ def weight(G):
     Returns:
     weight : int"""
 
-    weight = sum_edge_weights(G) - sum_node_weights(G)
+    weight = sum_edge_weights(G) + sum_node_weights(G)
 
     return weight
 

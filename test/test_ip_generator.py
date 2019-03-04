@@ -19,7 +19,7 @@ def test_init_op():
 
 def test_add_node_variables():
     ip = ig.OP()
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
     
     y = ip.add_node_variables(G)
     
@@ -37,7 +37,7 @@ def test_add_node_variables():
 
 def test_add_root_variables():
     ip = ig.OP()
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
 
     x = ip.add_root_variables(G)
 
@@ -55,7 +55,7 @@ def test_add_root_variables():
 
 def test_add_edge_variables():
     ip = ig.OP()
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
     
     z = ip.add_edge_variables(G)
     
@@ -74,7 +74,7 @@ def test_add_edge_variables():
 
 def test_add_edge_variables__multigraph():
     ip = ig.OP()
-    G, D = gg.random_weighted_spg(100, 50)
+    G, D = gg.random_weighted_spg(100, 1, 50, 1, 50)
     G = nx.convert_node_labels_to_integers(G)
 
     z = ip.add_edge_variables(G)
@@ -98,7 +98,7 @@ def test_add_edge_variables__multigraph():
 
 def test_add_flow_variables():
     ip = ig.OP()
-    G = gg.random_weighted_graph(100, 0.3, 50)
+    G = gg.random_weighted_graph(100, 0.3, 1, 50, 1, 50)
     G_flow = gh.construct_flow_graph(G)
 
     f = ip.add_flow_variables(G_flow)
@@ -121,7 +121,7 @@ def test_add_flow_variables():
 
 def test_add_flow_variables__edges():
     ip = ig.OP()
-    G = gg.random_weighted_graph(100, 0.3, 50)
+    G = gg.random_weighted_graph(100, 0.3, 1, 50, 1, 50)
     G_flow = gh.construct_flow_graph(G)
 
     f = ip.add_flow_variables(G_flow)
@@ -137,7 +137,7 @@ def test_add_flow_variables__edges():
 
 def test_add_flow_variables__multigraph():
     ip = ig.OP()
-    G, D = gg.random_weighted_spg(100, 50)
+    G, D = gg.random_weighted_spg(100, 1, 50, 1, 50)
     G = nx.convert_node_labels_to_integers(G)
     G = G.to_undirected()
     G_flow = gh.construct_flow_graph(G)
@@ -165,20 +165,20 @@ def test_add_flow_variables__multigraph():
 
 def test_set_wsp_objective():
     ip = ig.OP()
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
 
     y = ip.add_node_variables(G)
     z = ip.add_edge_variables(G)
 
     ip.set_wsp_objective(G)
     objective = quicksum(z[u][v] * w for u, v, w in G.edges.data('weight'))\
-        - quicksum(y[v] * w for v, w in G.nodes.data('weight'))
+        + quicksum(y[v] * w for v, w in G.nodes.data('weight'))
     assert ip.getObjective() == objective
 
 
 def test_set_wsp_objective_multigraph():
     ip = ig.OP()
-    G, D = gg.random_weighted_spg(100, 50)
+    G, D = gg.random_weighted_spg(100, 1, 50, 1, 50)
     G = nx.convert_node_labels_to_integers(G)
     G = G.to_undirected()
 
@@ -187,13 +187,13 @@ def test_set_wsp_objective_multigraph():
 
     ip.set_wsp_objective(G)
     objective = quicksum(z[u][v][k] * w for u, v, k, w in G.edges(keys=True, data='weight'))\
-        - quicksum(y[v] * w for v, w in G.nodes.data('weight'))
+        + quicksum(y[v] * w for v, w in G.nodes.data('weight'))
     assert ip.getObjective() == objective
 
 
 def test_add_induce_constraints():
     ip = ig.OP()
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
 
     ip.add_node_variables(G)
     ip.add_edge_variables(G)
@@ -209,7 +209,7 @@ def test_add_induce_constraints():
 
 def test_add_induce_constraints__multigraph():
     ip = ig.OP()
-    G, D = gg.random_weighted_spg(100, 50)
+    G, D = gg.random_weighted_spg(100, 1, 50, 1, 50)
     G = nx.convert_node_labels_to_integers(G)
     G = G.to_undirected()
 
@@ -227,7 +227,7 @@ def test_add_induce_constraints__multigraph():
 
 def test_add_root_constraints():
     ip = ig.OP()
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
 
     y = ip.add_node_variables(G)
     x = ip.add_root_variables(G)
@@ -243,7 +243,7 @@ def test_add_root_constraints():
 
 def test_add_flow_constraints():
     ip = ig.OP()
-    G = gg.random_weighted_graph(100, 0.1, 50)
+    G = gg.random_weighted_graph(100, 0.1, 1, 50, 1, 50)
     G_flow = gh.construct_flow_graph(G)
 
     ip.add_node_variables(G)
@@ -264,7 +264,7 @@ def test_add_flow_constraints():
 
 def test_add_flow_constraints__multigraph():
     ip = ig.OP()
-    G, D = gg.random_weighted_spg(100, 50)
+    G, D = gg.random_weighted_spg(100, 1, 50, 1, 50)
     G = nx.convert_node_labels_to_integers(G)
     G = G.to_undirected()
     G_flow = gh.construct_flow_graph(G)
@@ -287,7 +287,7 @@ def test_add_flow_constraints__multigraph():
 
 def test_op_model():
     m = Model("mip1")
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
     
     x = dict()
     for v in G.nodes():

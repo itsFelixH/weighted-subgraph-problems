@@ -53,7 +53,7 @@ def test_merge_nodes__multigraph():
 
 
 def test_merge_nodes__weights():
-    (G_old, dic) = gg.random_weighted_grid(50, 50, 50)
+    (G_old, dic) = gg.random_weighted_grid(50, 50, 1, 50, 1, 50)
     G = G_old.copy()
     
     selected_nodes = random.sample(G.nodes(), np.random.randint(2, G.number_of_nodes() / 2))
@@ -77,7 +77,7 @@ def test_merge_nodes__weights():
 
 
 def test_merge_nodes__random():
-    G_old = gg.random_weighted_graph(100, 0.1, 50)
+    G_old = gg.random_weighted_graph(100, 0.1, 1, 50, 1, 50)
     G = G_old.copy()
 
     selected_nodes = random.sample(G.nodes(), np.random.randint(2, G.number_of_nodes() / 2))
@@ -101,8 +101,8 @@ def test_merge_nodes__random():
 
 
 def test_is_path():
-    G1 = gg.random_weighted_path(100, 20)
-    G2 = gg.random_weighted_graph(20, 0.3, 30)
+    G1 = gg.random_weighted_path(100, 1, 20, 1, 20)
+    G2 = gg.random_weighted_graph(20, 0.3, 1, 30, 1, 30)
     G3 = nx.Graph()
     G3.add_nodes_from([1, 7, 4, 'a'])
     G3.add_edges_from([(1, 7), (7, 4), (4, 'a')])
@@ -115,7 +115,7 @@ def test_is_path():
 
 
 def test_direct_tree():
-    T = gg.random_weighted_tree(50, 20)
+    T = gg.random_weighted_tree(50, 1, 20, 1, 20)
     D = gh.direct_tree(T)
     
     assert nx.is_tree(D)
@@ -137,7 +137,7 @@ def test_direct_tree():
 
 
 def test_direct_tree__root():
-    T = gg.random_weighted_tree(50, 20)
+    T = gg.random_weighted_tree(50, 1, 20, 1, 20)
     D = gh.direct_tree(T, 20)
 
     assert nx.is_tree(D)
@@ -175,7 +175,7 @@ def test_construct_flow_graph():
 
 
 def test_construct_flow_graph__multigraph():
-    G, D = gg.random_weighted_spg(50, 10)
+    G, D = gg.random_weighted_spg(50, 1, 10, 1, 10)
     G = nx.convert_node_labels_to_integers(G)
     G = G.to_undirected()
     G_flow = gh.construct_flow_graph(G)
@@ -194,20 +194,20 @@ def test_construct_flow_graph__multigraph():
 
 def test_weight():
     G = nx.empty_graph()
-    G.add_node(0, weight=3333)
-    G.add_node(1, weight=4)
-    G.add_node(2, weight=2203)
-    G.add_node(3, weight=7830)
+    G.add_node(0, weight=-3333)
+    G.add_node(1, weight=-4)
+    G.add_node(2, weight=-2203)
+    G.add_node(3, weight=-7830)
     G.add_node(4, weight=0)
-    G.add_node(5, weight=23)
-    G.add_node(6, weight=89)
+    G.add_node(5, weight=-23)
+    G.add_node(6, weight=-89)
     G.add_edge(0, 2, weight=35)
     G.add_edge(1, 3, weight=4)
     G.add_edge(2, 5, weight=23)
     G.add_edge(3, 5, weight=78)
     G.add_edge(4, 0, weight=2)
 
-    edges = 35 + 4 + 23 + 78 + 2
+    edges = +35 + 4 + 23 + 78 + 2
     nodes = 3333 + 4 + 2203 + 7830 + 23 + 89
     assert gh.weight(G) == (edges - nodes)
 

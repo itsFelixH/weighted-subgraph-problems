@@ -458,14 +458,14 @@ def solve_dynamic_prog_on_path(G, mode='max'):
         print('G is not a path!')
     
     H_in = [0]
-    weight_H_in = -G.node[0]['weight']
+    weight_H_in = G.node[0]['weight']
     
     H_out = []
     weight_H_out = 0
 
     for (u, v) in G.edges():
-        weight1 = weight_H_in + G[u][v]['weight'] - G.node[v]['weight']
-        weight2 = -G.node[v]['weight']
+        weight1 = weight_H_in + G[u][v]['weight'] + G.node[v]['weight']
+        weight2 = G.node[v]['weight']
         
         if mode == 'max':
             if weight_H_in > weight_H_out:
@@ -542,7 +542,7 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
 
     for v in G.nodes():
         H_in[v] = [v]
-        weight_H_in[v] = -G.node[v]['weight']
+        weight_H_in[v] = G.node[v]['weight']
         H_out[v] = []
         weight_H_out[v] = 0
 
@@ -616,15 +616,15 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
         t = tree.t
 
         H_s[tree] = {s}
-        weight_H_s[tree] = - GD.node[s]['weight']
+        weight_H_s[tree] = GD.node[s]['weight']
         H_t[tree] = {t}
-        weight_H_t[tree] = - GD.node[t]['weight']
+        weight_H_t[tree] = GD.node[t]['weight']
         H_empty[tree] = {}
         weight_H_empty[tree] = 0
         H_stc[tree] = {s, t}
-        weight_H_stc[tree] = GD[s][t][0]['weight'] - GD.node[s]['weight'] - GD.node[t]['weight']
+        weight_H_stc[tree] = GD[s][t][0]['weight'] + GD.node[s]['weight'] + GD.node[t]['weight']
         H_stn[tree] = {s, t}
-        weight_H_stn[tree] = - GD.node[s]['weight'] - GD.node[t]['weight']
+        weight_H_stn[tree] = GD.node[s]['weight'] + GD.node[t]['weight']
 
     for i in reversed(range(1, D.depth())):
         for tree in D.level_list(i):
@@ -638,7 +638,7 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
 
                 if tree.composition == 'P':  # parallel composition
                     # H_s
-                    weights = [weight_H_s[D1], weight_H_s[D2], weight_H_s[D1] + weight_H_s[D2] + s['weight']]
+                    weights = [weight_H_s[D1], weight_H_s[D2], weight_H_s[D1] + weight_H_s[D2] - s['weight']]
                     nodelist = [H_s[D1], H_s[D2], H_s[D1].union(H_s[D2])]
 
                     if mode == 'max':
@@ -664,7 +664,7 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
                     weight_H_s[tree] = weights[ind]
 
                     # H_t
-                    weights = [weight_H_t[D1], weight_H_t[D2], weight_H_t[D1] + weight_H_t[D2] + t['weight']]
+                    weights = [weight_H_t[D1], weight_H_t[D2], weight_H_t[D1] + weight_H_t[D2] - t['weight']]
                     nodelist = [H_t[D1], H_t[D2], H_t[D1].union(H_t[D2])]
 
                     if mode == 'max':
@@ -716,12 +716,12 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
                     weight_H_empty[tree] = weights[ind]
 
                     # H_stc
-                    weights = [weight_H_stc[D1], weight_H_stc[D2], weight_H_stc[D1] + weight_H_stc[D2] + s['weight']
-                               + t['weight'], weight_H_stc[D1] + weight_H_s[D2] + s['weight'], weight_H_stc[D1] +
-                               weight_H_t[D2] + t['weight'], weight_H_s[D1] + weight_H_stc[D2] + s['weight'],
-                               weight_H_t[D1] + weight_H_stc[D2] + t['weight'], weight_H_stc[D1] + weight_H_stn[D2]
-                               + s['weight'] + t['weight'], weight_H_stn[D1] + weight_H_stc[D2] + s['weight']
-                               + t['weight']]
+                    weights = [weight_H_stc[D1], weight_H_stc[D2], weight_H_stc[D1] + weight_H_stc[D2] - s['weight']
+                               - t['weight'], weight_H_stc[D1] + weight_H_s[D2] - s['weight'], weight_H_stc[D1] +
+                               weight_H_t[D2] - t['weight'], weight_H_s[D1] + weight_H_stc[D2] - s['weight'],
+                               weight_H_t[D1] + weight_H_stc[D2] - t['weight'], weight_H_stc[D1] + weight_H_stn[D2]
+                               - s['weight'] - t['weight'], weight_H_stn[D1] + weight_H_stc[D2] - s['weight']
+                               - t['weight']]
                     nodelist = [H_stc[D1], H_stc[D2], H_stc[D1].union(H_stc[D2]), H_stc[D1].union(H_s[D2]),
                                 H_stc[D1].union(H_t[D2]), H_s[D1].union(H_stc[D2]), H_t[D1].union(H_stc[D2]),
                                 H_stc[D1].union(H_stn[D2]), H_stn[D1].union(H_stc[D2])]
@@ -749,10 +749,10 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
                     weight_H_stc[tree] = weights[ind]
 
                     # H_stn
-                    weights = [weight_H_stn[D1], weight_H_stn[D2], weight_H_stn[D1] + weight_H_stn[D2] + s['weight']
-                               + t['weight'], weight_H_stn[D1] + weight_H_s[D2] + s['weight'], weight_H_stn[D1]
-                               + weight_H_t[D2] + t['weight'], weight_H_s[D1] + weight_H_stn[D2] + s['weight'],
-                               weight_H_t[D1] + weight_H_stn[D2] + t['weight']]
+                    weights = [weight_H_stn[D1], weight_H_stn[D2], weight_H_stn[D1] + weight_H_stn[D2] - s['weight']
+                               - t['weight'], weight_H_stn[D1] + weight_H_s[D2] - s['weight'], weight_H_stn[D1]
+                               + weight_H_t[D2] - t['weight'], weight_H_s[D1] + weight_H_stn[D2] - s['weight'],
+                               weight_H_t[D1] + weight_H_stn[D2] - t['weight']]
                     nodelist = [H_stn[D1], H_stn[D2], H_stn[D1].union(H_stn[D2]), H_stn[D1].union(H_s[D2]),
                                 H_stn[D1].union(H_t[D2]), H_s[D1].union(H_stn[D2]), H_t[D1].union(H_stn[D2])]
 
@@ -796,7 +796,7 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
                     # print(gh.weight(D2.graph))
 
                     # H_s
-                    weights = [weight_H_s[D1], weight_H_stc[D1] + weight_H_s[D2] + join['weight']]
+                    weights = [weight_H_s[D1], weight_H_stc[D1] + weight_H_s[D2] - join['weight']]
                     nodelist = [H_s[D1], H_stc[D1].union(H_s[D2])]
                     # print('')
                     # print('H_s')
@@ -822,7 +822,7 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
                     # print(weights[ind])
 
                     # H_t
-                    weights = [weight_H_t[D2], weight_H_t[D1] + weight_H_stc[D2] + join['weight']]
+                    weights = [weight_H_t[D2], weight_H_t[D1] + weight_H_stc[D2] - join['weight']]
                     nodelist = [H_t[D2], H_t[D1].union(H_stc[D2])]
                     # print('')
                     # print('H_t')
@@ -848,7 +848,7 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
                     # print(weights[ind])
 
                     # H_empty
-                    weights = [weight_H_t[D1] + weight_H_s[D2] + join['weight'], weight_H_empty[D1], weight_H_empty[D2]]
+                    weights = [weight_H_t[D1] + weight_H_s[D2] - join['weight'], weight_H_empty[D1], weight_H_empty[D2]]
                     nodelist = [H_t[D1].union(H_s[D2]), H_empty[D1], H_empty[D2]]
                     # print('')
                     # print('H_empty')
@@ -879,15 +879,15 @@ def solve_dynamic_prog_on_spg(G, D, mode='max'):
                     new_nodelist.remove(D2.s)
                     new_nodelist.add(tree.join)
                     H_stc[tree] = new_nodelist
-                    weight_H_stc[tree] = weight_H_stc[D1] + weight_H_stc[D2] + join['weight']
+                    weight_H_stc[tree] = weight_H_stc[D1] + weight_H_stc[D2] - join['weight']
                     # print('')
                     # print('H_stc')
                     # print(new_nodelist)
                     # print(weight_H_stc[tree])
 
                     # H_stn
-                    weights = [weight_H_stn[D1] + weight_H_stc[D2] + join['weight'], weight_H_stc[D1] + weight_H_stn[D2]
-                               + join['weight'], weight_H_s[D1] + weight_H_t[D2], weight_H_stc[D1] + weight_H_t[D2],
+                    weights = [weight_H_stn[D1] + weight_H_stc[D2] - join['weight'], weight_H_stc[D1] + weight_H_stn[D2]
+                               - join['weight'], weight_H_s[D1] + weight_H_t[D2], weight_H_stc[D1] + weight_H_t[D2],
                                weight_H_s[D1] + weight_H_stc[D2]]
                     nodelist = [H_stn[D1].union(H_stc[D2]), H_stc[D1].union(H_stn[D2]), H_s[D1].union(H_t[D2]),
                                 H_stc[D1].union(H_t[D2]), H_s[D1].union(H_stc[D2])]

@@ -79,7 +79,7 @@ def test_weight_nodes():
 
 
 def test_random_weighted_path_coinfilp():
-    G = gg.random_weighted_path_coinfilp(0.9, 50)
+    G = gg.random_weighted_path_coinfilp(0.9, 1, 50, 1, 50)
     
     assert G.nodes()
     assert G.edges()
@@ -104,7 +104,7 @@ def test_random_weighted_path_coinfilp():
 
 
 def test_random_weighted_path():
-    G = gg.random_weighted_path(100, 50)
+    G = gg.random_weighted_path(100, 1, 50, 1, 50)
     
     assert G.nodes()
     assert G.edges()
@@ -128,7 +128,7 @@ def test_random_weighted_path():
 
 
 def test_random_weighted_graph():
-    G = gg.random_weighted_graph(100, 0.1, 50)
+    G = gg.random_weighted_graph(100, 0.1, 1, 50, 1, 50)
     
     assert G.nodes()
     assert G.edges()
@@ -150,7 +150,7 @@ def test_random_weighted_graph():
 
 
 def test_random_weighted_binary_tree():
-    G = gg.random_weighted_binary_tree(100, 40)
+    G = gg.random_weighted_binary_tree(100, 1, 40, 1, 40)
     
     assert G.nodes()
     assert G.edges()
@@ -175,7 +175,7 @@ def test_random_weighted_binary_tree():
 
 
 def test_random_weighted_tree():
-    G = gg.random_weighted_tree(100, 660)
+    G = gg.random_weighted_tree(100, 10, 660, 10, 660)
     
     assert G.nodes()
     assert G.edges()
@@ -187,20 +187,20 @@ def test_random_weighted_tree():
         assert G.degree[v] >= 1
         assert data['weight']
         assert isinstance(data['weight'], int)
-        assert data['weight'] >= 1
+        assert data['weight'] >= 10
         assert data['weight'] <= 660
         
     for (u, v, data) in G.edges(data=True):
         assert data['weight']
         assert isinstance(data['weight'], int)
-        assert data['weight'] >= 1
+        assert data['weight'] >= 10
         assert data['weight'] <= 660
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']
 
 
 def test_random_weighted_spg():
-    (G, D) = gg.random_weighted_spg(100, 50)
+    (G, D) = gg.random_weighted_spg(100, 0, 50, 0, 50)
 
     assert G.number_of_edges() == 100
     assert G.nodes()
@@ -226,7 +226,7 @@ def test_random_weighted_spg():
 
 
 def test_random_weighted_grid():
-    (G, dic) = gg.random_weighted_grid(50, 50, 10)
+    (G, dic) = gg.random_weighted_grid(50, 50, 1, 10, 1, 10)
 
     assert G.number_of_nodes() == 2500
     assert G.number_of_edges() == 4900
@@ -237,11 +237,12 @@ def test_random_weighted_grid():
         assert data['weight']
         assert isinstance(data['weight'], int)
         assert data['weight'] >= 1
-        assert data['weight'] <= 50
+        assert data['weight'] <= 10
 
     for (u, v, data) in G.edges(data=True):
         assert data['weight']
         assert isinstance(data['weight'], int)
+        assert data['weight'] >= 1
         assert data['weight'] <= 10
         assert G[v][u]
         assert data['weight'] == G[v][u]['weight']

@@ -22,8 +22,8 @@ CHOICE = 'a'
 DEBUG = 0
 ITERATIONS = 100
 
-MIN_NODE_WEIGHT = 0
-MAX_NODE_WEIGHT = 25
+MIN_NODE_WEIGHT = -25
+MAX_NODE_WEIGHT = 0
 MIN_EDGE_WEIGHT = 0
 MAX_EDGE_WEIGHT = 20
 
@@ -43,8 +43,7 @@ def main():
     if choice != 'z':
         
         if choice == 'a':
-            G = gg.random_weighted_graph(50, 0.08, 10)
-            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_graph(50, 0.08, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             start = timer()            
             (H, weight) = wsp.solve_flow_ip(G, MODE)
@@ -68,8 +67,7 @@ def main():
                 plt.show()
             
         elif choice == 'b':            
-            G = gg.random_weighted_path(12, 40)
-            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_path(12, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW or SAVE_PLOT:
                 dic = nx.circular_layout(G)
@@ -145,8 +143,7 @@ def main():
                 plt.show()
         
         elif choice == 'c':
-            G = gg.random_weighted_binary_tree(10, 10)
-            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_binary_tree(10, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW or SAVE_PLOT:
                 dic = nx.spring_layout(G)
@@ -205,8 +202,7 @@ def main():
                 plt.show()
 
         elif choice == 'd':
-            G = gg.random_weighted_path(400, 50)
-            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_path(400, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW:
                 dic = nx.circular_layout(G)
@@ -236,8 +232,7 @@ def main():
                 plt.show()
 
         elif choice == 'e':
-            G = gg.random_weighted_tree(30, 30)
-            G = gg.weight_graph(G, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_tree(30, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW:
                 dic = nx.spring_layout(G)
@@ -268,7 +263,7 @@ def main():
                 plt.show()
 
         elif choice == 'f':
-            G, D = gg.random_weighted_spg(60, 30)
+            G, D = gg.random_weighted_spg(60, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW or SAVE_PLOT:
                 dic = nx.spring_layout(G)
