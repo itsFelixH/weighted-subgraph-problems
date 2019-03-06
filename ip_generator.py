@@ -200,9 +200,6 @@ class OP(Model):
 
     def add_violated_constraint(self, G, connected_components):
         if G.is_multigraph():
-            print('here')
-            print(connected_components)
-            print(list(connected_components))
             for s in connected_components:
                 elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
                 for v in s:

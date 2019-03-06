@@ -119,7 +119,11 @@ def is_path(G):
 
 def direct_tree(G, root=None):
     if not root:
-        root = random.choice([v for (v, d) in G.degree() if d == 2])
+        degree_two_vertices = [v for (v, d) in G.degree() if d >= 2]
+        if len(degree_two_vertices) > 0:
+            root = random.choice(degree_two_vertices)
+        else:
+            root = random.choice(list(G.nodes()))
     
     H = nx.DiGraph()
     H.add_nodes_from(G.nodes(data=True))
