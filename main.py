@@ -25,9 +25,9 @@ ITERATIONS = 100
 PATH_STATS = 1
 TREE_STATS = 1
 SPG_STATS = 1
-SIZES_PATH = [10, 20]#, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
-SIZES_TREE = [10, 20]#, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
-SIZES_SPG = [10, 20]#, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
+SIZES_PATH = [10000]#[10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
+SIZES_TREE = [10000]#[10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
+SIZES_SPG = [10000]#[10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
 
 # For generating graphs
 MIN_NODE_WEIGHT = -250
@@ -360,7 +360,8 @@ def path_statistics():
 
         for k in range(ITERATIONS):
             G = gg.random_weighted_path(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-            if (k + 1) % 10 == 0:
+
+            if (k + 1) % (ITERATIONS/10) == 0:
                 print('Iteration ' + str(k + 1))
 
             start = timer()
@@ -431,7 +432,8 @@ def tree_statistics():
 
         for k in range(ITERATIONS):
             G = gg.random_weighted_tree(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-            if (k + 1) % 10 == 0:
+
+            if (k + 1) % (ITERATIONS/10) == 0:
                 print('Iteration ' + str(k + 1))
 
             start = timer()
@@ -502,7 +504,8 @@ def spg_statistics():
 
         for k in range(ITERATIONS):
             G, D = gg.random_weighted_spg(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-            if (k + 1) % 10 == 0:
+
+            if (k + 1) % (ITERATIONS/10) == 0:
                 print('Iteration ' + str(k + 1))
 
             start = timer()
