@@ -258,7 +258,6 @@ def solve_separation_ip(G, mode='max'):
 
     i = 0
     H = nx.empty_graph()
-    sets = []
     while not connected:
         ip.optimize()
 
@@ -267,8 +266,8 @@ def solve_separation_ip(G, mode='max'):
         if nx.is_connected(H):
             connected = True
         else:
-            ip.add_violated_constraint(G, H.nodes())
-        i += 1
+            ip.add_violated_constraint(G, nx.connected_components(H))
+            i += 1
 
     weight = ip.objVal
 

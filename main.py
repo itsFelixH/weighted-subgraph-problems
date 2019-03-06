@@ -13,7 +13,7 @@ import weighted_subgraph_problem as wsp
 # PARAMETERS
 # --------------------------
 
-MODE = 'min'
+MODE = 'max'
 ASK_USER = 1
 CHOICE = 'a'
 DRAW = 1
@@ -24,7 +24,7 @@ ITERATIONS = 100
 MIN_NODE_WEIGHT = -25
 MAX_NODE_WEIGHT = 0
 MIN_EDGE_WEIGHT = 0
-MAX_EDGE_WEIGHT = 20
+MAX_EDGE_WEIGHT = 25
 
 # --------------------------
 # USER INPUT
@@ -42,7 +42,7 @@ def main():
     if choice != 'z':
         
         if choice == 'a':
-            G = gg.random_weighted_graph(50, 0.08, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_graph(200, 0.01, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             start = timer()            
             (H, weight) = wsp.solve_flow_ip(G, MODE)
@@ -231,7 +231,7 @@ def main():
                 plt.show()
 
         elif choice == 'e':
-            G = gg.random_weighted_tree(15, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_weighted_tree(60, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW:
                 dic = nx.spring_layout(G)
@@ -317,19 +317,72 @@ def main():
             nx.draw(R)
             plt.show()
 
+        elif choice == 'path_stats':
+            sizes = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
+            graph_class = 'paths'
 
-        elif choice == 'statistics':
-            sizes = [10, 20, 30, 40, 50, 60, 75, 100]
+            dir = "Statistics"
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+            time_str = time.strftime("%Y%m%d-%H%M%S")
+            name = 'av_times_' + graph_class + '_' + time_str + '.csv'
+            file_path = os.path.join(dir, name)
+
+            f = open(file_path, 'w')
+
+            f.write(MODE + '-WSP,' + 'on' + ',' + graph_class + "\n")
+            f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(ITERATIONS) + ',' + 'iterations:' + '\n')
+            f.write('\n')
+            f.write('N,time IP (flow),time IP(sep), time dynamic prog\n')
 
             for n in sizes:
-                print('Starting size ' + n + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-                G, = gg.random_weighted_graph(n, 0.3, 30)
-                G = gg.weight_graph(G, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 
                 times = dict()
-                times2 = dict()
 
-                # for k in range(ITERATIONS):
+                for k in range(ITERATIONS):
+                    G = gg.random_weighted_path(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                    if (k + 1) % 10 == 0:
+                        print('Iteration ' + str(k + 1))
+
+                    start = timer()
+                    (H, weight) = wsp.solve_flow_ip(G, MODE)
+                    end = timer()
+                    alg = 'IP (flow)'
+                    if alg not in times:
+                        times[alg] = []
+                    times[alg].append(end - start)
+
+                    start = timer()
+                    (H, weight, i) = wsp.solve_separation_ip(G, MODE)
+                    end = timer()
+                    alg = 'IP (separation)'
+                    if alg not in times:
+                        times[alg] = []
+                    times[alg].append(end - start)
+
+                    start = timer()
+                    (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
+                    end = timer()
+                    alg = 'Dynamic program'
+                    if alg not in times:
+                        times[alg] = []
+                    times[alg].append(end - start)
+
+                av_time = dict()
+                for alg in times:
+                    av_time[alg] = sum(times[alg]) / float(ITERATIONS)
+
+                f.write(str(n) + ',' +
+                        "{0:.6f}".format(av_time['IP (flow)']) + ',' +
+                        "{0:.6f}".format(av_time['IP (separation)']) + ',' +
+                        "{0:.6f}".format(av_time['Dynamic program']) + "\n")
+
+                print(graph_class + ' with size ' + str(n)
+                      + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
+            f.close()
+
+        print(graph_class + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
