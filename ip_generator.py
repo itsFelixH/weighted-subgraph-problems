@@ -212,3 +212,9 @@ class OP(Model):
                     self.addConstr(self._y[v] <=  (quicksum(self._x[u] for u in s)) +
                                    (quicksum(self._z[v1][v2] for v1, v2 in elist[:])), name='Conn'+str(v))
         self.update()
+
+    def set_gap(self, gap):
+        self.setParam('MIPGap', gap)
+
+    def get_relaxation(self):
+        return self.relax()

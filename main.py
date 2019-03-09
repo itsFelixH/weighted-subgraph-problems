@@ -20,16 +20,7 @@ DRAW = 1
 SAVE_PLOT = 0
 PRINT_SOLUTION = 1
 
-# For statistics
-ITERATIONS = 10
-PATH_STATS = 1
-TREE_STATS = 0
-SPG_STATS = 1
-SIZES = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500, 600, 750, 1000, 1500, 2000]
-#SIZES = [3000, 4000, 5000, 6000]
-SIZES_PATH = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]#, 600, 750, 1000, 1500, 2000]
-SIZES_TREE = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]#, 600, 750, 1000, 1500, 2000]
-SIZES_SPG = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]#, 600, 750, 1000, 1500, 2000]
+
 
 # For generating graphs
 MIN_NODE_WEIGHT = -200
@@ -329,18 +320,17 @@ def main():
             plt.show()
 
         elif choice == 'h':
-            # For statistics
-            ITERATIONS = 100
+            small = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
+            medium = [100, 250, 500, 1000, 2000]
+            large = [500, 1000, 2500, 5000, 10000]
 
-            #path_statistics()
-            #tree_statistics()
-            #spg_statistics()
-            graph_statistics()
+            #make_statistics('path', 10, large, sep=True, sep_iter=True)
+            #make_statistics('tree', 10, large, sep=True, sep_iter=True)
+            #make_statistics('spg', 10, small, sep=True, sep_iter=True)
 
 
-def path_statistics():
-    graph_class = 'path'
-
+def make_statistics(graph_class, iterations, sizes, mode='max', flow=False, dyn=False, sep=False, sep_iter=False):
+    # Create directory
     dir = "statistics"
     if not os.path.exists(dir):
         os.makedirs(dir)
@@ -348,257 +338,89 @@ def path_statistics():
     name = 'times_' + graph_class + '_' + time_str + '.csv'
     file_path = os.path.join(dir, name)
 
+    # Open file
     f = open(file_path, 'w')
 
-    f.write(MODE + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + "\n")
-    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(ITERATIONS) + ',' + 'iterations:' + '\n')
+    # Heading
+    f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
+    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
     f.write('\n')
-    f.write('graph size,time dynamic prog,time IP (flow),time IP(sep)\n')
+    table_columns = 'graph size'
+    if dyn:
+        table_columns += '&' + 'time dynamic prog'
+    if flow:
+        table_columns += '&' + 'time IP (flow)'
+    if sep:
+        table_columns += '&' + 'time IP(sep)'
+    if sep_iter:
+        table_columns += '&' + 'IP(sep) iterations'
+    table_columns += '\n'
+    f.write(table_columns)
 
-    for n in SIZES_PATH:
+    # Fill table rows
+    for n in sizes:
         print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 
         times = dict()
         num_iter = []
 
-        for k in range(ITERATIONS):
-            G = gg.random_weighted_path(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+        for k in range(iterations):
+            if graph_class == 'path':
+                G = gg.random_weighted_path(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            elif graph_class == 'tree':
+                G = gg.random_weighted_tree(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            elif graph_class == 'spg':
+                G, D = gg.random_weighted_spg(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            else:
+                G = gg.random_weighted_graph(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
-            if (k + 1) % (ITERATIONS/10)== 0:
+            if (k + 1) % (iterations/10) == 0:
                 print('Iteration ' + str(k + 1))
 
-            start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
-            end = timer()
-            alg = 'IP (flow)'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
+            if flow:
+                start = timer()
+                (H, weight) = wsp.solve_flow_ip(G, mode)
+                end = timer()
+                alg = 'IP (flow)'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
 
-            start = timer()
-            (H, weight, i) = wsp.solve_separation_ip(G, MODE)
-            end = timer()
-            alg = 'IP (separation)'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-            num_iter.append(i)
+            if sep:
+                start = timer()
+                (H, weight, i) = wsp.solve_separation_ip(G, mode)
+                end = timer()
+                alg = 'IP (separation)'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
+                num_iter.append(i)
 
-            start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
-            end = timer()
-            alg = 'Dynamic program'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
+            if dyn:
+                start = timer()
+                (H, weight) = wsp.solve_dynamic_prog_on_path(G, mode)
+                end = timer()
+                alg = 'Dynamic program'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
 
         av_time = dict()
         for alg in times:
-            av_time[alg] = sum(times[alg]) / float(ITERATIONS)
-        av_iter = sum(num_iter) / float(ITERATIONS)
+            av_time[alg] = sum(times[alg]) / float(iterations)
+        av_iter = sum(num_iter) / float(iterations)
 
-        f.write(str(n) +
-                "& {0:.6f}".format(av_time['Dynamic program']) +
-                "& {0:.6f}".format(av_time['IP (flow)']) +
-                "& {0:.6f}".format(av_time['IP (separation)']) + "\n")
-
-        print(graph_class + ' with size ' + str(n)
-              + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-    f.close()
-
-    print(graph_class + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-
-
-def tree_statistics():
-    graph_class = 'tree'
-
-    dir = "statistics"
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    time_str = time.strftime("%Y%m%d-%H%M%S")
-    name = 'times_' + graph_class + '_' + time_str + '.csv'
-    file_path = os.path.join(dir, name)
-
-    f = open(file_path, 'w')
-
-    f.write(MODE + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + "\n")
-    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(ITERATIONS) + ',' + 'iterations:' + '\n')
-    f.write('\n')
-    f.write('graph size,time dynamic prog,time IP (flow),time IP(sep),IP(sep) iterations\n')
-
-    for n in SIZES_TREE:
-        print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-
-        times = dict()
-        num_iter = []
-
-        for k in range(ITERATIONS):
-            G = gg.random_weighted_tree(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-
-            if (k + 1) % (ITERATIONS/10) == 0:
-                print('Iteration ' + str(k + 1))
-
-            start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
-            end = timer()
-            alg = 'IP (flow)'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-
-            start = timer()
-            (H, weight, i) = wsp.solve_separation_ip(G, MODE)
-            end = timer()
-            alg = 'IP (separation)'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-            num_iter.append(i)
-
-            start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_tree(G, MODE)
-            end = timer()
-            alg = 'Dynamic program'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-
-        av_time = dict()
-        for alg in times:
-            av_time[alg] = sum(times[alg]) / float(ITERATIONS)
-        av_iter = sum(num_iter) / float(ITERATIONS)
-
-        f.write(str(n) + ',' +
-                "{0:.6f}".format(av_time['Dynamic program']) + ',' +
-                "{0:.6f}".format(av_time['IP (flow)']) + ',' +
-                "{0:.6f}".format(av_time['IP (separation)']) + ',' +
-                "{0:.6f}".format(av_iter) + "\n")
-
-        print(graph_class + ' with size ' + str(n)
-              + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-    f.close()
-
-    print(graph_class + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-
-
-def spg_statistics():
-    graph_class = 'spg'
-
-    dir = "statistics"
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    time_str = time.strftime("%Y%m%d-%H%M%S")
-    name = 'times_' + graph_class + '_' + time_str + '.csv'
-    file_path = os.path.join(dir, name)
-
-    f = open(file_path, 'w')
-
-    f.write(MODE + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + "\n")
-    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(ITERATIONS) + ',' + 'iterations:' + '\n')
-    f.write('\n')
-    f.write('graph size,time dynamic prog,time IP (flow),time IP(sep),IP(sep) iterations\n')
-
-    for n in SIZES_SPG:
-        print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-
-        times = dict()
-        num_iter = []
-
-        for k in range(ITERATIONS):
-            G, D = gg.random_weighted_spg(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-
-            if (k + 1) % (ITERATIONS/10) == 0:
-                print('Iteration ' + str(k + 1))
-
-            start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
-            end = timer()
-            alg = 'IP (flow)'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-
-            start = timer()
-            (H, weight, i) = wsp.solve_separation_ip(G, MODE)
-            end = timer()
-            alg = 'IP (separation)'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-            num_iter.append(i)
-
-            start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_spg(G, D, MODE)
-            end = timer()
-            alg = 'Dynamic program'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-
-        av_time = dict()
-        for alg in times:
-            av_time[alg] = sum(times[alg]) / float(ITERATIONS)
-        av_iter = sum(num_iter) / float(ITERATIONS)
-
-        f.write(str(n) + ',' +
-                "{0:.6f}".format(av_time['Dynamic program']) + ',' +
-                "{0:.6f}".format(av_time['IP (flow)']) + ',' +
-                "{0:.6f}".format(av_time['IP (separation)']) + ',' +
-                "{0:.6f}".format(av_iter) + "\n")
-
-        print(graph_class + ' with size ' + str(n)
-              + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-    f.close()
-
-    print(graph_class + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-
-
-def graph_statistics():
-    graph_class = 'graphs'
-
-    dir = "statistics"
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    time_str = time.strftime("%Y%m%d-%H%M%S")
-    name = 'times_' + graph_class + '_' + time_str + '.csv'
-    file_path = os.path.join(dir, name)
-
-    f = open(file_path, 'w')
-
-    f.write(MODE + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + "\n")
-    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(ITERATIONS) + ',' + 'iterations:' + '\n')
-    f.write('\n')
-    f.write('graph size,time IP(sep),IP(sep) iterations\n')
-
-    for n in SIZES:
-        print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-
-        times = dict()
-        num_iter = []
-
-        for k in range(ITERATIONS):
-            G = gg.random_weighted_path(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
-
-            if (k + 1) % (ITERATIONS/10)== 0:
-                print('Iteration ' + str(k + 1))
-
-            start = timer()
-            (H, weight, i) = wsp.solve_separation_ip(G, MODE)
-            end = timer()
-            alg = 'IP (separation)'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-            num_iter.append(i)
-
-        av_time = dict()
-        for alg in times:
-            av_time[alg] = sum(times[alg]) / float(ITERATIONS)
-        av_iter = sum(num_iter) / float(ITERATIONS)
-
-        f.write(str(n) + ',' +
-                "{0:.6f}".format(av_time['IP (separation)']) + ',' +
-                "{0:.6f}".format(av_iter) + "\n")
+        table_row = str(n)
+        if dyn:
+            table_row += "& {0:.6f}".format(av_time['Dynamic program'])
+        if flow:
+            table_row += "& {0:.6f}".format(av_time['IP (flow)'])
+        if sep:
+            table_row += "& {0:.6f}".format(av_time['IP (separation)'])
+        if sep_iter:
+            table_row += "& {0:.6f}".format(av_iter)
+        table_row += '\n'
+        f.write(table_row)
 
         print(graph_class + ' with size ' + str(n)
               + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
