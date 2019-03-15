@@ -102,7 +102,7 @@ def random_weighted_path(number_of_nodes, min_node_weight, max_node_weight, min_
     return P
 
 
-def random_weighted_graph(number_of_nodes, p, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
+def random_weighted_graph(number_of_nodes, number_of_edges, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
     """Generates random weighted graph.
     Parameters:
     number_of_nodes: int (number of nodes in the graph)
@@ -115,7 +115,8 @@ def random_weighted_graph(number_of_nodes, p, min_node_weight, max_node_weight, 
     Returns:
     G : NetworkX graph"""
 
-    G = nx.gnp_random_graph(number_of_nodes, p)
+    #G = nx.gnp_random_graph(number_of_nodes, p)
+    G = nx.gnm_random_graph(number_of_nodes, number_of_edges)
     G = weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
 
     return G
@@ -280,6 +281,68 @@ def random_weighted_grid(m, n, min_node_weight, max_node_weight, min_edge_weight
     return G, dic
 
 
+def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
+                           multigraph=False, directed=False):
+    """Creates a random connected graph.
+    Parameters:
+    m: int (number of nodes)
+    n: int (number of edges)
+    min_node_weight : int (minimum weight for nodes)
+    max_node_weight : int (maximum weight for nodes)
+    min_edge_weight : int (minimum weight for edges)
+    max_edge_weight : int (maximum weight for edges)
+
+    Returns:
+    G : NetworkX graph"""
+
+    nodes = range(n)
+
+    S = set(nodes)
+    T = set()
+
+    current_node = random.sample(S, 1).pop()
+    S.remove(current_node)
+    T.add(current_node)
+
+    if multigraph:
+        if directed:
+            G = nx.MultiDiGraph(nodes)
+        else:
+            G = nx.MultiGraph(nodes)
+    elif directed:
+        G = nx.DiGraph(nodes)
+    else:
+        G = nx.Graph(nodes)
+
+    while S:
+        neighbor_node = random.sample(nodes, 1).pop()
+        if neighbor_node not in T:
+            edge = (current_node, neighbor_node)
+            G.add_edge(edge)
+            S.remove(neighbor_node)
+            T.add(neighbor_node)
+        current_node = neighbor_node
+
+    G = add_random_edges(G, m)
+    G = weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
+
+    return G
+
+
+def add_random_edges(G, num_total_edges):
+    if G.is_multigraph():
+        while len(G.edges) < num_total_edges:
+            random_edge = tuple(random.sample(G.nodes, 2))
+            G.add_edge(random_edge)
+    else:
+        while len(G.edges) < num_total_edges:
+            random_edge = tuple(random.sample(G.nodes, 2))
+            if not G.has_edge(random_edge):
+                G.add_edge(random_edge)
+
+    return G
+
+
 def ex_graph_path():
     P = nx.empty_graph()
     P.add_node(0, weight=7)
@@ -314,9 +377,3 @@ def ex_graph_path():
     P.add_edge(13, 14, weight=9)
     
     return P
-
-
-def ex_graph_tree():
-    T = nx.empty_graph()
-
-    return T

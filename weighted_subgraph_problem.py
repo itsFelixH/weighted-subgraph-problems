@@ -1,4 +1,4 @@
-from itertools import chain, combinations
+from itertools import chain, combinations, permutations
 import networkx as nx
 import numpy as np
 from gurobipy import *
@@ -84,60 +84,154 @@ def preprocessing(G):
     edge_mapping = dict()
     R = G.copy()
 
-    # Phase 1
-    # Isolated_nodes
-    for v in R.nodes():
-        if R.degree[v] == 0:
-            R.remove_node(v)
+    while True:
+        backup = R.copy()
 
-    # Parallel edges
-    if R.is_multigraph():
-        for u in R.nodes():
-            for v in R.nodes():
-                num_edges = R.number_of_edges(u, v)
-                if R.number_of_edges(u, v) > 1:
-                    weight = 0
-                    edge_map = []
-                    for edge in R[u][v].copy():
-                        if R[u][v][edge]['weight'] >= 0:
-                            weight += R[u][v][edge]['weight']
-                            R.remove_edge(u, v, edge)
-                            edge_map.append((u, v, edge))
-                        if R.number_of_edges(u, v) < num_edges:
-                            key = R.new_edge_key(u, v)
-                            R.add_edge(u, v, key, weight=weight)
-                            edge_mapping[(u, v, key)] = edge_map
+        # Phase 1
+        # Isolated_nodes
+        R = isolated_vertices_rule(R)
 
-    # Adjacent edges
-    changed = True
-    while changed:
-        edges = list(R.edges.data('weight')).copy()
-        changed = False
-        for u, v, w in edges:
-            if w >= 0 and w + R.node[u]['weight'] >= 0 and w + R.node[v]['weight'] >= 0:
-                changed = True
-                gh.merge_nodes(R, [u, v], 'm'+str(u)+'_'+str(v), w + R.node[u]['weight'] + R.node[v]['weight'])
-                break
+        # Parallel edges
+        R, new_edges = parallel_edges_rule(R)
+        edge_mapping.update(new_edges)
 
-    # Chain rule
-    degree_two_nodes = [v for v, d in R.degree() if d == 2]
-    for v in degree_two_nodes:
-        if R.node[v]['weight'] <= 0:
-            if len(list(R.neighbors(v))) > 1:
-                u, w = G.neighbors(v)
-                (u1, v1, w1) = G.edges(u, v, data='weight')
-                (u2, v2, w2) = G.edges(v, w, data='weight')
-                if w1 <= 0 and w2 <= 0:
-                    R.remove_node(v)
-                    if R.is_multigraph():
-                        key = R.new_edge_key(u, w)
-                        R.add_edge(u, w, key, weight=R.node[v]['weight'] + w1 + w2)
-                        edge_mapping[(u, w, key)] = [(u, v), (v, w)]
-                    else:
-                        R.add_edge(u, w, weight=R.node[v]['weight'] + w1 + w2)
-                        edge_mapping[(u, w)] = [(u, v), (v, w)]
+        # Adjacent edges
+        R, new_nodes = adjacent_edges_rule(R)
+        node_mapping.update(new_nodes)
+
+        # Chain rule
+        R, new_edges = chain_rule(R)
+        edge_mapping.update(new_edges)
+
+        # Phase 2
+        # Mirrored hubs
+        R = mirrored_hubs_rule(R)
+
+        if R.number_of_nodes() == backup.number_of_nodes() and R.number_of_edges() == backup.number_of_edges():
+            break
 
     return R, node_mapping, edge_mapping
+
+
+def isolated_vertices_rule(G):
+    to_remove = []
+    for v in G.nodes():
+        if G.degree[v] == 0:
+            to_remove.append(v)
+
+    G.remove_nodes_from(to_remove)
+    return G
+
+
+def parallel_edges_rule(G):
+    edge_mapping = dict()
+
+    # Parallel edges
+    if G.is_multigraph():
+        for u in G.nodes():
+            for v in G.nodes():
+                num_edges = G.number_of_edges(u, v)
+                if G.number_of_edges(u, v) > 1:
+                    weight = 0
+                    positive = 0
+                    negative = 0
+                    edge_map = []
+                    for edge in G[u][v].copy():
+                        if G[u][v][edge]['weight'] >= 0:
+                            positive += 1
+                            weight += G[u][v][edge]['weight']
+                            G.remove_edge(u, v, edge)
+                            edge_map.append((u, v, edge))
+                        else:
+                            negative += 1
+                    if G.number_of_edges(u, v) < num_edges:
+                        key = G.new_edge_key(u, v)
+                        G.add_edge(u, v, key, weight=weight)
+                        edge_mapping[(u, v, key)] = edge_map
+                    if negative > 0:
+                        if positive > 0:
+                            for edge in G[u][v].copy():
+                                if G[u][v][edge]['weight'] < 0:
+                                    G.remove_edge(u, v, edge)
+                        else:
+                            max_weight = None
+                            max_edge = None
+                            for edge in G[u][v].copy():
+                                if G[u][v][edge]['weight'] < 0:
+                                    weight = G[u][v][edge]['weight']
+                                    if not max_weight or weight > max_weight:
+                                        max_edge = edge
+                            for edge in G[u][v].copy():
+                                if G[u][v][edge]['weight'] < 0:
+                                    if max_edge and edge != max_edge:
+                                        G.remove_edge(u, v, edge)
+    return G, edge_mapping
+
+
+def adjacent_edges_rule(G):
+    node_mapping = dict()
+
+    changed = True
+    while changed:
+        edges = list(G.edges.data('weight')).copy()
+        changed = False
+        for u, v, w in edges:
+            if w >= 0 and w + G.node[u]['weight'] >= 0 and w + G.node[v]['weight'] >= 0:
+                changed = True
+                gh.merge_nodes(G, [u, v], 'm' + str(u) + '_' + str(v), w + G.node[u]['weight'] + G.node[v]['weight'])
+                node_mapping['m' + str(u) + '_' + str(v)] = [u, v]
+                break
+    return G, node_mapping
+
+
+def chain_rule(G):
+    edge_mapping = dict()
+
+    changed = True
+    while changed:
+        degree_two_nodes = [v for v, d in G.degree() if d == 2]
+        target_nodes = [v for v in degree_two_nodes if len(list(G.neighbors(v))) == 2]
+        changed = False
+        for v in target_nodes:
+            if G.node[v]['weight'] <= 0:
+                if len(list(G.neighbors(v))) > 1:
+                    u, w = G.neighbors(v)
+                    if G.has_edge(u, v):
+                        w1 = G[u][v][0]['weight']
+                    else:
+                        w1 = G[v][u][0]['weight']
+                    if G.has_edge(v, w):
+                        w2 = G[v][w][0]['weight']
+                    else:
+                        w2 = G[w][v][0]['weight']
+
+                    if w1 <= 0 and w2 <= 0:
+                        changed = True
+                        w3 = G.node[v]['weight']
+                        G.remove_node(v)
+                        if G.is_multigraph():
+                            key = G.new_edge_key(u, w)
+                            G.add_edge(u, w, key, weight=w3 + w1 + w2)
+                            edge_mapping[(u, w, key)] = [(u, v), (v, w)]
+                        else:
+                            G.add_edge(u, w, weight=w3 + w1 + w2)
+                            edge_mapping[(u, w)] = [(u, v), (v, w)]
+                        break
+    return G, edge_mapping
+
+
+def mirrored_hubs_rule(G):
+    for u, v in combinations(G.nodes(), 2):
+        if G.node[u]['weight'] <= G.node[v]['weight']:
+            if G.neighbors(u) == G.neighbors(v):
+                all_negative = True
+                for w in G.neighbors(u):
+                    for edge in G[u][w]:
+                        if G[u][w][edge]['weight'] > 0:
+                            all_negative = False
+                if all_negative:
+                    G.remove_node(u)
+    return G
 
 
 def solve_rooted_ip(G, root, mode='max'):

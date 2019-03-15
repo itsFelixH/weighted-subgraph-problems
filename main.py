@@ -23,10 +23,10 @@ PRINT_SOLUTION = 1
 
 
 # For generating graphs
-MIN_NODE_WEIGHT = -200
-MAX_NODE_WEIGHT = 0
-MIN_EDGE_WEIGHT = 0
-MAX_EDGE_WEIGHT = 100
+MIN_NODE_WEIGHT = -20
+MAX_NODE_WEIGHT = 10
+MIN_EDGE_WEIGHT = -20
+MAX_EDGE_WEIGHT = 10
 
 # --------------------------
 # USER INPUT
@@ -305,18 +305,52 @@ def main():
                 plt.show()
 
         elif choice == 'g':
-            G, D = gg.random_weighted_spg(60, -20, 10, -10, 20)
+            G, D = gg.random_weighted_spg(6, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = G.to_undirected()
             dic = nx.spring_layout(G)
+            print("\n".join(nx.generate_gml(G)))
 
             R, node_map, edge_map = wsp.preprocessing(G)
+            #print(node_map)
+            #print(edge_map)
+            print("\n".join(nx.generate_gml(R)))
 
             # Draw graph G
             ax = plt.subplot(2, 1, 1)
-            nx.draw(G)
+            ax.axis('off')
+            nx.draw_networkx_nodes(G, pos=dic, node_size=200)
+            nx.draw_networkx_edges(G, pos=dic, edge_color='r', node_size=200)
+            edge_labels = dict(((u, v), str(d['weight'])) for u, v, d in G.edges(data=True))
+            node_labels = dict((v, str(d['weight'])) for v, d in G.nodes(data=True))
+            nx.draw_networkx_edge_labels(G, pos=dic, edge_labels=edge_labels, font_size=8)
+            nx.draw_networkx_labels(G, pos=dic, labels=node_labels, font_size=8)
+
+            pos_higher = {}
+            y_off = 0.2
+            for k, v in dic.items():
+                pos_higher[k] = (v[0], v[1] + y_off)
+            labels = dict((v, v) for v in G.nodes)
+            nx.draw_networkx_labels(G, pos_higher, labels)
 
             # Draw R
             ax = plt.subplot(2, 1, 2)
-            nx.draw(R)
+            ax.axis('off')
+            dic = nx.spring_layout(R)
+            nx.draw_networkx_nodes(R, pos=dic, node_color='g', node_size=200)
+            nx.draw_networkx_edges(R, pos=dic, edge_color='g', node_size=200)
+            edge_labels = dict(((u, v), str(d['weight'])) for u, v, d in R.edges(data=True))
+            node_labels = dict((v, str(d['weight'])) for v, d in R.nodes(data=True))
+            nx.draw_networkx_edge_labels(R, pos=dic, edge_labels=edge_labels, font_size=8)
+            nx.draw_networkx_labels(R, pos=dic, labels=node_labels, font_size=8)
+
+            pos_higher = {}
+            y_off = 0.2
+            for k, v in dic.items():
+                pos_higher[k] = (v[0], v[1] + y_off)
+            labels = dict((v, v) for v in R.nodes)
+            nx.draw_networkx_labels(R, pos_higher, labels)
+
+            plt.axis('off')
             plt.show()
 
         elif choice == 'h':
@@ -366,13 +400,13 @@ def make_statistics(graph_class, iterations, sizes, mode='max', flow=False, dyn=
 
         for k in range(iterations):
             if graph_class == 'path':
-                G = gg.random_weighted_path(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G = gg.random_weighted_path(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
             elif graph_class == 'tree':
-                G = gg.random_weighted_tree(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G = gg.random_weighted_tree(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
             elif graph_class == 'spg':
-                G, D = gg.random_weighted_spg(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G, D = gg.random_weighted_spg(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
             else:
-                G = gg.random_weighted_graph(n, MAX_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G = gg.random_weighted_graph(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if (k + 1) % (iterations/10) == 0:
                 print('Iteration ' + str(k + 1))
