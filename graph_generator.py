@@ -306,19 +306,21 @@ def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weig
 
     if multigraph:
         if directed:
-            G = nx.MultiDiGraph(nodes)
+            G = nx.MultiDiGraph()
         else:
-            G = nx.MultiGraph(nodes)
+            G = nx.MultiGraph()
     elif directed:
-        G = nx.DiGraph(nodes)
+        G = nx.DiGraph()
     else:
-        G = nx.Graph(nodes)
+        G = nx.Graph()
+
+    G.add_nodes_from(nodes)
 
     while S:
         neighbor_node = random.sample(nodes, 1).pop()
         if neighbor_node not in T:
             edge = (current_node, neighbor_node)
-            G.add_edge(edge)
+            G.add_edge(*edge)
             S.remove(neighbor_node)
             T.add(neighbor_node)
         current_node = neighbor_node
@@ -330,20 +332,33 @@ def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weig
 
 
 def add_random_edges(G, num_total_edges):
+    """Adds random edges until the number of desired edges is reached.
+    Parameters:
+    G: NetworkX graph
+    num_total_edges: number of desired edges
+
+    Returns:
+    G : NetworkX graph"""
+
     if G.is_multigraph():
         while len(G.edges) < num_total_edges:
             random_edge = tuple(random.sample(G.nodes, 2))
-            G.add_edge(random_edge)
+            G.add_edge(*random_edge)
     else:
         while len(G.edges) < num_total_edges:
             random_edge = tuple(random.sample(G.nodes, 2))
-            if not G.has_edge(random_edge):
-                G.add_edge(random_edge)
+            if not G.has_edge(*random_edge):
+                G.add_edge(*random_edge)
 
     return G
 
 
 def ex_graph_path():
+    """Creates predefined weighted path.
+
+    Returns:
+    P : NetworkX graph"""
+
     P = nx.empty_graph()
     P.add_node(0, weight=7)
     P.add_node(1, weight=2)

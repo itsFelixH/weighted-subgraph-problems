@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 import os
 import time
+import random
 
 import graph_generator as gg
 import graph_helper as gh
@@ -311,8 +312,6 @@ def main():
             print("\n".join(nx.generate_gml(G)))
 
             R, node_map, edge_map = wsp.preprocessing(G)
-            #print(node_map)
-            #print(edge_map)
             print("\n".join(nx.generate_gml(R)))
 
             # Draw graph G
@@ -354,16 +353,30 @@ def main():
             plt.show()
 
         elif choice == 'h':
-            small = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
+            small = [10, 20, 30, 40, 50, 60, 75, 100]
+
+            #small = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
             medium = [100, 250, 500, 1000, 2000]
             large = [500, 1000, 2500, 5000, 10000]
 
-            #make_statistics('path', 10, large, sep=True, sep_iter=True)
-            #make_statistics('tree', 10, large, sep=True, sep_iter=True)
+            # Statistics for comparing IPs
+
+            # Statistics for IP (sep)
+            #make_statistics('path', 10, small, sep=True, sep_iter=True)
+            #make_statistics('tree', 10, small, sep=True, sep_iter=True)
             #make_statistics('spg', 10, small, sep=True, sep_iter=True)
+            make_statistics('graph', 10, small, sep=True, sep_iter=True)
+
+            # Statistics for preprocessing
+
+            # Statistics with GAP/Relaxing
 
 
-def make_statistics(graph_class, iterations, sizes, mode='max', flow=False, dyn=False, sep=False, sep_iter=False):
+def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, full=False, flowrooted=False, flow=False,
+                    dyn=False, sep=False, sep_iter=False):
+
+    weights = (-10, 10, -10, 10)
+
     # Create directory
     dir = "statistics"
     if not os.path.exists(dir):
@@ -372,24 +385,30 @@ def make_statistics(graph_class, iterations, sizes, mode='max', flow=False, dyn=
     name = 'times_' + graph_class + '_' + time_str + '.csv'
     file_path = os.path.join(dir, name)
 
-    # Open file
-    f = open(file_path, 'w')
-
-    # Heading
-    f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
-    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
-    f.write('\n')
-    table_columns = 'graph size'
-    if dyn:
-        table_columns += '&' + 'time dynamic prog'
-    if flow:
-        table_columns += '&' + 'time IP (flow)'
-    if sep:
-        table_columns += '&' + 'time IP(sep)'
-    if sep_iter:
-        table_columns += '&' + 'IP(sep) iterations'
-    table_columns += '\n'
-    f.write(table_columns)
+    # # Open file
+    # f = open(file_path, 'w')
+    #
+    # # Heading
+    # f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
+    # f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
+    # f.write('\n')
+    # table_columns = 'graph size'
+    # if dyn:
+    #     table_columns += '&' + 'time dynamic prog'
+    # if rooted:
+    #     table_columns += '&' + 'time IP (rooted)'
+    # if full:
+    #     table_columns += '&' + 'time IP'
+    # if flowrooted:
+    #     table_columns += '&' + 'time IP (flow rooted)'
+    # if flow:
+    #     table_columns += '&' + 'time IP (flow)'
+    # if sep:
+    #     table_columns += '&' + 'time IP(sep)'
+    # if sep_iter:
+    #     table_columns += '&' + 'IP(sep) iterations'
+    # table_columns += '\n'
+    # f.write(table_columns)
 
     # Fill table rows
     for n in sizes:
@@ -398,18 +417,70 @@ def make_statistics(graph_class, iterations, sizes, mode='max', flow=False, dyn=
         times = dict()
         num_iter = []
 
+        # Open file
+        f = open(file_path, 'w')
+
+        # Heading
+        f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
+        f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
+        f.write('\n')
+        table_columns = 'graph size'
+        if dyn:
+            table_columns += '&' + 'time dynamic prog'
+        if rooted:
+            table_columns += '&' + 'time IP (rooted)'
+        if full:
+            table_columns += '&' + 'time IP'
+        if flowrooted:
+            table_columns += '&' + 'time IP (flow rooted)'
+        if flow:
+            table_columns += '&' + 'time IP (flow)'
+        if sep:
+            table_columns += '&' + 'time IP(sep)'
+        if sep_iter:
+            table_columns += '&' + 'IP(sep) iterations'
+        table_columns += '\n'
+        f.write(table_columns)
+
         for k in range(iterations):
             if graph_class == 'path':
-                G = gg.random_weighted_path(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G = gg.random_weighted_path(n, *weights)
             elif graph_class == 'tree':
-                G = gg.random_weighted_tree(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G = gg.random_weighted_tree(n, *weights)
             elif graph_class == 'spg':
-                G, D = gg.random_weighted_spg(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G, D = gg.random_weighted_spg(n, *weights)
             else:
-                G = gg.random_weighted_graph(n, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+                G = gg.random_connected_graph(n, 2*n, *weights)
 
             if (k + 1) % (iterations/10) == 0:
                 print('Iteration ' + str(k + 1))
+
+            if rooted:
+                start = timer()
+                (H, weight) = wsp.solve_full_ip__rooted(G, mode)
+                end = timer()
+                alg = 'IP (rooted)'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
+
+            if full:
+                start = timer()
+                (H, weight) = wsp.solve_full_ip(G, mode)
+                end = timer()
+                alg = 'IP'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
+
+            if flowrooted:
+                start = timer()
+                (H, weight) = wsp.solve_flow_ip__rooted(G, mode)
+                end = timer()
+                alg = 'IP (flow rooted)'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
 
             if flow:
                 start = timer()
@@ -455,10 +526,11 @@ def make_statistics(graph_class, iterations, sizes, mode='max', flow=False, dyn=
             table_row += "& {0:.6f}".format(av_iter)
         table_row += '\n'
         f.write(table_row)
+        f.close()
 
         print(graph_class + ' with size ' + str(n)
               + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-    f.close()
+    #f.close()
 
     print(graph_class + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 

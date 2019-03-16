@@ -79,7 +79,17 @@ def construct_weighted_subgraph(G, ip):
     return H
 
 
-def preprocessing(G):
+def preprocessing(G, mode='max'):
+    """Preprocessing for WSP on graph G.
+    Parameters:
+    G : NetworkX graph
+    mode : 'max' or 'min'
+
+    Returns:
+    R : NetworkX graph (reduced instance)
+    node_mapping : {node} (mapping of removed/replaced edges)
+    edge_mapping : {node} (mapping of merged nodes)"""
+
     node_mapping = dict()
     edge_mapping = dict()
     R = G.copy()

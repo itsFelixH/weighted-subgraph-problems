@@ -8,6 +8,7 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
     G : NetworkX graph
     selected_nodes : list (nodes to merge)
     new_node : (node to merge to)
+    node_weight : (weight of the new node)
 
     Returns:
     G : NetworkX graph"""
@@ -88,36 +89,28 @@ def merge_edges_between_u_and_v(G, u, v):
     return G
 
 
-def create_subgraph(G, node, mode='successors'):
-    edges = []
-    if mode == 'successors':
-        edges = nx.dfs_successors(G, node)
-    elif mode == 'predecessors':
-        edges = nx.dfs_predecessors(G, node)
-    nodes = []
-    for k, v in edges.items():
-        nodes.extend([k])
-        nodes.extend(v)
-    return G.subgraph(nodes)
-
-
-def create_subgraphs_between_nodes(G, s, t):
-    S = []
-    for v in G.successors(s):
-        paths_between = nx.all_simple_paths(G,source=v,target=t)
-        nodes = {node for path in paths_between for node in path}
-        nodes.add(s)
-        S.extend(nodes)
-    return G.subgraph(S)
-
-
 def is_path(G):
+    """Checks if the graph is a path.
+    Parameters:
+    G : NetworkX graph
+
+    Returns:
+    Boolean"""
+
     G = nx.convert_node_labels_to_integers(G)
     N = G.number_of_nodes()
     return all([G.has_edge(i, i+1) for i in range(N-1)])
 
 
 def direct_tree(G, root=None):
+    """Directs a tree graph.
+    Parameters:
+    G : NetworkX graph (undirected tree)
+    root : node (root of the tree)
+
+    Returns:
+    H : NetworkX graph (directed tree)"""
+
     if not root:
         degree_two_vertices = [v for (v, d) in G.degree() if d >= 2]
         if len(degree_two_vertices) > 0:
@@ -143,6 +136,13 @@ def direct_tree(G, root=None):
 
 
 def construct_flow_graph(G):
+    """Replaces each edge by two arcs.
+    Parameters:
+    G : NetworkX graph (undirected)
+
+    Returns:
+    G_flow : NetworkX graph (directed)"""
+
     G_flow = G.to_directed()
     return G_flow
 
@@ -190,6 +190,14 @@ def sum_edge_weights(G):
 
 
 def level_order_list(G, root):
+    """Returns list of nodes in a tree level by level from top to bottom.
+    Parameters:
+    G : NetworkX graph (directed tree)
+    root : node (root of the tree)
+
+    Returns:
+    l : [node]"""
+
     h = height(G, root)
     l = []
     for i in range(1, h+1):
@@ -198,7 +206,14 @@ def level_order_list(G, root):
 
 
 def level_list(G, root , level):
-    """Returns nodes at a given level"""
+    """Returns list of nodes in a tree at a given level.
+    Parameters:
+    G : NetworkX graph (directed tree)
+    root : node (root of the tree)
+    level : int (desired level)
+
+    Returns:
+    l : [node]"""
     
     if not nx.is_tree(G): 
         return 0
@@ -213,7 +228,13 @@ def level_list(G, root , level):
 
 
 def height(G, root):
-    """Computes the height of a tree."""
+    """Computes the height of a tree.
+    Parameters:
+    G : NetworkX graph (undirected/directed tree)
+    root : node (root of the tree)
+
+    Returns:
+    height : int"""
     
     if not nx.is_tree(G):
         return 0
