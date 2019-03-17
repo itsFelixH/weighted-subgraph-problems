@@ -306,66 +306,88 @@ def main():
                 plt.show()
 
         elif choice == 'g':
-            G, D = gg.random_weighted_spg(6, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G, D = gg.random_weighted_spg(10, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+
             G = G.to_undirected()
-            dic = nx.spring_layout(G)
+            dic_G = nx.spring_layout(G)
             print("\n".join(nx.generate_gml(G)))
 
             R, node_map, edge_map = wsp.preprocessing(G)
             print("\n".join(nx.generate_gml(R)))
 
             # Draw graph G
-            ax = plt.subplot(2, 1, 1)
+            ax = plt.subplot(2, 2, 1)
             ax.axis('off')
-            nx.draw_networkx_nodes(G, pos=dic, node_size=200)
-            nx.draw_networkx_edges(G, pos=dic, edge_color='r', node_size=200)
+            nx.draw_networkx_nodes(G, pos=dic_G, node_size=200)
+            nx.draw_networkx_edges(G, pos=dic_G, edge_color='r', node_size=200)
             edge_labels = dict(((u, v), str(d['weight'])) for u, v, d in G.edges(data=True))
             node_labels = dict((v, str(d['weight'])) for v, d in G.nodes(data=True))
-            nx.draw_networkx_edge_labels(G, pos=dic, edge_labels=edge_labels, font_size=8)
-            nx.draw_networkx_labels(G, pos=dic, labels=node_labels, font_size=8)
+            nx.draw_networkx_edge_labels(G, pos=dic_G, edge_labels=edge_labels, font_size=8)
+            nx.draw_networkx_labels(G, pos=dic_G, labels=node_labels, font_size=8)
 
             pos_higher = {}
             y_off = 0.2
-            for k, v in dic.items():
+            for k, v in dic_G.items():
                 pos_higher[k] = (v[0], v[1] + y_off)
             labels = dict((v, v) for v in G.nodes)
             nx.draw_networkx_labels(G, pos_higher, labels)
 
             # Draw R
-            ax = plt.subplot(2, 1, 2)
+            ax = plt.subplot(2, 2, 2)
             ax.axis('off')
-            dic = nx.spring_layout(R)
-            nx.draw_networkx_nodes(R, pos=dic, node_color='g', node_size=200)
-            nx.draw_networkx_edges(R, pos=dic, edge_color='g', node_size=200)
+            dic_R = nx.spring_layout(R)
+            nx.draw_networkx_nodes(R, pos=dic_R, node_color='g', node_size=200)
+            nx.draw_networkx_edges(R, pos=dic_R, edge_color='g', node_size=200)
             edge_labels = dict(((u, v), str(d['weight'])) for u, v, d in R.edges(data=True))
             node_labels = dict((v, str(d['weight'])) for v, d in R.nodes(data=True))
-            nx.draw_networkx_edge_labels(R, pos=dic, edge_labels=edge_labels, font_size=8)
-            nx.draw_networkx_labels(R, pos=dic, labels=node_labels, font_size=8)
+            nx.draw_networkx_edge_labels(R, pos=dic_R, edge_labels=edge_labels, font_size=8)
+            nx.draw_networkx_labels(R, pos=dic_R, labels=node_labels, font_size=8)
 
             pos_higher = {}
             y_off = 0.2
-            for k, v in dic.items():
+            for k, v in dic_R.items():
                 pos_higher[k] = (v[0], v[1] + y_off)
             labels = dict((v, v) for v in R.nodes)
             nx.draw_networkx_labels(R, pos_higher, labels)
+
+            start = timer()
+            (H, weight) = wsp.solve_flow_ip(G, MODE, induced=False)
+            end = timer()
+            if PRINT_SOLUTION:
+                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+            if DRAW:
+                ax = plt.subplot(2, 2, 3)
+                draw_weighted_subgraph(ax, G, H, dic_G, weight, 'IP (flow)', end - start)
+
+            start = timer()
+            (HR, weight) = wsp.solve_flow_ip(R, MODE, induced=False)
+            end = timer()
+            if PRINT_SOLUTION:
+                print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+            if DRAW:
+                ax = plt.subplot(2, 2, 4)
+                draw_weighted_subgraph(ax, R, HR, dic_R, weight, 'IP (flow)', end - start)
 
             plt.axis('off')
             plt.show()
 
         elif choice == 'h':
-            small = [10, 20, 30, 40, 50, 60, 75, 100]
+            verysmall = [5, 10, 11, 12, 13, 14, 15]
+            #small = [20, 30, 40, 50, 60, 75, 100]
 
-            #small = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
+            small = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
             medium = [100, 250, 500, 1000, 2000]
             large = [500, 1000, 2500, 5000, 10000]
 
             # Statistics for comparing IPs
+            make_statistics('path', 10, small, flowrooted=True, flow=True, sep=True)
+
 
             # Statistics for IP (sep)
             #make_statistics('path', 10, small, sep=True, sep_iter=True)
             #make_statistics('tree', 10, small, sep=True, sep_iter=True)
             #make_statistics('spg', 10, small, sep=True, sep_iter=True)
-            make_statistics('graph', 10, small, sep=True, sep_iter=True)
+            #make_statistics('graph', 10, small, sep=True, sep_iter=True)
 
             # Statistics for preprocessing
 
@@ -381,9 +403,6 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
     dir = "statistics"
     if not os.path.exists(dir):
         os.makedirs(dir)
-    time_str = time.strftime("%Y%m%d-%H%M%S")
-    name = 'times_' + graph_class + '_' + time_str + '.csv'
-    file_path = os.path.join(dir, name)
 
     # # Open file
     # f = open(file_path, 'w')
@@ -418,6 +437,9 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
         num_iter = []
 
         # Open file
+        time_str = time.strftime("%Y%m%d-%H%M%S")
+        name = 'times_' + graph_class + '_' + time_str + '.csv'
+        file_path = os.path.join(dir, name)
         f = open(file_path, 'w')
 
         # Heading
@@ -516,14 +538,22 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
         av_iter = sum(num_iter) / float(iterations)
 
         table_row = str(n)
+
         if dyn:
             table_row += "& {0:.6f}".format(av_time['Dynamic program'])
+        if rooted:
+            table_row += "& {0:.6f}".format(av_time['IP (rooted)'])
+        if full:
+            table_row += "& {0:.6f}".format(av_time['IP'])
+        if flowrooted:
+            table_row += "& {0:.6f}".format(av_time['IP (flow rooted)'])
         if flow:
             table_row += "& {0:.6f}".format(av_time['IP (flow)'])
         if sep:
             table_row += "& {0:.6f}".format(av_time['IP (separation)'])
         if sep_iter:
             table_row += "& {0:.6f}".format(av_iter)
+
         table_row += '\n'
         f.write(table_row)
         f.close()

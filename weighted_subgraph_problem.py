@@ -90,6 +90,9 @@ def preprocessing(G, mode='max'):
     node_mapping : {node} (mapping of removed/replaced edges)
     edge_mapping : {node} (mapping of merged nodes)"""
 
+    if G.is_directed():
+        G = G.to_undirected()
+
     node_mapping = dict()
     edge_mapping = dict()
     R = G.copy()
@@ -206,14 +209,10 @@ def chain_rule(G):
             if G.node[v]['weight'] <= 0:
                 if len(list(G.neighbors(v))) > 1:
                     u, w = G.neighbors(v)
-                    if G.has_edge(u, v):
-                        w1 = G[u][v][0]['weight']
-                    else:
-                        w1 = G[v][u][0]['weight']
-                    if G.has_edge(v, w):
-                        w2 = G[v][w][0]['weight']
-                    else:
-                        w2 = G[w][v][0]['weight']
+                    for k in G[u][v]:
+                        w1 = G[u][v][k]['weight']
+                    for k in G[v][w]:
+                        w2 = G[v][w][k]['weight']
 
                     if w1 <= 0 and w2 <= 0:
                         changed = True
@@ -241,6 +240,10 @@ def mirrored_hubs_rule(G):
                             all_negative = False
                 if all_negative:
                     G.remove_node(u)
+    return G
+
+
+def postprocessing(G):
     return G
 
 
@@ -415,7 +418,7 @@ def solve_flow_ip__rooted(G, mode='max'):
     return H, weight
 
 
-def solve_flow_ip(G, mode='max'):
+def solve_flow_ip(G, mode='max', induced=True):
     """Compute opt weighted subgraph in graph G using a flow IP.
     Parameters:
     G : NetworkX graph
@@ -425,8 +428,7 @@ def solve_flow_ip(G, mode='max'):
     H : NetworkX graph (opt weighted subgraph)
     weight: objective value (weight of H)"""
 
-    ip = setup_ip(G, mode, flow=True)
-
+    ip = setup_ip(G, mode, induced=induced, flow=True)
 
     ip.optimize()
 
