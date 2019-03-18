@@ -230,8 +230,81 @@ def mirrored_hubs_rule(G, mode='max'):
     return G
 
 
-def postprocessing(G):
-    return G
+def postprocessing(G, H, mode='max'):
+    """Preprocessing for WSP on graph G.
+    Parameters:
+    G : NetworkX graph
+    mode : 'max' or 'min'
+
+    Returns:
+    H : NetworkX graph"""
+
+    H = positive_edges_rule(G, H, mode)
+    H = negative_nodes_rule(H, mode)
+    H = negative_edges_rule(H, mode)
+    H = neighboring_nodes_rule(G, H, mode)
+
+    return H
+
+
+def positive_edges_rule(G, H, mode='max'):
+    for (u, v, w) in G.edges(data='weight'):
+        if u in H.nodes() and v in H.nodes() and (u,v) not in H.edges():
+            if w >= 0:
+                H.add_edge(u, v)
+    return H
+
+
+def negative_nodes_rule(H, mode='max'):
+    to_remove = []
+    temp = H.copy()
+
+    for v, wv in H.nodes(data='weight'):
+        weight = wv
+        for e in H.edges(v):
+            weight += e['weight']
+        if weight < 0:
+            temp.remove_node(v)
+            if nx.is_connected(temp):
+                to_remove.append(v)
+
+    H.remove_nodes_from(to_remove)
+    return H
+
+
+def negative_edges_rule(H, mode='max'):
+    to_remove = []
+    temp = H.copy()
+
+    for e, w in H.edges(data='weight'):
+        if w < 0:
+            temp.remove_edge(e)
+            if nx.is_connected(temp):
+                to_remove.append(e)
+
+    H.remove_edges_from(to_remove)
+    return H
+
+
+def neighboring_nodes_rule(G, H, mode='max'):
+    nodes_to_add = []
+
+    for v in H.nodes():
+        for w in G.neighbors(v):
+            if w not in H.nodes() and w not in nodes_to_add:
+                weight = G.node[w]['weight']
+                for u in G.neighbors(w):
+                    if u in H.nodes():
+                        if G.is_multigraph():
+                            for k in G[w][u]:
+                                weight += G[w][u][k]['weight']
+                        else:
+                            weight += G[w][u]['weight']
+                if weight >= 0:
+                    nodes_to_add.append(w)
+
+    H.add_nodes_from(nodes_to_add)
+    return H
 
 
 def solve_on_path__all_subpaths(G, mode='max'):

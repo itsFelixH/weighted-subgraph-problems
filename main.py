@@ -27,6 +27,7 @@ MIN_NODE_WEIGHT = -20
 MAX_NODE_WEIGHT = 10
 MIN_EDGE_WEIGHT = -20
 MAX_EDGE_WEIGHT = 10
+weights = (-10, 10, -10, 10)
 
 # --------------------------
 # USER INPUT
@@ -350,7 +351,7 @@ def main():
             nx.draw_networkx_labels(R, pos_higher, labels)
 
             start = timer()
-            (H, weight) = dp.solve_flow_ip(G, MODE, induced=False)
+            (H, weight) = ip.solve_flow_ip(G, MODE, induced=False)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -359,7 +360,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic_G, weight, 'IP (flow)', end - start)
 
             start = timer()
-            (HR, weight) = dp.solve_flow_ip(R, MODE, induced=False)
+            (HR, weight) = ip.solve_flow_ip(R, MODE, induced=False)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -380,9 +381,11 @@ def main():
 
             # Statistics for comparing IPs
             #make_statistics('graph', 10, verysmall, rooted=True, full=True, flowrooted=True, flow=True, sep=True)
-            make_statistics('graph', 10, [20], full=True)
-            make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
+            #make_statistics('graph', 10, [20], full=True)
+            #make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
 
+            # Statistics for comparing IPs
+            make_statistics('path', 10, small, dyn=True, flow=True)
 
             # Statistics for IP (sep)
             #make_statistics('path', 10, small, sep=True, sep_iter=True)
@@ -393,6 +396,36 @@ def main():
             # Statistics for preprocessing
 
             # Statistics with GAP/Relaxing
+
+        elif choice == 'i':
+            for k in range(10):
+                print('Iteration ' + str(k+1))
+
+                G = gg.random_connected_graph(10, 15, *weights)
+
+                start = timer()
+                weight = ip.solve_flow_ip(G, MODE, relaxed=True)
+                end = timer()
+                if PRINT_SOLUTION:
+                    print('LP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+
+                start = timer()
+                weight = ip.solve_full_ip__rooted(G, MODE, relaxed=True)
+                end = timer()
+                if PRINT_SOLUTION:
+                    print('LP (rooted): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+
+                start = timer()
+                weight = ip.solve_full_ip(G, MODE, relaxed=True)
+                end = timer()
+                if PRINT_SOLUTION:
+                    print('LP: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+
+                start = timer()
+                H, weight = ip.solve_flow_ip(G, MODE)
+                end = timer()
+                if PRINT_SOLUTION:
+                    print('IP solution: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
 
 
 def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, full=False, flowrooted=False, flow=False,
@@ -584,6 +617,7 @@ e) Compare IP (separation) and dynamic program for trees
 f) Compare IP (flow) and dynamic program for SPGs
 g) Preprocessing for WSP on random graph
 h) Save statistics to file
+i) Compare relaxations
       
 z) End program...
 
