@@ -189,6 +189,13 @@ def sum_edge_weights(G):
     return weight
 
 
+def get_children(G, node):
+    children = []
+    for v in G.successors(node):
+        children.append(v)
+    return children
+
+
 def level_order_list(G, root):
     """Returns list of nodes in a tree level by level from top to bottom.
     Parameters:
@@ -198,10 +205,15 @@ def level_order_list(G, root):
     Returns:
     l : [node]"""
 
-    h = height(G, root)
-    l = []
-    for i in range(1, h+1):
-        l.extend(level_list(G, root, i))
+    l = [root]
+    current_level = [root]
+    while len(current_level) > 0:
+        next_level = []
+        for node in current_level:
+            children = get_children(G, node)
+            l.extend(children)
+            next_level.extend(children)
+        current_level = next_level
     return l
 
 
@@ -214,17 +226,14 @@ def level_list(G, root , level):
 
     Returns:
     l : [node]"""
-    
-    if not nx.is_tree(G): 
-        return 0
-    
-    if level == 1: 
-        return [root]
-    elif level > 1:
+
+    if level > 1:
         l = []
         for v in G.successors(root):
             l.extend(level_list(G, v, level-1))
         return l
+    elif level == 1:
+        return [root]
 
 
 def height(G, root):
@@ -236,20 +245,9 @@ def height(G, root):
     Returns:
     height : int"""
     
-    if not nx.is_tree(G):
-        return 0
-    
     height1 = 0
-    if G.is_directed():
-        for v in G.successors(root):
-            height2 = height(G, v)
-            if height2 > height1:
-                height1 = height2
-    else:
-        for v in G.neighbors(root):
-            H = G.copy()
-            H.remove_node(root)
-            height2 = height(H, v)
-            if height2 > height1:
-                height1 = height2
+    for v in G.successors(root):
+        height2 = height(G, v)
+        if height2 > height1:
+            height1 = height2
     return height1 + 1

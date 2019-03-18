@@ -22,8 +22,6 @@ DRAW = 1
 SAVE_PLOT = 0
 PRINT_SOLUTION = 1
 
-
-
 # For generating graphs
 MIN_NODE_WEIGHT = -20
 MAX_NODE_WEIGHT = 10
@@ -376,12 +374,14 @@ def main():
             verysmall = [5, 10, 11, 12, 13, 14, 15]
             #small = [20, 30, 40, 50, 60, 75, 100]
 
-            small = [10, 20, 30, 40, 50, 60, 75, 100, 150, 200, 300, 400, 500]
-            medium = [100, 250, 500, 1000, 2000]
-            large = [500, 1000, 2500, 5000, 10000]
+            small = [10, 20, 30, 40, 50, 60, 75, 100]
+            medium = [250, 500, 750, 1000]
+            large = [500, 1000, 2500, 5000]
 
             # Statistics for comparing IPs
-            make_statistics('path', 10, small, flowrooted=True, flow=True, sep=True)
+            #make_statistics('graph', 10, verysmall, rooted=True, full=True, flowrooted=True, flow=True, sep=True)
+            make_statistics('graph', 10, [20], full=True)
+            make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
 
 
             # Statistics for IP (sep)
@@ -404,31 +404,34 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
     dir = "statistics"
     if not os.path.exists(dir):
         os.makedirs(dir)
+    time_str = time.strftime("%Y%m%d-%H%M%S")
+    name = 'times_' + graph_class + '_' + time_str + '.csv'
+    file_path = os.path.join(dir, name)
 
-    # # Open file
-    # f = open(file_path, 'w')
-    #
-    # # Heading
-    # f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
-    # f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
-    # f.write('\n')
-    # table_columns = 'graph size'
-    # if dyn:
-    #     table_columns += '&' + 'time dynamic prog'
-    # if rooted:
-    #     table_columns += '&' + 'time IP (rooted)'
-    # if full:
-    #     table_columns += '&' + 'time IP'
-    # if flowrooted:
-    #     table_columns += '&' + 'time IP (flow rooted)'
-    # if flow:
-    #     table_columns += '&' + 'time IP (flow)'
-    # if sep:
-    #     table_columns += '&' + 'time IP(sep)'
-    # if sep_iter:
-    #     table_columns += '&' + 'IP(sep) iterations'
-    # table_columns += '\n'
-    # f.write(table_columns)
+    # Open file
+    f = open(file_path, 'w')
+
+    # Heading
+    f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
+    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
+    f.write('\n')
+    table_columns = 'graph size'
+    if dyn:
+        table_columns += '&' + 'time dynamic prog'
+    if rooted:
+        table_columns += '&' + 'time IP (rooted)'
+    if full:
+        table_columns += '&' + 'time IP'
+    if flowrooted:
+        table_columns += '&' + 'time IP (flow rooted)'
+    if flow:
+        table_columns += '&' + 'time IP (flow)'
+    if sep:
+        table_columns += '&' + 'time IP(sep)'
+    if sep_iter:
+        table_columns += '&' + 'IP(sep) iterations'
+    table_columns += '\n'
+    f.write(table_columns)
 
     # Fill table rows
     for n in sizes:
@@ -436,34 +439,6 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
         times = dict()
         num_iter = []
-
-        # Open file
-        time_str = time.strftime("%Y%m%d-%H%M%S")
-        name = 'times_' + graph_class + '_' + time_str + '.csv'
-        file_path = os.path.join(dir, name)
-        f = open(file_path, 'w')
-
-        # Heading
-        f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
-        f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
-        f.write('\n')
-        table_columns = 'graph size'
-        if dyn:
-            table_columns += '&' + 'time dynamic prog'
-        if rooted:
-            table_columns += '&' + 'time IP (rooted)'
-        if full:
-            table_columns += '&' + 'time IP'
-        if flowrooted:
-            table_columns += '&' + 'time IP (flow rooted)'
-        if flow:
-            table_columns += '&' + 'time IP (flow)'
-        if sep:
-            table_columns += '&' + 'time IP(sep)'
-        if sep_iter:
-            table_columns += '&' + 'IP(sep) iterations'
-        table_columns += '\n'
-        f.write(table_columns)
 
         for k in range(iterations):
             if graph_class == 'path':
@@ -557,11 +532,10 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
         table_row += '\n'
         f.write(table_row)
-        f.close()
 
         print(graph_class + ' with size ' + str(n)
               + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-    #f.close()
+    f.close()
 
     print(graph_class + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 

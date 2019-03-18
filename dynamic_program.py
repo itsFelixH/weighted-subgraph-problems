@@ -1,4 +1,3 @@
-import networkx as nx
 import numpy as np
 import graph_helper as gh
 import decomposition_tree as dt
@@ -82,14 +81,10 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
     H : NetworkX graph (maximum/minimum weighted subgraph)
     objVal: objective value (weight of H)"""
     
-    if not nx.is_tree(G):
-        print('G is not a tree!')
-    
-    if not G.is_directed():
-        G = gh.direct_tree(G)
+    G = gh.direct_tree(G)
     root = [v for v, d in G.in_degree() if d == 0]
     root = root[0]
-    
+
     h = gh.height(G, root)
     level = dict()
     for i in range(1, h+1):

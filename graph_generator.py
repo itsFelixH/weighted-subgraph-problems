@@ -281,11 +281,10 @@ def random_weighted_grid(m, n, min_node_weight, max_node_weight, min_edge_weight
     return G, dic
 
 
-def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
+def random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
                            multigraph=False, directed=False):
-    """Creates a random connected graph.
+    """Creates a random spanning tree by executing a random walk.
     Parameters:
-    m: int (number of nodes)
     n: int (number of edges)
     min_node_weight : int (minimum weight for nodes)
     max_node_weight : int (maximum weight for nodes)
@@ -325,7 +324,44 @@ def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weig
             T.add(neighbor_node)
         current_node = neighbor_node
 
+    return G
+
+
+def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
+                           multigraph=False, directed=False):
+    """Creates a random connected graph.
+    Parameters:
+    m: int (number of nodes)
+    n: int (number of edges)
+    min_node_weight : int (minimum weight for nodes)
+    max_node_weight : int (maximum weight for nodes)
+    min_edge_weight : int (minimum weight for edges)
+    max_edge_weight : int (maximum weight for edges)
+
+    Returns:
+    G : NetworkX graph"""
+
+    G = random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph, directed)
     G = add_random_edges(G, m)
+    G = weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
+
+    return G
+
+
+def random_weighted_tree2(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
+                           multigraph=False, directed=False):
+    """Creates a random tree.
+    Parameters:
+    n: int (number of nodes)
+    min_node_weight : int (minimum weight for nodes)
+    max_node_weight : int (maximum weight for nodes)
+    min_edge_weight : int (minimum weight for edges)
+    max_edge_weight : int (maximum weight for edges)
+
+    Returns:
+    G : NetworkX graph"""
+
+    G = random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph, directed)
     G = weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
 
     return G
