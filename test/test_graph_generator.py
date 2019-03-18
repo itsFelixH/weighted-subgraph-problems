@@ -128,11 +128,12 @@ def test_random_weighted_path():
 
 
 def test_random_weighted_graph():
-    G = gg.random_weighted_graph(100, 0.1, 1, 50, 1, 50)
+    G = gg.random_weighted_graph(100, 140, 1, 50, 1, 50)
     
     assert G.nodes()
     assert G.edges()
     assert G.number_of_nodes() == 100
+    assert G.number_of_edges() == 140
     
     for (v, data) in G.nodes(data=True):
         assert data['weight']
@@ -140,6 +141,31 @@ def test_random_weighted_graph():
         assert data['weight'] >= 1
         assert data['weight'] <= 50
         
+    for (u, v, data) in G.edges(data=True):
+        assert data['weight']
+        assert isinstance(data['weight'], int)
+        assert data['weight'] >= 1
+        assert data['weight'] <= 50
+        assert G[v][u]
+        assert data['weight'] == G[v][u]['weight']
+
+
+def test_random_connected_graph():
+    G = gg.random_connected_graph(100, 120, 1, 50, 1, 50)
+
+    assert G.nodes()
+    assert G.edges()
+    assert G.number_of_nodes() == 100
+    assert G.number_of_edges() == 120
+
+    assert nx.is_connected(G)
+
+    for (v, data) in G.nodes(data=True):
+        assert data['weight']
+        assert isinstance(data['weight'], int)
+        assert data['weight'] >= 1
+        assert data['weight'] <= 50
+
     for (u, v, data) in G.edges(data=True):
         assert data['weight']
         assert isinstance(data['weight'], int)

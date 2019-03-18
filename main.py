@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 import os
 import time
-import random
 
 import graph_generator as gg
 import graph_helper as gh
 import weighted_subgraph_problem as wsp
+import dynamic_program as dp
+import integer_program as ip
 
 
 # --------------------------
@@ -45,10 +46,10 @@ def main():
     if choice != 'z':
         
         if choice == 'a':
-            G = gg.random_weighted_graph(200, 0.01, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G = gg.random_connected_graph(200, 280, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             start = timer()            
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
+            (H, weight) = ip.solve_flow_ip(G, MODE)
             end = timer()
 
             if PRINT_SOLUTION:
@@ -79,7 +80,7 @@ def main():
                 fig.suptitle(MODE + '-WSP on a path')
 
             start = timer()
-            (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
+            (H, weight) = ip.solve_full_ip__rooted(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (rooted): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -88,7 +89,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (rooted)', end-start)
             
             start = timer()
-            (H, weight) = wsp.solve_full_ip(G, MODE)
+            (H, weight) = ip.solve_full_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -97,7 +98,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP', end-start)
             
             start = timer()
-            (H, weight) = wsp.solve_ip_on_path(G, MODE)
+            (H, weight) = ip.solve_ip_on_path(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (path): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -106,7 +107,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (path)', end-start)
 
             start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
+            (H, weight) = ip.solve_flow_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -124,7 +125,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'subpath iteration', end-start)
             
             start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
+            (H, weight) = dp.solve_dynamic_prog_on_path(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -155,7 +156,7 @@ def main():
                 fig.suptitle(MODE + '-WSP on a tree')
 
             start = timer()
-            (H, weight) = wsp.solve_full_ip__rooted(G, MODE)
+            (H, weight) = ip.solve_full_ip__rooted(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (rooted): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -164,7 +165,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (rooted)', end-start)
             
             start = timer()
-            (H, weight) = wsp.solve_full_ip(G, MODE)
+            (H, weight) = ip.solve_full_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -182,7 +183,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'subtree iteration', end-start)
             
             start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_tree(G, MODE)
+            (H, weight) = dp.solve_dynamic_prog_on_tree(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -212,7 +213,7 @@ def main():
                 fig.suptitle(MODE + '-WSP on a path')
 
             start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
+            (H, weight) = ip.solve_flow_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -221,7 +222,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (flow)', end - start)
 
             start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_path(G, MODE)
+            (H, weight) = dp.solve_dynamic_prog_on_path(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -242,7 +243,7 @@ def main():
                 fig.suptitle(MODE + '-WSP on a tree')
 
             start = timer()
-            (H, weight, i) = wsp.solve_separation_ip(G, MODE)
+            (H, weight, i) = ip.solve_separation_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (sep): weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -251,7 +252,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic, weight, 'IP (' + str(i) + ' iterations)', end - start)
 
             start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_tree(G, MODE)
+            (H, weight) = dp.solve_dynamic_prog_on_tree(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end-start, 5)) + 's')
@@ -274,7 +275,7 @@ def main():
                 fig.suptitle(MODE + '-WSP on a SPG')
 
             start = timer()
-            (H, weight) = wsp.solve_dynamic_prog_on_spg(G, D, MODE)
+            (H, weight) = dp.solve_dynamic_prog_on_spg(G, D, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('dynamic program: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -284,7 +285,7 @@ def main():
 
             G = G.to_undirected()
             start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE)
+            (H, weight) = ip.solve_flow_ip(G, MODE)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -351,7 +352,7 @@ def main():
             nx.draw_networkx_labels(R, pos_higher, labels)
 
             start = timer()
-            (H, weight) = wsp.solve_flow_ip(G, MODE, induced=False)
+            (H, weight) = dp.solve_flow_ip(G, MODE, induced=False)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -360,7 +361,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic_G, weight, 'IP (flow)', end - start)
 
             start = timer()
-            (HR, weight) = wsp.solve_flow_ip(R, MODE, induced=False)
+            (HR, weight) = dp.solve_flow_ip(R, MODE, induced=False)
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -479,7 +480,7 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
             if rooted:
                 start = timer()
-                (H, weight) = wsp.solve_full_ip__rooted(G, mode)
+                (H, weight) = ip.solve_full_ip__rooted(G, mode)
                 end = timer()
                 alg = 'IP (rooted)'
                 if alg not in times:
@@ -488,7 +489,7 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
             if full:
                 start = timer()
-                (H, weight) = wsp.solve_full_ip(G, mode)
+                (H, weight) = ip.solve_full_ip(G, mode)
                 end = timer()
                 alg = 'IP'
                 if alg not in times:
@@ -497,7 +498,7 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
             if flowrooted:
                 start = timer()
-                (H, weight) = wsp.solve_flow_ip__rooted(G, mode)
+                (H, weight) = ip.solve_flow_ip__rooted(G, mode)
                 end = timer()
                 alg = 'IP (flow rooted)'
                 if alg not in times:
@@ -506,7 +507,7 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
             if flow:
                 start = timer()
-                (H, weight) = wsp.solve_flow_ip(G, mode)
+                (H, weight) = ip.solve_flow_ip(G, mode)
                 end = timer()
                 alg = 'IP (flow)'
                 if alg not in times:
@@ -515,7 +516,7 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
             if sep:
                 start = timer()
-                (H, weight, i) = wsp.solve_separation_ip(G, mode)
+                (H, weight, i) = ip.solve_separation_ip(G, mode)
                 end = timer()
                 alg = 'IP (separation)'
                 if alg not in times:
@@ -525,7 +526,7 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
 
             if dyn:
                 start = timer()
-                (H, weight) = wsp.solve_dynamic_prog_on_path(G, mode)
+                (H, weight) = dp.solve_dynamic_prog_on_path(G, mode)
                 end = timer()
                 alg = 'Dynamic program'
                 if alg not in times:
@@ -607,7 +608,7 @@ d) Compare WSP algorithms and their running times for trees
 d) Compare IP (flow) and dynamic program for paths
 e) Compare IP (separation) and dynamic program for trees
 f) Compare IP (flow) and dynamic program for SPGs
-g) Preprocessing for GWSP on random graph
+g) Preprocessing for WSP on random graph
 h) Save statistics to file
       
 z) End program...

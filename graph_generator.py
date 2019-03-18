@@ -102,7 +102,8 @@ def random_weighted_path(number_of_nodes, min_node_weight, max_node_weight, min_
     return P
 
 
-def random_weighted_graph(number_of_nodes, number_of_edges, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
+def random_weighted_graph(number_of_nodes, number_of_edges, min_node_weight, max_node_weight, min_edge_weight,
+                          max_edge_weigth):
     """Generates random weighted graph.
     Parameters:
     number_of_nodes: int (number of nodes in the graph)
@@ -115,17 +116,16 @@ def random_weighted_graph(number_of_nodes, number_of_edges, min_node_weight, max
     Returns:
     G : NetworkX graph"""
 
-    #G = nx.gnp_random_graph(number_of_nodes, p)
     G = nx.gnm_random_graph(number_of_nodes, number_of_edges)
     G = weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
 
     return G
 
 
-def random_weighted_binary_tree(number_of_nodes, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
+def random_weighted_binary_tree(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
     """Generates random weighted binary tree graph.
     Parameters:
-    number_of_nodes: int (number of nodes in the graph)
+    n: int (number of edges)
     min_node_weight : int (minimum weight for nodes)
     max_node_weight : int (maximum weight for nodes)
     min_edge_weight : int (minimum weight for edges)
@@ -139,7 +139,7 @@ def random_weighted_binary_tree(number_of_nodes, min_node_weight, max_node_weigh
     
     free_edges = [(0, 1), (0, 2)]
     
-    while T.number_of_nodes() < number_of_nodes:
+    while T.number_of_nodes() < n:
         (u, v) = random.choice(free_edges)
         
         T.add_node(v)
@@ -153,10 +153,10 @@ def random_weighted_binary_tree(number_of_nodes, min_node_weight, max_node_weigh
     return T
 
 
-def random_weighted_tree(number_of_nodes, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
+def random_weighted_tree(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
     """Generates random weighted tree graph.
     Parameters:
-    number_of_nodes: int (number of nodes in the graph)
+    n: int (number of edges)
     min_node_weight : int (minimum weight for nodes)
     max_node_weight : int (maximum weight for nodes)
     min_edge_weight : int (minimum weight for edges)
@@ -165,16 +165,16 @@ def random_weighted_tree(number_of_nodes, min_node_weight, max_node_weight, min_
     Returns:
     T : NetworkX graph"""
     
-    T = nx.random_tree(number_of_nodes)
+    T = nx.random_tree(n)
     T = weight_graph(T, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
 
     return T
 
 
-def random_weighted_spg(number_of_edges, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight):
+def random_weighted_spg(m, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight):
     """Generates random weighted sp graph.
     Parameters:
-    number_of_edges: int (number of edges in the graph)
+    m: int (number of nodes)
     min_node_weight : int (minimum weight for nodes)
     max_node_weight : int (maximum weight for nodes)
     min_edge_weight : int (minimum weight for edges)
@@ -189,7 +189,7 @@ def random_weighted_spg(number_of_edges, min_node_weight, max_node_weight, min_e
     sink = dict()
     node_map = dict()
 
-    for i in range(0, number_of_edges):
+    for i in range(0, m):
         sp_list[i] = nx.MultiDiGraph()
         sp_list[i].add_node(str(i)+'_1')
         sp_list[i].add_node(str(i)+'_2')

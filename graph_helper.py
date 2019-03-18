@@ -253,33 +253,3 @@ def height(G, root):
             if height2 > height1:
                 height1 = height2
     return height1 + 1
-
-
-def get_edgelist_from_nodelist(nodelist):
-    """Computes edgelist from nodelist.
-    Parameters:
-    nodelist : list (list of connected nodes)
-
-    Returns:
-    edgelist : list (list of edges)"""
-
-    edgelist = []
-    for u, v in zip(nodelist[:-1], nodelist[1:]):
-        edgelist.append((u, v))
-
-    return edgelist
-
-
-def get_nodelist_from_edgelist(edgelist):
-    """Computes nodelist from edgelist.
-    Parameters:
-    edgelist : list (list of adjacent edges)
-
-    Returns:
-    nodelist : list (list of nodes)"""
-
-    nodelist = [edgelist[0][0]]
-    for u, v in edgelist:
-        nodelist.append(v)
-
-    return nodelist

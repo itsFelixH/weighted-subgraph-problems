@@ -83,7 +83,7 @@ def test_merge_nodes__weights():
 
 
 def test_merge_nodes__random():
-    G_old = gg.random_weighted_graph(100, 0.1, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G_old = gg.random_weighted_graph(100, 200, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     G = G_old.copy()
 
     selected_nodes = random.sample(G.nodes(), np.random.randint(2, G.number_of_nodes() / 2))
@@ -144,7 +144,7 @@ def test_merge_edges_between_u_and_v__weighted():
 
 def test_is_path():
     G1 = gg.random_weighted_path(100, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
-    G2 = gg.random_weighted_graph(20, 0.3, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
+    G2 = gg.random_weighted_graph(20, 30, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
     G3 = nx.Graph()
     G3.add_nodes_from([1, 7, 4, 'a'])
     G3.add_edges_from([(1, 7), (7, 4), (4, 'a')])
@@ -337,21 +337,3 @@ def test_height():
     assert gh.height(G, 4) == 1
     assert gh.height(G, 5) == 1
     assert gh.height(G, 6) == 1
-
-
-def test_get_edgelist_from_nodelist():
-    path = random.sample(range(500), random.randint(20,250))
-    edgelist = gh.get_edgelist_from_nodelist(path)
-
-    for u, v in edgelist:
-        assert u in path
-        assert v in path
-        assert path[path.index(u) + 1] == v
-
-
-def test_get_nodelist_from_edgelist():
-    path = random.sample(range(500), random.randint(20, 250))
-    edgelist = gh.get_edgelist_from_nodelist(path)
-
-    nodelist = gh.get_nodelist_from_edgelist(edgelist)
-    assert nodelist == path
