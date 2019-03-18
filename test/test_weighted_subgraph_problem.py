@@ -1,3 +1,5 @@
+from itertools import combinations
+import random
 import networkx as nx
 import graph_generator as gg
 import graph_helper as gh
@@ -7,6 +9,66 @@ min_node_weight = -40
 max_node_weight = -1
 min_edge_weight = 1
 max_edge_weight = 40
+weights = (-10, 10, -10, 10)
+
+
+def test_isolated_vertices_rule():
+    degree_zero_vertices = []
+
+    while len(degree_zero_vertices) == 0:
+        G = nx.fast_gnp_random_graph(100, 0.01)
+        degree_zero_vertices = [v for (v, d) in G.degree() if d == 0]
+
+    G = wsp.isolated_vertices_rule(G)
+    degree_zero_vertices = [v for (v, d) in G.degree() if d == 0]
+    assert len(degree_zero_vertices) == 0
+
+
+def test_parallel_edges_rule():
+    G, D = gg.random_weighted_spg(100, *weights)
+    G, mapping = wsp.parallel_edges_rule(G)
+
+    for u, v in combinations(G.nodes(), 2):
+        assert G.number_of_edges(u, v) <= 1
+
+
+def test_parallel_edges_rule__weights():
+    G = nx.MultiGraph()
+    G.add_nodes_from([0, 1, 2])
+
+    weight1 = 0
+    neg_weight1 = -11
+    for i in range(random.randint(2, 20)):
+        weight = random.randint(-10, 10)
+        if weight > 0:
+            weight1 += weight
+        elif weight < 0:
+            if weight > neg_weight1:
+                neg_weight1 = weight
+        G.add_edge(0, 1, weight=weight)
+
+    weight2 = 0
+    neg_weight2 = -11
+    for i in range(random.randint(2, 20)):
+        weight = random.randint(-10, 10)
+        if weight > 0:
+            weight2 += weight
+        elif weight < 0:
+            if weight > neg_weight2:
+                neg_weight2 = weight
+        G.add_edge(1, 2, weight=weight)
+
+    G, mapping = wsp.parallel_edges_rule(G)
+
+    for u, v in combinations(G.nodes(), 2):
+        assert G.number_of_edges(u, v) <= 1
+
+    for u, v, w in G.edges(data='weight'):
+        if (u == 0 and v == 1) or (u == 1 and v == 0):
+            assert w == weight1 or w == neg_weight2
+
+        if (u == 1 and v == 2) or (u == 2 and v == 1):
+            assert w == weight2 or w == neg_weight2
 
 
 def test_solve_on_path__all_subpaths():
