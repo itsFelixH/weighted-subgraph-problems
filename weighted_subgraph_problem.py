@@ -61,12 +61,12 @@ def preprocessing(G, mode='max'):
         R = isolated_vertices_rule(R)
 
         # Parallel edges
-        #R, new_edges = parallel_edges_rule(R, mode)
-        #edge_mapping.update(new_edges)
+        R, new_edges = parallel_edges_rule(R, mode)
+        edge_mapping.update(new_edges)
 
         # Adjacent edges
-        R, new_nodes = adjacent_edges_rule(R, mode)
-        node_mapping.update(new_nodes)
+        #R, new_nodes = adjacent_edges_rule(R, mode)
+        #node_mapping.update(new_nodes)
 
         # Chain rule
         #R, new_edges = chain_rule(R, mode)
@@ -164,19 +164,17 @@ def adjacent_edges_rule(G, mode='max'):
     node_mapping = dict()
 
     changed = True
+    k = 1
     while changed:
         edges = list(G.edges.data('weight')).copy()
         print(edges)
         changed = False
         for u, v, w in edges:
             if w >= 0 and w + G.node[u]['weight'] >= 0 and w + G.node[v]['weight'] >= 0:
-                print(w)
-                print(G.node[u]['weight'])
-                print(G.node[v]['weight'])
-
                 changed = True
-                gh.merge_nodes(G, [u, v], 'm' + str(u) + '_' + str(v), w + G.node[u]['weight'] + G.node[v]['weight'])
-                node_mapping['m' + str(u) + '_' + str(v)] = [u, v]
+                G = gh.merge_nodes(G, [u, v], 'm' + str(k), w + G.node[u]['weight'] + G.node[v]['weight'])
+                node_mapping['m' + str(k)] = [u, v]
+                k += 1
                 break
     return G, node_mapping
 

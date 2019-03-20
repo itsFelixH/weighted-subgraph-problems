@@ -352,6 +352,8 @@ def main():
 
             start = timer()
             (H, weight) = ip.solve_flow_ip(G, MODE, induced=False)
+            print('weight: '+str(weight))
+            print('weight: ' + str(gh.weight(H)))
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -361,6 +363,8 @@ def main():
 
             start = timer()
             (HR, weight) = ip.solve_flow_ip(R, MODE, induced=False)
+            print('weight: ' + str(weight))
+            print('weight: ' + str(gh.weight(HR)))
             end = timer()
             if PRINT_SOLUTION:
                 print('IP (flow): weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
@@ -385,13 +389,12 @@ def main():
             #make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
 
             # Statistics for comparing IPs
-            make_statistics('path', 10, small, dyn=True, flow=True)
+            #make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
+            #make_statistics('tree', 10, medium, stat_name='dyn_tree', dyn=True, flow=True)
+            #make_statistics('SPG', 10, medium, stat_name='dyn_spg', dyn=True, flow=True)
 
             # Statistics for IP (sep)
-            #make_statistics('path', 10, small, sep=True, sep_iter=True)
-            #make_statistics('tree', 10, small, sep=True, sep_iter=True)
-            #make_statistics('spg', 10, small, sep=True, sep_iter=True)
-            #make_statistics('graph', 10, small, sep=True, sep_iter=True)
+            make_statistics('graph', 10, small, stat_name='sep', sep=True, sep_iter=True)
 
             # Statistics for preprocessing
 
@@ -428,41 +431,45 @@ def main():
                     print('IP solution: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
 
 
-def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, full=False, flowrooted=False, flow=False,
-                    dyn=False, sep=False, sep_iter=False):
+def make_statistics(graph_class, iterations, sizes, stat_name=None, mode='max', rooted=False, full=False, flowrooted=False, flow=False,
+                    dyn=False, sep=False, sep_iter=False, ):
 
+    # weights
     weights = (-10, 10, -10, 10)
 
+    # Name for file
+    if not stat_name:
+        stat_name = graph_class
     # Create directory
     dir = "statistics"
     if not os.path.exists(dir):
         os.makedirs(dir)
     time_str = time.strftime("%Y%m%d-%H%M%S")
-    name = 'times_' + graph_class + '_' + time_str + '.csv'
+    name = 'times_' + stat_name + '_' + time_str + '.csv'
     file_path = os.path.join(dir, name)
 
     # Open file
     f = open(file_path, 'w')
 
     # Heading
-    f.write(mode + '-WSP,' + 'on' + ',' + graph_class.capitalize() + 's' + '\n')
+    f.write(mode + '-WSP,' + 'on' + ',' + 'random' + ',' + graph_class.capitalize() + 's' + '\n')
     f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
     f.write('\n')
     table_columns = 'graph size'
     if dyn:
-        table_columns += '&' + 'time dynamic prog'
+        table_columns += '&' + 'dyn prog'
     if rooted:
-        table_columns += '&' + 'time IP (rooted)'
+        table_columns += '&' + 'IP (rooted)'
     if full:
-        table_columns += '&' + 'time IP'
+        table_columns += '&' + 'IP'
     if flowrooted:
-        table_columns += '&' + 'time IP (flow rooted)'
+        table_columns += '&' + 'IP (flow rooted)'
     if flow:
-        table_columns += '&' + 'time IP (flow)'
+        table_columns += '&' + 'IP (flow)'
     if sep:
-        table_columns += '&' + 'time IP(sep)'
+        table_columns += '&' + 'IP(sep)'
     if sep_iter:
-        table_columns += '&' + 'IP(sep) iterations'
+        table_columns += '&' + 'iterations (sep)'
     table_columns += '\n'
     f.write(table_columns)
 
@@ -478,7 +485,7 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
                 G = gg.random_weighted_path(n, *weights)
             elif graph_class == 'tree':
                 G = gg.random_weighted_tree(n, *weights)
-            elif graph_class == 'spg':
+            elif graph_class == 'SPG':
                 G, D = gg.random_weighted_spg(n, *weights)
             else:
                 G = gg.random_connected_graph(n, 2*n, *weights)
@@ -533,9 +540,19 @@ def make_statistics(graph_class, iterations, sizes, mode='max', rooted=False, fu
                 num_iter.append(i)
 
             if dyn:
-                start = timer()
-                (H, weight) = dp.solve_dynamic_prog_on_path(G, mode)
-                end = timer()
+                if graph_class == 'path':
+                    start = timer()
+                    (H, weight) = dp.solve_dynamic_prog_on_path(G, mode)
+                    end = timer()
+                elif graph_class == 'tree':
+                    start = timer()
+                    (H, weight) = dp.solve_dynamic_prog_on_tree(G, mode)
+                    end = timer()
+                elif graph_class == 'SPG':
+                    start = timer()
+                    (H, weight) = dp.solve_dynamic_prog_on_spg(G, D, mode)
+                    end = timer()
+
                 alg = 'Dynamic program'
                 if alg not in times:
                     times[alg] = []
