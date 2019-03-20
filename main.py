@@ -306,7 +306,7 @@ def main():
                 plt.show()
 
         elif choice == 'g':
-            G, D = gg.random_weighted_spg(10, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G, D = gg.random_weighted_spg(50, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             G = G.to_undirected()
             dic_G = nx.spring_layout(G)
@@ -336,8 +336,8 @@ def main():
             ax = plt.subplot(2, 2, 2)
             ax.axis('off')
             dic_R = nx.spring_layout(R)
-            nx.draw_networkx_nodes(R, pos=dic_R, node_color='g', node_size=200)
-            nx.draw_networkx_edges(R, pos=dic_R, edge_color='g', node_size=200)
+            nx.draw_networkx_nodes(R, pos=dic_R, node_size=200)
+            nx.draw_networkx_edges(R, pos=dic_R, edge_color='r', node_size=200)
             edge_labels = dict(((u, v), str(d['weight'])) for u, v, d in R.edges(data=True))
             node_labels = dict((v, str(d['weight'])) for v, d in R.nodes(data=True))
             nx.draw_networkx_edge_labels(R, pos=dic_R, edge_labels=edge_labels, font_size=8)

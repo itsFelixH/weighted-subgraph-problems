@@ -102,9 +102,7 @@ def solve_dynamic_prog_on_tree(G, mode='max'):
         weight_H_out[v] = 0
 
     for i in reversed(range(1, h)):
-        print('level ' + str(i))
         for v in level[i]:
-            print('node ' + str(v))
             best_weight = 0
             for w in G.successors(v):
                 weight_in = weight_H_in[w]

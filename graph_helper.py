@@ -89,6 +89,33 @@ def merge_edges_between_u_and_v(G, u, v):
     return G
 
 
+def spanning_tree(G, mode='max'):
+    """Computes a weighted spanning tree in G.
+    Parameters:
+    G : NetworkX graph
+
+    Returns:
+    T : NetworkX graph"""
+
+    def _maximum_spanning_tree_edges(G):
+        from networkx.utils import UnionFind
+
+        subtrees = UnionFind()
+        if mode == 'max':
+            edges = reverse(sorted(G.edges(data=True), key=lambda t: t[2].get(weight, 1)))
+        else:
+            edges = sorted(G.edges(data=True), key=lambda t: t[2].get(weight, 1))
+
+        for u, v, d in edges:
+            if subtrees[u] != subtrees[v]:
+                yield (u, v, d)
+                subtrees.union(u, v)
+
+    T = nx.Graph(_maximum_spanning_tree_edges(G))
+
+    return T
+
+
 def is_path(G):
     """Checks if the graph is a path.
     Parameters:

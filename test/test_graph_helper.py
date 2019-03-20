@@ -9,6 +9,7 @@ min_node_weight = -50
 max_node_weight = -1
 min_edge_weight = 1
 max_edge_weight = 50
+weights = (-10, 10, -10, 10)
 
 
 def test_merge_nodes():
@@ -140,6 +141,13 @@ def test_merge_edges_between_u_and_v__weighted():
     assert G.number_of_nodes() == 5
     assert G.number_of_edges() == 4
     assert G.number_of_edges(1, 2) == 1
+
+
+def test_maximum_spanning_tree():
+    G = gg.random_connected_graph(50, 80, *weights)
+    T = gh.maximum_spanning_tree(G)
+
+    assert nx.is_tree(T)
 
 
 def test_is_path():
