@@ -27,7 +27,7 @@ MIN_NODE_WEIGHT = -20
 MAX_NODE_WEIGHT = 10
 MIN_EDGE_WEIGHT = -20
 MAX_EDGE_WEIGHT = 10
-weights = (-10, 10, -10, 10)
+WEIGHTS = (-10, 10, -10, 10)
 
 # --------------------------
 # USER INPUT
@@ -377,8 +377,6 @@ def main():
 
         elif choice == 'h':
             verysmall = [5, 10, 11, 12, 13, 14, 15]
-            #small = [20, 30, 40, 50, 60, 75, 100]
-
             small = [10, 20, 30, 40, 50, 60, 75, 100]
             medium = [250, 500, 750, 1000]
             large = [500, 1000, 2500, 5000]
@@ -400,11 +398,18 @@ def main():
 
             # Statistics with GAP/Relaxing
 
+            # Statistic for weights
+            # Fixed Nodes
+            weights = [(10, 10, -5, 5), (10, 10, -10, 10), (10, 10, -20, 20)]
+
+            # Fixed Edges
+            weights = [(-5, 5, 10, 10), (-10, 10, 10, 10), (-20, 20, 10, 10)]
+
         elif choice == 'i':
             for k in range(10):
                 print('Iteration ' + str(k+1))
 
-                G = gg.random_connected_graph(10, 15, *weights)
+                G = gg.random_connected_graph(10, 15, *WEIGHTS)
 
                 start = timer()
                 weight = ip.solve_flow_ip(G, MODE, relaxed=True)
@@ -429,165 +434,6 @@ def main():
                 end = timer()
                 if PRINT_SOLUTION:
                     print('IP solution: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
-
-
-def make_statistics(graph_class, iterations, sizes, stat_name=None, mode='max', rooted=False, full=False, flowrooted=False, flow=False,
-                    dyn=False, sep=False, sep_iter=False, ):
-
-    # weights
-    weights = (-10, 10, -10, 10)
-
-    # Name for file
-    if not stat_name:
-        stat_name = graph_class
-    # Create directory
-    dir = "statistics"
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    time_str = time.strftime("%Y%m%d-%H%M%S")
-    name = 'times_' + stat_name + '_' + time_str + '.csv'
-    file_path = os.path.join(dir, name)
-
-    # Open file
-    f = open(file_path, 'w')
-
-    # Heading
-    f.write(mode + '-WSP,' + 'on' + ',' + 'random' + ',' + graph_class.capitalize() + 's' + '\n')
-    f.write('Average' + ',' + 'times' + ',' + 'for' + ',' + str(iterations) + ',' + 'iterations:' + '\n')
-    f.write('\n')
-    table_columns = 'graph size'
-    if dyn:
-        table_columns += '&' + 'dyn prog'
-    if rooted:
-        table_columns += '&' + 'IP (rooted)'
-    if full:
-        table_columns += '&' + 'IP'
-    if flowrooted:
-        table_columns += '&' + 'IP (flow rooted)'
-    if flow:
-        table_columns += '&' + 'IP (flow)'
-    if sep:
-        table_columns += '&' + 'IP(sep)'
-    if sep_iter:
-        table_columns += '&' + 'iterations (sep)'
-    table_columns += '\n'
-    f.write(table_columns)
-
-    # Fill table rows
-    for n in sizes:
-        print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-
-        times = dict()
-        num_iter = []
-
-        for k in range(iterations):
-            if graph_class == 'path':
-                G = gg.random_weighted_path(n, *weights)
-            elif graph_class == 'tree':
-                G = gg.random_weighted_tree(n, *weights)
-            elif graph_class == 'SPG':
-                G, D = gg.random_weighted_spg(n, *weights)
-            else:
-                G = gg.random_connected_graph(n, 2*n, *weights)
-
-            if (k + 1) % (iterations/10) == 0:
-                print('Iteration ' + str(k + 1))
-
-            if rooted:
-                start = timer()
-                (H, weight) = ip.solve_full_ip__rooted(G, mode)
-                end = timer()
-                alg = 'IP (rooted)'
-                if alg not in times:
-                    times[alg] = []
-                times[alg].append(end - start)
-
-            if full:
-                start = timer()
-                (H, weight) = ip.solve_full_ip(G, mode)
-                end = timer()
-                alg = 'IP'
-                if alg not in times:
-                    times[alg] = []
-                times[alg].append(end - start)
-
-            if flowrooted:
-                start = timer()
-                (H, weight) = ip.solve_flow_ip__rooted(G, mode)
-                end = timer()
-                alg = 'IP (flow rooted)'
-                if alg not in times:
-                    times[alg] = []
-                times[alg].append(end - start)
-
-            if flow:
-                start = timer()
-                (H, weight) = ip.solve_flow_ip(G, mode)
-                end = timer()
-                alg = 'IP (flow)'
-                if alg not in times:
-                    times[alg] = []
-                times[alg].append(end - start)
-
-            if sep:
-                start = timer()
-                (H, weight, i) = ip.solve_separation_ip(G, mode)
-                end = timer()
-                alg = 'IP (separation)'
-                if alg not in times:
-                    times[alg] = []
-                times[alg].append(end - start)
-                num_iter.append(i)
-
-            if dyn:
-                if graph_class == 'path':
-                    start = timer()
-                    (H, weight) = dp.solve_dynamic_prog_on_path(G, mode)
-                    end = timer()
-                elif graph_class == 'tree':
-                    start = timer()
-                    (H, weight) = dp.solve_dynamic_prog_on_tree(G, mode)
-                    end = timer()
-                elif graph_class == 'SPG':
-                    start = timer()
-                    (H, weight) = dp.solve_dynamic_prog_on_spg(G, D, mode)
-                    end = timer()
-
-                alg = 'Dynamic program'
-                if alg not in times:
-                    times[alg] = []
-                times[alg].append(end - start)
-
-        av_time = dict()
-        for alg in times:
-            av_time[alg] = sum(times[alg]) / float(iterations)
-        av_iter = sum(num_iter) / float(iterations)
-
-        table_row = str(n)
-
-        if dyn:
-            table_row += "& {0:.6f}".format(av_time['Dynamic program'])
-        if rooted:
-            table_row += "& {0:.6f}".format(av_time['IP (rooted)'])
-        if full:
-            table_row += "& {0:.6f}".format(av_time['IP'])
-        if flowrooted:
-            table_row += "& {0:.6f}".format(av_time['IP (flow rooted)'])
-        if flow:
-            table_row += "& {0:.6f}".format(av_time['IP (flow)'])
-        if sep:
-            table_row += "& {0:.6f}".format(av_time['IP (separation)'])
-        if sep_iter:
-            table_row += "& {0:.6f}".format(av_iter)
-
-        table_row += '\n'
-        f.write(table_row)
-
-        print(graph_class + ' with size ' + str(n)
-              + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
-    f.close()
-
-    print(graph_class + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):
