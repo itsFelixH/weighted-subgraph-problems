@@ -9,6 +9,7 @@ import graph_helper as gh
 import weighted_subgraph_problem as wsp
 import dynamic_program as dp
 import integer_program as ip
+import statstics as stats
 
 
 # --------------------------
@@ -387,16 +388,20 @@ def main():
             #make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
 
             # Statistics for comparing IPs
-            #make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
+            stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
+            stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
             #make_statistics('tree', 10, medium, stat_name='dyn_tree', dyn=True, flow=True)
             #make_statistics('SPG', 10, medium, stat_name='dyn_spg', dyn=True, flow=True)
 
             # Statistics for IP (sep)
-            make_statistics('graph', 10, small, stat_name='sep', sep=True, sep_iter=True)
+            #make_statistics('graph', 10, small, stat_name='sep', sep=True, sep_iter=True)
 
             # Statistics for preprocessing
-
+            stats.make__preprocessing_statistics(10, [10, 20, 30, 40, 50, 60, 75, 100])
+            stats.make__preprocessing_statistics(10, [200, 250, 500])
             # Statistics with GAP/Relaxing
+            #stats.make_relaxation_statistics(100, 10, deliminator=',', rooted=True, full=True, flow=True)
+
 
             # Statistic for weights
             # Fixed Nodes
