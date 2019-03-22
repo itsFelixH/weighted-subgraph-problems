@@ -377,24 +377,24 @@ def make_relaxation_statistics(iterations, size, stat_name='relaxation', delimin
             end = timer()
             alg = 'IP (flow)'
 
-        table_row = str(k) + deliminator + str(weight_ip)
+        table_row = str(int(weight_ip))
         if full:
             table_row += deliminator + "{0:.2f}".format(weight_full)
-            table_row += deliminator + "{0:.2f}".format(weight_ip/weight_full)
+            table_row += deliminator + "{0:.2f}".format((1 - weight_ip/weight_full)*100) + '\%'
         if rooted:
             table_row += deliminator + "{0:.2f}".format(weight_rooted)
-            table_row += deliminator + "{0:.2f}".format(weight_ip/weight_rooted)
+            table_row += deliminator + "{0:.2f}".format((1 - weight_ip/weight_rooted)*100) + '\%'
         if flow:
             table_row += deliminator + "{0:.2f}".format(weight_flow)
-            table_row += deliminator + "{0:.2f}".format(weight_ip/weight_flow)
+            table_row += deliminator + "{0:.2f}".format((1 - weight_ip/weight_flow)*100) + '\%'
 
-        table_row += '\n'
+        table_row += "\\\\ \hline \n"
         f.write(table_row)
 
     f.close()
 
 
-def make__preprocessing_statistics(iterations, sizes, stat_name='preprocess', deliminator='&', mode='max'):
+def make_preprocessing_statistics(iterations, sizes, stat_name='preprocess', deliminator='&', mode='max'):
 
     # weights
     weights = (-10, 10, -10, 10)
