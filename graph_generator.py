@@ -281,8 +281,7 @@ def random_weighted_grid(m, n, min_node_weight, max_node_weight, min_edge_weight
     return G, dic
 
 
-def random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
-                           multigraph=False, directed=False):
+def random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph=False):
     """Creates a random spanning tree by executing a random walk.
     Parameters:
     n: int (number of edges)
@@ -304,12 +303,7 @@ def random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_w
     T.add(current_node)
 
     if multigraph:
-        if directed:
-            G = nx.MultiDiGraph()
-        else:
-            G = nx.MultiGraph()
-    elif directed:
-        G = nx.DiGraph()
+        G = nx.MultiGraph()
     else:
         G = nx.Graph()
 
@@ -327,8 +321,7 @@ def random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_w
     return G
 
 
-def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
-                           multigraph=False, directed=False):
+def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph=False):
     """Creates a random connected graph.
     Parameters:
     m: int (number of nodes)
@@ -341,15 +334,14 @@ def random_connected_graph(n, m, min_node_weight, max_node_weight, min_edge_weig
     Returns:
     G : NetworkX graph"""
 
-    G = random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph, directed)
-    G = add_random_edges(G, m)
+    G = random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph)
+    G = add_random_edges(G, m, multigraph)
     G = weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
 
     return G
 
 
-def random_weighted_tree2(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth,
-                           multigraph=False, directed=False):
+def random_weighted_tree2(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth):
     """Creates a random tree.
     Parameters:
     n: int (number of nodes)
@@ -361,13 +353,13 @@ def random_weighted_tree2(n, min_node_weight, max_node_weight, min_edge_weight, 
     Returns:
     G : NetworkX graph"""
 
-    G = random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph, directed)
+    G = random_walk(n, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth, multigraph)
     G = weight_graph(G, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
 
     return G
 
 
-def add_random_edges(G, num_total_edges):
+def add_random_edges(G, num_total_edges, multigraph=False):
     """Adds random edges until the number of desired edges is reached.
     Parameters:
     G: NetworkX graph
@@ -376,7 +368,7 @@ def add_random_edges(G, num_total_edges):
     Returns:
     G : NetworkX graph"""
 
-    if G.is_multigraph():
+    if multigraph:
         while len(G.edges) < num_total_edges:
             random_edge = tuple(random.sample(G.nodes, 2))
             G.add_edge(*random_edge)

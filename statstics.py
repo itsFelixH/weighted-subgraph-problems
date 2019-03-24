@@ -394,7 +394,7 @@ def make_relaxation_statistics(iterations, size, stat_name='relaxation', delimin
     f.close()
 
 
-def make_preprocessing_statistics(iterations, sizes, stat_name='preprocess', deliminator='&', mode='max'):
+def make_preprocessing_statistics(iterations, ns, stat_name='preprocess', deliminator='&', mode='max'):
 
     # weights
     weights = (-10, 10, -10, 10)
@@ -410,21 +410,22 @@ def make_preprocessing_statistics(iterations, sizes, stat_name='preprocess', del
     f.write('Average' + deliminator + 'times' + deliminator + 'for' + deliminator + str(iterations) + deliminator
             + 'iterations:' + '\n')
     f.write('\n')
-    table_columns = 'graph size'
+    table_columns = 'n' + deliminator + 'm'
     table_columns += deliminator + 'Preprocessing'
     table_columns += deliminator + 'No preprocessing'
     table_columns += '\n'
     f.write(table_columns)
 
     # Fill table rows
-    for n in sizes:
-        print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
+    for n in ns:
+        m = n
+        print('Starting size ' + str(n) + ', '+ str(m) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 
         times = dict()
         num_iter = []
 
         for k in range(iterations):
-            G = gg.random_connected_graph(n, 2*n, *weights)
+            G = gg.random_connected_graph(n, m, *weights, multigraph=True)
 
             if (k + 1) % (iterations/10) == 0:
                 print('Iteration ' + str(k + 1))
@@ -447,17 +448,16 @@ def make_preprocessing_statistics(iterations, sizes, stat_name='preprocess', del
                 times[alg] = []
             times[alg].append(end - start)
 
-
         av_time = dict()
         for alg in times:
             av_time[alg] = sum(times[alg]) / float(iterations)
-        av_iter = sum(num_iter) / float(iterations)
 
         table_row = str(n)
+        table_row += deliminator + str(m)
         table_row += deliminator + "{0:.6f}".format(av_time['Preprocessing'])
         table_row += deliminator + "{0:.6f}".format(av_time['No preprocessing'])
 
-        table_row += '\n'
+        table_row += '\\\\ \hline' + '\n'
         f.write(table_row)
 
         print('size ' + str(n) + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))

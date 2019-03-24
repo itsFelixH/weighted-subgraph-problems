@@ -97,12 +97,13 @@ def spanning_tree(G, mode='max'):
     Returns:
     T : NetworkX graph"""
 
-    def _maximum_spanning_tree_edges(G):
+    def _spanning_tree_edges(G):
         from networkx.utils import UnionFind
 
         subtrees = UnionFind()
         if mode == 'max':
-            edges = reverse(sorted(G.edges(data=True), key=lambda t: t[2].get(weight, 1)))
+            edges = sorted(G.edges(data=True), key=lambda t: t[2].get(weight, 1))
+            edges.reverse()
         else:
             edges = sorted(G.edges(data=True), key=lambda t: t[2].get(weight, 1))
 
@@ -111,7 +112,7 @@ def spanning_tree(G, mode='max'):
                 yield (u, v, d)
                 subtrees.union(u, v)
 
-    T = nx.Graph(_maximum_spanning_tree_edges(G))
+    T = nx.Graph(_spanning_tree_edges(G))
 
     return T
 

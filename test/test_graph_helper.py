@@ -143,12 +143,20 @@ def test_merge_edges_between_u_and_v__weighted():
     assert G.number_of_edges(1, 2) == 1
 
 
-def test_maximum_spanning_tree():
+def test_spanning_tree():
     G = gg.random_connected_graph(50, 80, *weights)
-    T = gh.maximum_spanning_tree(G)
+    T = gh.spanning_tree(G, 'max')
+
+    T2 = nx.maximum_spanning_tree(G, weight='weight')
 
     assert nx.is_tree(T)
+    assert gh.sum_edge_weights(T) == gh.sum_edge_weights(T2)
 
+def test_spanning_tree__min():
+    G = gg.random_connected_graph(50, 80, *weights)
+    T = gh.spanning_tree(G, 'min')
+
+    assert nx.is_tree(T)
 
 def test_is_path():
     G1 = gg.random_weighted_path(100, min_node_weight, max_node_weight, min_edge_weight, max_edge_weight)
