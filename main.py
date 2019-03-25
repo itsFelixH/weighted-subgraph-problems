@@ -422,9 +422,9 @@ def main():
 
             # Heuristics
             # stats.make_heuristic_statistics(10, 1000, span_heu=True)
-            stats.make_heuristic_statistics(10, 100, set_heu=True)
+            stats.make_heuristic_statistics(10, 1000, set_heu=True, span_heu=True)
             # stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], flow=True, span_heu=True, stat_name='heu_time')
-            stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], set_heu=True, stat_name='heu_time')
+            # stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], set_heu=True, stat_name='heu_time')
 
         elif choice == 'i':
             for k in range(10):
