@@ -44,7 +44,7 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
     f.write('Average' + deliminator + 'times' + deliminator + 'for' + deliminator + str(iterations) + deliminator
             + 'iterations:' + '\n')
     f.write('\n')
-    table_columns = 'graph size'
+    table_columns = '' #''graph size'
     if dyn:
         table_columns += deliminator + 'dyn prog'
     if rooted:
@@ -152,7 +152,7 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
             av_time[alg] = sum(times[alg]) / float(iterations)
         av_iter = sum(num_iter) / float(iterations)
 
-        table_row = str(n)
+        table_row = '' #str(n)
 
         if dyn:
             table_row += deliminator + "{0:.6f}".format(av_time['Dynamic program'])
@@ -169,6 +169,7 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
         if sep_iter:
             table_row += deliminator + "{0:.6f}".format(av_iter)
 
+        table_row += '\\\\ \hline'
         table_row += '\n'
         f.write(table_row)
 
@@ -411,18 +412,18 @@ def make_preprocessing_statistics(iterations, ns, stat_name='preprocess', delimi
             + 'iterations:' + '\n')
     f.write('\n')
     table_columns = 'n' + deliminator + 'm'
-    table_columns += deliminator + 'Preprocessing'
-    table_columns += deliminator + 'No preprocessing'
+    table_columns += deliminator + 'with'
+    table_columns += deliminator + 'n' + deliminator + 'm'
+    table_columns += deliminator + 'without'
     table_columns += '\n'
     f.write(table_columns)
 
     # Fill table rows
     for n in ns:
-        m = n
-        print('Starting size ' + str(n) + ', '+ str(m) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
+        m = 2*n
+        print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 
         times = dict()
-        num_iter = []
 
         for k in range(iterations):
             G = gg.random_connected_graph(n, m, *weights, multigraph=True)
@@ -438,7 +439,9 @@ def make_preprocessing_statistics(iterations, ns, stat_name='preprocess', delimi
                 times[alg] = []
             times[alg].append(end - start)
 
-            R, node_map, edge_map = wsp.preprocessing(G, mode)
+            R = wsp.preprocessing(G, mode)
+            nr = R.number_of_nodes()
+            mr = R.number_of_edges()
 
             start = timer()
             (H, weight) = ip.solve_flow_ip(R, mode)
@@ -455,6 +458,7 @@ def make_preprocessing_statistics(iterations, ns, stat_name='preprocess', delimi
         table_row = str(n)
         table_row += deliminator + str(m)
         table_row += deliminator + "{0:.6f}".format(av_time['Preprocessing'])
+        table_row += deliminator + str(nr) + deliminator + str(mr)
         table_row += deliminator + "{0:.6f}".format(av_time['No preprocessing'])
 
         table_row += '\\\\ \hline' + '\n'

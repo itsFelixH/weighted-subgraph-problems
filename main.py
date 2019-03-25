@@ -24,11 +24,11 @@ SAVE_PLOT = 0
 PRINT_SOLUTION = 1
 
 # For generating graphs
-MIN_NODE_WEIGHT = -20
-MAX_NODE_WEIGHT = 10
-MIN_EDGE_WEIGHT = -20
+MIN_NODE_WEIGHT = -10
+MAX_NODE_WEIGHT = 0
+MIN_EDGE_WEIGHT = 0
 MAX_EDGE_WEIGHT = 10
-WEIGHTS = (-10, 10, -10, 10)
+WEIGHTS = (-20, 10, -20, 10)
 
 # --------------------------
 # USER INPUT
@@ -266,7 +266,7 @@ def main():
                 plt.show()
 
         elif choice == 'f':
-            G, D = gg.random_weighted_spg(60, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G, D = gg.random_weighted_spg(10, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             if DRAW or SAVE_PLOT:
                 dic = nx.spring_layout(G)
@@ -307,14 +307,12 @@ def main():
                 plt.show()
 
         elif choice == 'g':
-            G, D = gg.random_weighted_spg(50, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
+            G, D = gg.random_weighted_spg(30, MIN_NODE_WEIGHT, MAX_NODE_WEIGHT, MIN_EDGE_WEIGHT, MAX_EDGE_WEIGHT)
 
             G = G.to_undirected()
             dic_G = nx.spring_layout(G)
-            print("\n".join(nx.generate_gml(G)))
 
-            R, node_map, edge_map = wsp.preprocessing(G)
-            print("\n".join(nx.generate_gml(R)))
+            R = wsp.preprocessing(G)
 
             # Draw graph G
             ax = plt.subplot(2, 2, 1)
@@ -352,7 +350,7 @@ def main():
             nx.draw_networkx_labels(R, pos_higher, labels)
 
             start = timer()
-            (H, weight) = ip.solve_flow_ip(G, MODE, induced=False)
+            (H, weight) = ip.solve_flow_ip(G, MODE)
             print('weight: '+str(weight))
             print('weight: ' + str(gh.weight(H)))
             end = timer()
@@ -363,7 +361,7 @@ def main():
                 draw_weighted_subgraph(ax, G, H, dic_G, weight, 'IP (flow)', end - start)
 
             start = timer()
-            (HR, weight) = ip.solve_flow_ip(R, MODE, induced=False)
+            (HR, weight) = ip.solve_flow_ip(R, MODE)
             print('weight: ' + str(weight))
             print('weight: ' + str(gh.weight(HR)))
             end = timer()
@@ -387,19 +385,38 @@ def main():
             # make_statistics('graph', 10, [20], full=True)
             # make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
 
+            # Statistics for dynamic
+            #graph_class, iterations, sizes, stat_name = None, deliminator = '&', mode = 'max', rooted = False,
+            #full = False, flowrooted = False, flow = False, dyn = False, sep = False, sep_iter = False
+
+            #stats.make_statistics('path', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+            #                      flow=True)
+
+            #stats.make_statistics('tree', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+            #                      flow=True)
+
+            #stats.make_statistics('SPG', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+            #                      flow=True)
+
             # Statistics for comparing IPs
             # stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
             # stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
             # make_statistics('tree', 10, medium, stat_name='dyn_tree', dyn=True, flow=True)
             # make_statistics('SPG', 10, medium, stat_name='dyn_spg', dyn=True, flow=True)
+            #stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
+            #stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
+            #make_statistics('tree', 10, medium, stat_name='dyn_tree', dyn=True, flow=True)
+            #make_statistics('SPG', 10, medium, stat_name='dyn_spg', dyn=True, flow=True)
 
             # Statistics for IP (sep)
             # make_statistics('graph', 10, small, stat_name='sep', sep=True, sep_iter=True)
 
             # Statistics for preprocessing
             stats.make_preprocessing_statistics(10, [10, 20, 30, 40, 50, 60, 75, 100])
-            stats.make_preprocessing_statistics(10, [200, 250, 500])
+            # stats.make_preprocessing_statistics(10, [200, 250, 500])
 
+            # stats.make__preprocessing_statistics(10, [10, 20, 30, 40, 50, 60, 75, 100])
+            # stats.make__preprocessing_statistics(10, [200, 250, 500])
             # Statistics with GAP/Relaxing
             # stats.make_relaxation_statistics(20, 10, rooted=True, full=True, flow=True)
 

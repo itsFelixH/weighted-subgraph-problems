@@ -49,37 +49,24 @@ def preprocessing(G, mode='max'):
     if G.is_directed():
         G = G.to_undirected()
 
-    node_mapping = dict()
-    edge_mapping = dict()
     R = G.copy()
 
     while True:
         backup = R.copy()
 
         # Phase 1
-        # Isolated_nodes
         R = isolated_vertices_rule(R)
-
-        # Parallel edges
-        R, new_edges = parallel_edges_rule(R, mode)
-        edge_mapping.update(new_edges)
-
-        # Adjacent edges
-        # R, new_nodes = adjacent_edges_rule(R, mode)
-        # node_mapping.update(new_nodes)
-
-        # Chain rule
-        #R, new_edges = chain_rule(R, mode)
-        # edge_mapping.update(new_edges)
+        R = parallel_edges_rule(R, mode)
+        R = adjacent_edges_rule(R, mode)
+        R = chain_rule(R, mode)
 
         # Phase 2
-        # Mirrored hubs
-        # R = mirrored_hubs_rule(R, mode)
+        R = mirrored_hubs_rule(R, mode)
 
         if R.number_of_nodes() == backup.number_of_nodes() and R.number_of_edges() == backup.number_of_edges():
             break
 
-    return R, node_mapping, edge_mapping
+    return R
 
 
 def isolated_vertices_rule(G):
@@ -108,9 +95,6 @@ def parallel_edges_rule(G, mode='max'):
     Returns:
     R : NetworkX graph (reduced instance)"""
 
-    edge_mapping = dict()
-
-    # Parallel edges
     if G.is_multigraph():
         for u in G.nodes():
             for v in G.nodes():
@@ -131,7 +115,6 @@ def parallel_edges_rule(G, mode='max'):
                     if G.number_of_edges(u, v) < num_edges:
                         key = G.new_edge_key(u, v)
                         G.add_edge(u, v, key, weight=weight)
-                        edge_mapping[(u, v, key)] = edge_map
                     if negative > 0:
                         if positive > 0:
                             for edge in G[u][v].copy():
@@ -149,7 +132,7 @@ def parallel_edges_rule(G, mode='max'):
                                 if G[u][v][edge]['weight'] < 0:
                                     if max_edge and edge != max_edge:
                                         G.remove_edge(u, v, edge)
-    return G, edge_mapping
+    return G
 
 
 def adjacent_edges_rule(G, mode='max'):
@@ -161,23 +144,19 @@ def adjacent_edges_rule(G, mode='max'):
     Returns:
     R : NetworkX graph (reduced instance)"""
 
-    node_mapping = dict()
-
     changed = True
     k = 1
     while changed:
-        edges = list(G.edges.data('weight')).copy()
+        edges = list(G.edges.data('weight'))
         changed = False
         for u, v, w in edges:
-            print(G.node[u])
-            print(G.node[v])
             if w >= 0 and w + G.node[u]['weight'] >= 0 and w + G.node[v]['weight'] >= 0:
                 changed = True
                 G = gh.merge_nodes(G, [u, v], 'm' + str(k), w + G.node[u]['weight'] + G.node[v]['weight'])
-                node_mapping['m' + str(k)] = [u, v]
                 k += 1
+                G = parallel_edges_rule(G, mode)
                 break
-    return G, node_mapping
+    return G
 
 
 def chain_rule(G, mode='max'):
@@ -188,8 +167,6 @@ def chain_rule(G, mode='max'):
 
     Returns:
     R : NetworkX graph (reduced instance)"""
-
-    edge_mapping = dict()
 
     changed = True
     while changed:
@@ -212,12 +189,10 @@ def chain_rule(G, mode='max'):
                         if G.is_multigraph():
                             key = G.new_edge_key(u, w)
                             G.add_edge(u, w, key, weight=w3 + w1 + w2)
-                            edge_mapping[(u, w, key)] = [(u, v), (v, w)]
                         else:
                             G.add_edge(u, w, weight=w3 + w1 + w2)
-                            edge_mapping[(u, w)] = [(u, v), (v, w)]
                         break
-    return G, edge_mapping
+    return G
 
 
 def mirrored_hubs_rule(G, mode='max'):

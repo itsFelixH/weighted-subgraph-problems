@@ -22,17 +22,17 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
     else:
         G.add_node(new_node)
 
-    edges = list(G.edges.data('weight'))
-    for u, v, weight in edges:
+    edges = list(G.edges.data('weight')).copy()
+    for u, v, w in edges:
         if multigraph:
             if u in selected_nodes:
-                G.add_edge(new_node, v, weight=weight)
+                G.add_edge(new_node, v, weight=w)
             elif v in selected_nodes:
-                G.add_edge(u, new_node, weight=weight)
+                G.add_edge(u, new_node, weight=w)
         else:
             if u in selected_nodes:
                 if not G.has_edge(new_node, v):
-                    G.add_edge(new_node, v, weight=weight)
+                    G.add_edge(new_node, v, weight=w)
                 else:
                     multigraph = 1
                     if G.is_directed():
@@ -42,10 +42,10 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
                     H.add_nodes_from(G.nodes())
                     H.add_edges_from(G.edges(data=True))
                     G = H
-                    G.add_edge(new_node, v, weight=weight)
+                    G.add_edge(new_node, v, weight=w)
             elif v in selected_nodes:
                 if not G.has_edge(u, new_node):
-                    G.add_edge(u, new_node, weight=weight)
+                    G.add_edge(u, new_node, weight=w)
                 else:
                     multigraph = 1
                     if G.is_directed():
@@ -55,7 +55,7 @@ def merge_nodes(G, selected_nodes, new_node, node_weight=None):
                     H.add_nodes_from(G.nodes())
                     H.add_edges_from(G.edges(data=True))
                     G = H
-                    G.add_edge(u, new_node, weight=weight)
+                    G.add_edge(u, new_node, weight=w)
                     
     for node in selected_nodes:
         G.remove_node(node)
