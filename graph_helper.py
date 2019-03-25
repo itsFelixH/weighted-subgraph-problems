@@ -145,8 +145,11 @@ def direct_tree(G, root=None):
             root = random.choice(degree_two_vertices)
         else:
             root = random.choice(list(G.nodes()))
-    
-    H = nx.DiGraph()
+
+    if G.is_multigraph():
+        H = nx.DiGraph()
+    else:
+        H = nx.MultiDiGraph()
     H.add_nodes_from(G.nodes(data=True))
     
     Q = [root]
@@ -155,9 +158,15 @@ def direct_tree(G, root=None):
         u = Q[0]
         used_nodes.append(u)
         for v in G.neighbors(u):
-            if v not in used_nodes:
-                H.add_edge(u, v, weight=G[u][v]['weight'])
-                Q.append(v)
+            if G.is_multigraph():
+                if v not in used_nodes:
+                    for k in G[u][v]:
+                        H.add_edge(u, v, weight=G[u][v][k]['weight'])
+                        Q.append(v)
+                else:
+                    if v not in used_nodes:
+                        H.add_edge(u, v, weight=G[u][v]['weight'])
+                        Q.append(v)
         Q.remove(u)
     
     return H

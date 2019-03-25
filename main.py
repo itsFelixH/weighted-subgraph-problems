@@ -10,6 +10,7 @@ import weighted_subgraph_problem as wsp
 import dynamic_program as dp
 import integer_program as ip
 import statstics as stats
+import heuristics as heu
 
 
 # --------------------------
@@ -28,7 +29,7 @@ MIN_NODE_WEIGHT = -10
 MAX_NODE_WEIGHT = 0
 MIN_EDGE_WEIGHT = 0
 MAX_EDGE_WEIGHT = 10
-WEIGHTS = (-20, 10, -20, 10)
+WEIGHTS = (-10, 10, -10, 10)
 
 # --------------------------
 # USER INPUT
@@ -386,47 +387,44 @@ def main():
             # make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
 
             # Statistics for dynamic
-            #graph_class, iterations, sizes, stat_name = None, deliminator = '&', mode = 'max', rooted = False,
-            #full = False, flowrooted = False, flow = False, dyn = False, sep = False, sep_iter = False
-
-            #stats.make_statistics('path', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+            # stats.make_statistics('path', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
             #                      flow=True)
-
-            #stats.make_statistics('tree', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+            # stats.make_statistics('tree', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
             #                      flow=True)
-
-            #stats.make_statistics('SPG', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+            # stats.make_statistics('SPG', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
             #                      flow=True)
 
             # Statistics for comparing IPs
             # stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
             # stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
-            # make_statistics('tree', 10, medium, stat_name='dyn_tree', dyn=True, flow=True)
-            # make_statistics('SPG', 10, medium, stat_name='dyn_spg', dyn=True, flow=True)
-            #stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
-            #stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
-            #make_statistics('tree', 10, medium, stat_name='dyn_tree', dyn=True, flow=True)
-            #make_statistics('SPG', 10, medium, stat_name='dyn_spg', dyn=True, flow=True)
+            # stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
+            # stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
+            # stats.make_statistics('SPG', 10, [1000], stat_name='density', flow=True, dyn=True)
 
             # Statistics for IP (sep)
             # make_statistics('graph', 10, small, stat_name='sep', sep=True, sep_iter=True)
 
             # Statistics for preprocessing
-            stats.make_preprocessing_statistics(10, [10, 20, 30, 40, 50, 60, 75, 100])
+            # stats.make_preprocessing_statistics(10, [10, 20, 30, 40, 50, 60, 75, 100])
             # stats.make_preprocessing_statistics(10, [200, 250, 500])
 
-            # stats.make__preprocessing_statistics(10, [10, 20, 30, 40, 50, 60, 75, 100])
-            # stats.make__preprocessing_statistics(10, [200, 250, 500])
             # Statistics with GAP/Relaxing
             # stats.make_relaxation_statistics(20, 10, rooted=True, full=True, flow=True)
 
 
             # Statistic for weights
-            # Fixed Nodes
-            weights = [(10, 10, -5, 5), (10, 10, -10, 10), (10, 10, -20, 20)]
+            #weights = [(0, 0, -1, 1), (0, 0, -5, 5), (0, 0, -10, 10), (0, 0, -25, 25), (0, 0, -50, 50), (0, 0, -100, 100)]
+            #stats.make_weight_statistics('graph', 10, weights, stat_name='weight', flow=True)
+            #weights = [(-1, 1, 0, 0), (-5, 5, 0, 0), (-10, 10, 0, 0), (-25, 25, 0, 0), (-50, 50, 0, 0), (-100, 100, 0, 0)]
+            #stats.make_weight_statistics('graph', 10, weights, stat_name='weight', flow=True)
+            #weights = [(-10, 0, 0, 5), (-10, 0, 0, 10), (-10, 0, 0, 20), (-10, 0, 0, 25), (-10, 0, 0, 50), (-10, 0, 0, 100)]
+            #stats.make_weight_statistics('graph', 10, weights, stat_name='weight', flow=True)
 
-            # Fixed Edges
-            weights = [(-5, 5, 10, 10), (-10, 10, 10, 10), (-20, 20, 10, 10)]
+            # Heuristics
+            # stats.make_heuristic_statistics(10, 1000, span_heu=True)
+            stats.make_heuristic_statistics(10, 100, set_heu=True)
+            # stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], flow=True, span_heu=True, stat_name='heu_time')
+            stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], set_heu=True, stat_name='heu_time')
 
         elif choice == 'i':
             for k in range(10):
@@ -457,6 +455,17 @@ def main():
                 end = timer()
                 if PRINT_SOLUTION:
                     print('IP solution: weight ' + str(int(weight)) + ', time ' + str(round(end - start, 5)) + 's')
+
+        elif choice == 'j':
+            G, D = gg.random_weighted_spg(100, *WEIGHTS)
+            G = G.to_undirected()
+
+            H, weight = dp.solve_dynamic_prog_on_spg(G, D)
+            print('weight OPT: '+str(int(weight)))
+            HST, weight_st = heu.spanning_tree_heuristic(G)
+            print('weight ST: '+str(int(weight_st)))
+            HNS, weight_ns = heu.node_set_heuristic(G)
+            print('weight NS: ' + str(int(weight_ns)))
 
 
 def draw_weighted_subgraph(plot, G, H, dic=None, weight=None, method='', time=None):

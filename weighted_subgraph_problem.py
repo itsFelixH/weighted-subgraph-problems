@@ -58,10 +58,10 @@ def preprocessing(G, mode='max'):
         R = isolated_vertices_rule(R)
         R = parallel_edges_rule(R, mode)
         R = adjacent_edges_rule(R, mode)
-        R = chain_rule(R, mode)
+        #R = chain_rule(R, mode)
 
         # Phase 2
-        R = mirrored_hubs_rule(R, mode)
+        #R = mirrored_hubs_rule(R, mode)
 
         if R.number_of_nodes() == backup.number_of_nodes() and R.number_of_edges() == backup.number_of_edges():
             break
@@ -78,9 +78,10 @@ def isolated_vertices_rule(G):
     R : NetworkX graph (reduced instance)"""
 
     to_remove = []
-    for v in G.nodes():
-        if G.degree[v] == 0:
-            to_remove.append(v)
+    if G.number_of_nodes() > 0:
+        for v in G.nodes():
+            if G.degree[v] == 0:
+                to_remove.append(v)
 
     G.remove_nodes_from(to_remove)
     return G
@@ -228,9 +229,9 @@ def postprocessing(G, H, mode='max'):
 
 def positive_edges_rule(G, H, mode='max'):
     for (u, v, w) in G.edges(data='weight'):
-        if u in H.nodes() and v in H.nodes() and (u,v) not in H.edges():
+        if u in H.nodes() and v in H.nodes() and (u, v) not in H.edges():
             if w >= 0:
-                H.add_edge(u, v)
+                H.add_edge(u, v, weight=w)
     return H
 
 
@@ -240,12 +241,15 @@ def negative_nodes_rule(H, mode='max'):
 
     for v, wv in H.nodes(data='weight'):
         weight = wv
-        for e in H.edges(v):
-            weight += e['weight']
+        for u, u2, w in H.edges(v, data='weight'):
+            weight += w
         if weight < 0:
+            temp2 = temp.copy()
             temp.remove_node(v)
             if nx.is_connected(temp):
                 to_remove.append(v)
+            else:
+                temp = temp2
 
     H.remove_nodes_from(to_remove)
     return H
@@ -255,11 +259,14 @@ def negative_edges_rule(H, mode='max'):
     to_remove = []
     temp = H.copy()
 
-    for e, w in H.edges(data='weight'):
+    for u, v, w in H.edges(data='weight'):
         if w < 0:
-            temp.remove_edge(e)
+            temp2 = temp.copy()
+            temp.remove_edge(u,v)
             if nx.is_connected(temp):
-                to_remove.append(e)
+                to_remove.append((u, v))
+            else:
+                temp = temp2
 
     H.remove_edges_from(to_remove)
     return H

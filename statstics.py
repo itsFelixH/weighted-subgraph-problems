@@ -7,7 +7,7 @@ import graph_generator as gg
 import dynamic_program as dp
 import integer_program as ip
 import weighted_subgraph_problem as wsp
-
+import heuristics as heu
 
 
 def create_statistics_directory():
@@ -26,7 +26,8 @@ def create_statistics_file(name):
 
 
 def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator='&', mode='max', rooted=False,
-                    full=False, flowrooted=False, flow=False, dyn=False, sep=False, sep_iter=False):
+                    full=False, flowrooted=False, flow=False, dyn=False, sep=False, sep_iter=False, span_heu=False,
+                    set_heu=False):
 
     # weights
     weights = (-10, 10, -10, 10)
@@ -44,7 +45,8 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
     f.write('Average' + deliminator + 'times' + deliminator + 'for' + deliminator + str(iterations) + deliminator
             + 'iterations:' + '\n')
     f.write('\n')
-    table_columns = '' #''graph size'
+
+    table_columns = 'graph size'
     if dyn:
         table_columns += deliminator + 'dyn prog'
     if rooted:
@@ -55,6 +57,10 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
         table_columns += deliminator + 'IP (flow rooted)'
     if flow:
         table_columns += deliminator + 'IP (flow)'
+    if set_heu:
+        table_columns += deliminator + 'Node set'
+    if span_heu:
+        table_columns += deliminator + 'Spanning tree'
     if sep:
         table_columns += deliminator + 'IP(sep)'
     if sep_iter:
@@ -77,7 +83,7 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
             elif graph_class == 'SPG':
                 G, D = gg.random_weighted_spg(n, *weights)
             else:
-                G = gg.random_connected_graph(n, 2*n, *weights)
+                G = gg.random_connected_graph(n, 2*n, *weights, multigraph=True)
 
             if (k + 1) % (iterations/10) == 0:
                 print('Iteration ' + str(k + 1))
@@ -118,6 +124,24 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
                     times[alg] = []
                 times[alg].append(end - start)
 
+            if set_heu:
+                start = timer()
+                H, weight_set = heu.node_set_heuristic(G, mode)
+                end = timer()
+                alg = 'Node set'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
+
+            if span_heu:
+                start = timer()
+                H, weight_tree = heu.spanning_tree_heuristic(G, mode)
+                end = timer()
+                alg = 'Spanning tree'
+                if alg not in times:
+                    times[alg] = []
+                times[alg].append(end - start)
+
             if sep:
                 start = timer()
                 (H, weight, i) = ip.solve_separation_ip(G, mode)
@@ -152,7 +176,7 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
             av_time[alg] = sum(times[alg]) / float(iterations)
         av_iter = sum(num_iter) / float(iterations)
 
-        table_row = '' #str(n)
+        table_row = str(n)
 
         if dyn:
             table_row += deliminator + "{0:.6f}".format(av_time['Dynamic program'])
@@ -164,6 +188,10 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
             table_row += deliminator + "{0:.6f}".format(av_time['IP (flow rooted)'])
         if flow:
             table_row += deliminator + "{0:.6f}".format(av_time['IP (flow)'])
+        if span_heu:
+            table_row += deliminator + "{0:.6f}".format(av_time['Spanning tree'])
+        if set_heu:
+            table_row += deliminator + "{0:.6f}".format(av_time['Node set'])
         if sep:
             table_row += deliminator + "{0:.6f}".format(av_time['IP (separation)'])
         if sep_iter:
@@ -222,20 +250,20 @@ def make_weight_statistics(graph_class, iterations, weights, stat_name=None, del
 
         for k in range(iterations):
             if graph_class == 'path':
-                G = gg.random_weighted_path(size, *weights)
+                G = gg.random_weighted_path(size, *weight)
             elif graph_class == 'tree':
-                G = gg.random_weighted_tree(size, *weights)
+                G = gg.random_weighted_tree(size, *weight)
             elif graph_class == 'SPG':
-                G, D = gg.random_weighted_spg(size, *weights)
+                G, D = gg.random_weighted_spg(size, *weight)
             else:
-                G = gg.random_connected_graph(size, 2*size, *weights)
+                G = gg.random_connected_graph(size, 2*size, *weight)
 
             if (k + 1) % (iterations/10) == 0:
                 print('Iteration ' + str(k + 1))
 
             if rooted:
                 start = timer()
-                (H, weight) = ip.solve_full_ip__rooted(G, mode)
+                (H, w) = ip.solve_full_ip__rooted(G, mode)
                 end = timer()
                 alg = 'IP (rooted)'
                 if alg not in times:
@@ -244,7 +272,7 @@ def make_weight_statistics(graph_class, iterations, weights, stat_name=None, del
 
             if full:
                 start = timer()
-                (H, weight) = ip.solve_full_ip(G, mode)
+                (H, w) = ip.solve_full_ip(G, mode)
                 end = timer()
                 alg = 'IP'
                 if alg not in times:
@@ -253,7 +281,7 @@ def make_weight_statistics(graph_class, iterations, weights, stat_name=None, del
 
             if flowrooted:
                 start = timer()
-                (H, weight) = ip.solve_flow_ip__rooted(G, mode)
+                (H, w) = ip.solve_flow_ip__rooted(G, mode)
                 end = timer()
                 alg = 'IP (flow rooted)'
                 if alg not in times:
@@ -262,7 +290,7 @@ def make_weight_statistics(graph_class, iterations, weights, stat_name=None, del
 
             if flow:
                 start = timer()
-                (H, weight) = ip.solve_flow_ip(G, mode)
+                (H, w) = ip.solve_flow_ip(G, mode)
                 end = timer()
                 alg = 'IP (flow)'
                 if alg not in times:
@@ -271,7 +299,7 @@ def make_weight_statistics(graph_class, iterations, weights, stat_name=None, del
 
             if sep:
                 start = timer()
-                (H, weight, i) = ip.solve_separation_ip(G, mode)
+                (H, w, i) = ip.solve_separation_ip(G, mode)
                 end = timer()
                 alg = 'IP (separation)'
                 if alg not in times:
@@ -316,6 +344,7 @@ def make_weight_statistics(graph_class, iterations, weights, stat_name=None, del
         if sep:
             table_row += deliminator + "{0:.6f}".format(av_time['IP (separation)'])
 
+        table_row += '\\\\ \hline'
         table_row += '\n'
         f.write(table_row)
 
@@ -420,49 +449,105 @@ def make_preprocessing_statistics(iterations, ns, stat_name='preprocess', delimi
 
     # Fill table rows
     for n in ns:
-        m = 2*n
+        ms = [2*n, 3*n, 4*n]
         print('Starting size ' + str(n) + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
 
         times = dict()
 
-        for k in range(iterations):
+        #for k in range(iterations):
+        for m in ms:
             G = gg.random_connected_graph(n, m, *weights, multigraph=True)
-
-            if (k + 1) % (iterations/10) == 0:
-                print('Iteration ' + str(k + 1))
-
-            start = timer()
-            (H, weight) = ip.solve_flow_ip(G, mode)
-            end = timer()
-            alg = 'No preprocessing'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
-
             R = wsp.preprocessing(G, mode)
             nr = R.number_of_nodes()
             mr = R.number_of_edges()
 
-            start = timer()
-            (H, weight) = ip.solve_flow_ip(R, mode)
-            end = timer()
-            alg = 'Preprocessing'
-            if alg not in times:
-                times[alg] = []
-            times[alg].append(end - start)
+        # if (k + 1) % (iterations/10) == 0:
+        #     print('Iteration ' + str(k + 1))
+        #
+        # start = timer()
+        # (H, weight) = ip.solve_flow_ip(G, mode)
+        # end = timer()
+        # alg = 'No preprocessing'
+        # if alg not in times:
+        #     times[alg] = []
+        # times[alg].append(end - start)
+        #
+        # start = timer()
+        # (H, weight) = ip.solve_flow_ip(R, mode)
+        # end = timer()
+        # alg = 'Preprocessing'
+        # if alg not in times:
+        #     times[alg] = []
+        # times[alg].append(end - start)
+        #
+        # av_time = dict()
+        # for alg in times:
+        #     av_time[alg] = sum(times[alg]) / float(iterations)
 
-        av_time = dict()
-        for alg in times:
-            av_time[alg] = sum(times[alg]) / float(iterations)
+            table_row = str(n)
+            table_row += deliminator + str(m)
+            #table_row += deliminator + "{0:.6f}".format(av_time['Preprocessing'])
+            table_row += deliminator + str(nr) + deliminator + str(mr)
+            #table_row += deliminator + "{0:.6f}".format(av_time['No preprocessing'])
 
-        table_row = str(n)
-        table_row += deliminator + str(m)
-        table_row += deliminator + "{0:.6f}".format(av_time['Preprocessing'])
-        table_row += deliminator + str(nr) + deliminator + str(mr)
-        table_row += deliminator + "{0:.6f}".format(av_time['No preprocessing'])
-
-        table_row += '\\\\ \hline' + '\n'
-        f.write(table_row)
+            table_row += '\\\\ \hline' + '\n'
+            f.write(table_row)
 
         print('size ' + str(n) + ' done' + ' at ' + time.strftime("%Y%m%d-%H%M%S"))
+    f.close()
+
+
+def make_heuristic_statistics(iterations, size, stat_name='heuristic', deliminator='&', mode='max', set_heu=False,
+                    span_heu=False):
+
+    # weights
+    weights = (-10, 10, -10, 10)
+    file_path = create_statistics_file(stat_name)
+
+    # Open file
+    f = open(file_path, 'w')
+
+    # Heading
+    f.write(mode + '-WSP'+ deliminator + 'on' + deliminator + 'random' + deliminator + 'Graphs'
+            + 's' + '\n')
+    f.write('\n')
+    table_columns = 'OPT'
+    if set_heu:
+        table_columns += deliminator + 'Node set'
+    if span_heu:
+        table_columns += deliminator + 'Spanning tree'
+    table_columns += '\\ \hline' + '\n'
+    f.write(table_columns)
+
+    # Fill table rows
+
+    for k in range(iterations):
+        G, D = gg.random_weighted_spg(size, *weights)
+
+        if (k + 1) % (iterations/10) == 0:
+            print('Iteration ' + str(k + 1))
+
+        (H, weight_ip) = dp.solve_dynamic_prog_on_spg(G, D, mode)
+        G = G.to_undirected()
+
+        if set_heu:
+            start = timer()
+            H, weight_set = heu.node_set_heuristic(G, mode)
+            end = timer()
+            alg = 'Node set'
+
+        if span_heu:
+            start = timer()
+            H, weight_tree = heu.spanning_tree_heuristic(G, mode)
+            end = timer()
+            alg = 'Spanning tree'
+
+        table_row = str(int(weight_ip))
+        if set_heu:
+            table_row += deliminator + str(int(weight_set))
+        if span_heu:
+            table_row += deliminator + str(int(weight_tree))
+        table_row += "\\\\ \hline \n"
+        f.write(table_row)
+
     f.close()
