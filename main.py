@@ -383,6 +383,7 @@ def main():
 
             # Statistics for comparing IPs
             # make_statistics('graph', 10, verysmall, rooted=True, full=True, flowrooted=True, flow=True, sep=True)
+            # stats.make_statistics('graph', 10, [5, 10, 11, 12, 13, 14, 15, 20, 30, 40, 50, 60], flow=True)
             # make_statistics('graph', 10, [20], full=True)
             # make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
 
@@ -391,7 +392,7 @@ def main():
             #                      flow=True)
             # stats.make_statistics('tree', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
             #                      flow=True)
-            # stats.make_statistics('SPG', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+            # stats.make_statistics('SPG', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_test', dyn=True,
             #                      flow=True)
 
             # Statistics for comparing IPs
@@ -422,7 +423,7 @@ def main():
 
             # Heuristics
             # stats.make_heuristic_statistics(10, 1000, span_heu=True)
-            stats.make_heuristic_statistics(10, 1000, set_heu=True, span_heu=True)
+            stats.make_heuristic_statistics(5, [1000], set_heu=True, span_heu=True)
             # stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], flow=True, span_heu=True, stat_name='heu_time')
             # stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], set_heu=True, stat_name='heu_time')
 
