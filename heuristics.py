@@ -27,6 +27,15 @@ def spanning_tree_heuristic(G, mode='max'):
 
 
 def node_set_heuristic(G, mode='max'):
+    """Compute weighted subgraph in graph G using a node set heuristic.
+    Parameters:
+    G : NetworkX graph
+    mode : 'max' or 'min'
+
+    Returns:
+    H : NetworkX graph (weighted subgraph)
+    weight: objective value (weight of H)"""
+
     ip = ig.OP()
     R = wsp.preprocessing(G, mode)
 

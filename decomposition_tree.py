@@ -49,16 +49,6 @@ class DecompositionTree:
         else:
             return False
     
-    def get_path_in_tree_as_string(self, node):       
-        if self.left and self.left.contains(node):
-            return 'l' + self.left.get_path_in_tree_as_string(node)
-        elif self.right and self.right.contains(node):
-            return 'r' + self.right.get_path_in_tree_as_string(node)
-        elif self == node:
-            return ''
-        else:
-            return 'node is not in tree!'
-    
     def contains(self, node):
         """Checks if node is in the tree.
         Parameters:
@@ -212,6 +202,11 @@ class DecompositionTree:
             return l
 
     def size(self):
+        """Returns nodes at a given level of the tree.
+
+        Returns:
+        n : size of the tree"""
+
         n = 1
         if self.left is not None:
             n += self.left.size()

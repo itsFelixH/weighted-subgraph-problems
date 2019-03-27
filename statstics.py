@@ -81,7 +81,12 @@ def make_statistics(graph_class, iterations, sizes, stat_name=None, deliminator=
             elif graph_class == 'tree':
                 G = gg.random_weighted_tree(n, *weights)
             elif graph_class == 'SPG':
-                G, D = gg.random_weighted_spg(n, *weights)
+                size = 0
+                while size != n:
+                    G, D = gg.random_weighted_spg(1000, *weights)
+                    size = G.number_of_nodes()
+                    print(size)
+                G = G.to_undirected()
             else:
                 G = gg.random_connected_graph(n, 2*n, *weights, multigraph=True)
 

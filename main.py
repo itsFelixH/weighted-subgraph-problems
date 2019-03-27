@@ -31,6 +31,9 @@ MIN_EDGE_WEIGHT = 0
 MAX_EDGE_WEIGHT = 10
 WEIGHTS = (-10, 10, -10, 10)
 
+# For statistics
+ITERATIONS = 100
+
 # --------------------------
 # USER INPUT
 # --------------------------
@@ -378,53 +381,50 @@ def main():
         elif choice == 'h':
             verysmall = [5, 10, 11, 12, 13, 14, 15]
             small = [10, 20, 30, 40, 50, 60, 75, 100]
-            medium = [250, 500, 750, 1000]
-            large = [500, 1000, 2500, 5000]
 
             # Statistics for comparing IPs
-            # make_statistics('graph', 10, verysmall, rooted=True, full=True, flowrooted=True, flow=True, sep=True)
-            # make_statistics('graph', 10, [20], full=True)
-            # make_statistics('graph', 10, [75, 100], flowrooted=True, flow=True, sep=True)
+            stats.make_statistics('graph', ITERATIONS, verysmall, rooted=True, full=True, flowrooted=True, flow=True, sep=True)
+            stats.make_statistics('graph', ITERATIONS, [20], full=True)
+            stats.make_statistics('graph', ITERATIONS, [75, 100], flowrooted=True, flow=True, sep=True)
 
             # Statistics for dynamic
-            # stats.make_statistics('path', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
-            #                      flow=True)
-            # stats.make_statistics('tree', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
-            #                      flow=True)
-            # stats.make_statistics('SPG', 10, [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
-            #                      flow=True)
+            stats.make_statistics('path', ITERATIONS [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+                                 flow=True)
+            stats.make_statistics('tree', ITERATIONS [10, 20, 30, 40, 50, 60, 75, 100], stat_name='dyn_path', dyn=True,
+                                 flow=True)
+            stats.make_statistics('SPG', ITERATIONS [50], stat_name='density', dyn=True, flow=True)
 
             # Statistics for comparing IPs
-            # stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
-            # stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
-            # stats.make_statistics('path', 10, small, stat_name='dyn_path', dyn=True, flow=True)
-            # stats.make_statistics('path', 10, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
-            # stats.make_statistics('SPG', 10, [1000], stat_name='density', flow=True, dyn=True)
+            stats.make_statistics('path', ITERATIONS, small, stat_name='dyn_path', dyn=True, flow=True)
+            stats.make_statistics('path', ITERATIONS, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
+            stats.make_statistics('path', ITERATIONS, small, stat_name='dyn_path', dyn=True, flow=True)
+            stats.make_statistics('path', ITERATIONS, small, mode='min', stat_name='dyn_path_min', dyn=True, flow=True)
+            stats.make_statistics('SPG', ITERATIONS, [1000], stat_name='density', flow=True, dyn=True)
 
             # Statistics for IP (sep)
-            # make_statistics('graph', 10, small, stat_name='sep', sep=True, sep_iter=True)
+            stats.make_statistics('graph', ITERATIONS, small, stat_name='sep', sep=True, sep_iter=True)
 
             # Statistics for preprocessing
-            # stats.make_preprocessing_statistics(10, [10, 20, 30, 40, 50, 60, 75, 100])
-            # stats.make_preprocessing_statistics(10, [200, 250, 500])
+            stats.make_preprocessing_statistics(ITERATIONS, [10, 20, 30, 40, 50, 60, 75, 100])
+            stats.make_preprocessing_statistics(ITERATIONS, [200, 250, 500])
 
             # Statistics with GAP/Relaxing
-            # stats.make_relaxation_statistics(20, 10, rooted=True, full=True, flow=True)
+            stats.make_relaxation_statistics(20, ITERATIONS, rooted=True, full=True, flow=True)
 
 
             # Statistic for weights
-            #weights = [(0, 0, -1, 1), (0, 0, -5, 5), (0, 0, -10, 10), (0, 0, -25, 25), (0, 0, -50, 50), (0, 0, -100, 100)]
-            #stats.make_weight_statistics('graph', 10, weights, stat_name='weight', flow=True)
-            #weights = [(-1, 1, 0, 0), (-5, 5, 0, 0), (-10, 10, 0, 0), (-25, 25, 0, 0), (-50, 50, 0, 0), (-100, 100, 0, 0)]
-            #stats.make_weight_statistics('graph', 10, weights, stat_name='weight', flow=True)
-            #weights = [(-10, 0, 0, 5), (-10, 0, 0, 10), (-10, 0, 0, 20), (-10, 0, 0, 25), (-10, 0, 0, 50), (-10, 0, 0, 100)]
-            #stats.make_weight_statistics('graph', 10, weights, stat_name='weight', flow=True)
+            weights = [(0, 0, -1, 1), (0, 0, -5, 5), (0, 0, -10, 10), (0, 0, -25, 25), (0, 0, -50, 50), (0, 0, -100, 100)]
+            stats.make_weight_statistics('graph', ITERATIONS, weights, stat_name='weight', flow=True)
+            weights = [(-1, 1, 0, 0), (-5, 5, 0, 0), (-10, 10, 0, 0), (-25, 25, 0, 0), (-50, 50, 0, 0), (-100, 100, 0, 0)]
+            stats.make_weight_statistics('graph', ITERATIONS, weights, stat_name='weight', flow=True)
+            weights = [(-10, 0, 0, 5), (-10, 0, 0, 10), (-10, 0, 0, 20), (-10, 0, 0, 25), (-10, 0, 0, 50), (-10, 0, 0, 100)]
+            stats.make_weight_statistics('graph', ITERATIONS, weights, stat_name='weight', flow=True)
 
             # Heuristics
-            # stats.make_heuristic_statistics(10, 1000, span_heu=True)
-            stats.make_heuristic_statistics(10, 100, set_heu=True)
-            # stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], flow=True, span_heu=True, stat_name='heu_time')
-            stats.make_statistics('graph', 10, [10, 25, 50, 100, 250, 500, 1000], set_heu=True, stat_name='heu_time')
+            stats.make_heuristic_statistics(ITERATIONS, 1000, span_heu=True)
+            stats.make_heuristic_statistics(ITERATIONS, 100, set_heu=True)
+            stats.make_statistics('graph', ITERATIONS, [10, 25, 50, 100, 250, 500, 1000], flow=True, span_heu=True, stat_name='heu_time')
+            stats.make_statistics('graph', ITERATIONS, [10, 25, 50, 100, 250, 500, 1000], set_heu=True, stat_name='heu_time')
 
         elif choice == 'i':
             for k in range(10):
@@ -513,6 +513,7 @@ f) Compare IP (flow) and dynamic program for SPGs
 g) Preprocessing for WSP on random graph
 h) Save statistics to file
 i) Compare relaxations
+j) Compare heuristics
       
 z) End program...
 

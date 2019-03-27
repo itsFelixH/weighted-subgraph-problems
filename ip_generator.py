@@ -5,6 +5,11 @@ from itertools import chain, combinations
 class OP(Model):
 
     def __init__(self, *p, **k):
+        """Creates an new OP as a child of Gurobi.Model.
+
+        Returns:
+        OP"""
+
         Model.__init__(self, *p, **k)
         self.setParam('OutputFlag', False)
         self._x = dict()
@@ -13,18 +18,45 @@ class OP(Model):
         self._f = dict()
 
     def get_x(self):
+        """Getter for x
+
+        Returns:
+        x : dict"""
+
         return self._x
 
     def get_y(self):
+        """Getter for y
+
+        Returns:
+        y : dict"""
+
         return self._y
 
     def get_z(self):
+        """Getter for z
+
+        Returns:
+        z : dict"""
+
         return self._z
 
     def get_f(self):
+        """Getter for f
+
+        Returns:
+        f : dict"""
+
         return self._f
 
     def add_node_variables(self, G):
+        """Adds a variable to OP for each node in G
+        Parameters:
+        G : NetworkX Graph
+
+        Returns:
+        y : dict"""
+
         for v in G.nodes():
             self._y[v] = self.addVar(vtype=GRB.BINARY, name='y' + str(v))
 
@@ -32,6 +64,13 @@ class OP(Model):
         return self._y
 
     def add_root_variables(self, G):
+        """Adds a variable to OP for each node in G for encoding a root node
+        Parameters:
+        G : NetworkX Graph
+
+        Returns:
+        x : dict"""
+
         for v in G.nodes():
             self._x[v] = self.addVar(vtype=GRB.BINARY, name='x' + str(v))
 
@@ -39,6 +78,13 @@ class OP(Model):
         return self._x
 
     def add_edge_variables(self, G):
+        """Adds a variable to OP for each edge in G
+        Parameters:
+        G : NetworkX Graph
+
+        Returns:
+        z : dict"""
+
         if G.is_multigraph():
             for u, v, k in G.edges(keys=True):
                 if u not in self._z:
@@ -59,6 +105,13 @@ class OP(Model):
         return self._z
 
     def add_flow_variables(self, G_flow):
+        """Adds a variable to OP for each edge in G_f to use as flow variables
+        Parameters:
+        G_f : NetworkX DiGraph
+
+        Returns:
+        y : dict"""
+
         if G_flow.is_multigraph():
             for u, v, k in G_flow.edges(keys=True):
                 if u not in self._f:
@@ -75,6 +128,11 @@ class OP(Model):
         return self._f
 
     def set_wsp_objective(self, G, mode='max'):
+        """Sets the objective function for OP
+        Parameters:
+        G : NetworkX Graph
+        mode : string ('min' or 'max')"""
+
         if G.is_multigraph():
             if mode == 'max':
                 self.setObjective((quicksum(self._z[u][v][k] * w for u, v, k, w in G.edges(keys=True, data='weight')))
@@ -92,6 +150,10 @@ class OP(Model):
         self.update()
 
     def add_induce_constraints(self, G):
+        """Adds the constraints for making the subgraph induced
+        Parameters:
+        G : NetworkX Graph"""
+
         if G.is_multigraph():
             for u, v, k in G.edges(keys=True):
                 self.addConstr(self._z[u][v][k] >= self._y[u] + self._y[v] - 1,
@@ -106,6 +168,11 @@ class OP(Model):
         self.update()
 
     def add_root_constraints(self, G, root=None):
+        """Adds the root constraints
+        Parameters:
+        G : NetworkX Graph
+        root : vertex (root to be included, optional)"""
+
         if root:
             self.addConstr(self._y[root] == 1, name='R')
         else:
@@ -116,6 +183,11 @@ class OP(Model):
         self.update()
 
     def add_connectivity_constraints(self, G, root=None):
+        """Adds the constraints for making the subgraph connected
+        Parameters:
+        G : NetworkX Graph
+        root : vertex (root, optional)"""
+
         subsets = chain.from_iterable(combinations(G.nodes, i) for i in range(G.number_of_nodes() + 1))
         if root:
             for s in subsets:
@@ -145,6 +217,12 @@ class OP(Model):
         self.update()
 
     def add_flow_constraints(self, G_flow, root=None):
+        """Adds the constraints for making the subgraph connected using flow
+        Parameters:
+        G : NetworkX Graph
+        G_f : NetworkX DiGraph
+        root : vertex (root, optional)"""
+
         if G_flow.is_multigraph():
             for u, v, k in G_flow.edges(keys=True):
                 if u in self._z and v in self._z[u] and k in self._z[u][v]:
@@ -199,6 +277,11 @@ class OP(Model):
         self.update()
 
     def add_violated_constraint(self, G, connected_components):
+        """Adds violated constrains from given invalid set
+        Parameters:
+        G : NetworkX Graph
+        connected_components : [vertex]"""
+
         if G.is_multigraph():
             for s in connected_components:
                 elist = [e for e in G.edges(keys=True) if (e[0] in s) ^ (e[1] in s)]
@@ -212,9 +295,3 @@ class OP(Model):
                     self.addConstr(self._y[v] <=  (quicksum(self._x[u] for u in s)) +
                                    (quicksum(self._z[v1][v2] for v1, v2 in elist[:])), name='Conn'+str(v))
         self.update()
-
-    def set_gap(self, gap):
-        self.setParam('MIPGap', gap)
-
-    def get_relaxation(self):
-        return self.relax()
