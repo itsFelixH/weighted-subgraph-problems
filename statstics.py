@@ -2,8 +2,6 @@ from timeit import default_timer as timer
 import random
 import os
 import time
-import networkx as nx
-import matplotlib.pyplot as plt
 
 import graph_generator as gg
 import dynamic_program as dp
