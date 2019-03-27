@@ -2,6 +2,8 @@ from timeit import default_timer as timer
 import random
 import os
 import time
+import networkx as nx
+import matplotlib.pyplot as plt
 
 import graph_generator as gg
 import dynamic_program as dp
@@ -502,7 +504,7 @@ def make_preprocessing_statistics(iterations, ns, stat_name='preprocess', delimi
     f.close()
 
 
-def make_heuristic_statistics(iterations, size, stat_name='heuristic', deliminator='&', mode='max', set_heu=False,
+def make_heuristic_statistics(iterations, sizes, stat_name='heuristic', deliminator='&', mode='max', set_heu=False,
                     span_heu=False):
 
     # weights
@@ -516,42 +518,71 @@ def make_heuristic_statistics(iterations, size, stat_name='heuristic', deliminat
     f.write(mode + '-WSP'+ deliminator + 'on' + deliminator + 'random' + deliminator + 'Graphs'
             + 's' + '\n')
     f.write('\n')
-    table_columns = 'OPT'
+    table_columns = 'n'
     if set_heu:
-        table_columns += deliminator + 'Node set'
+        table_columns += deliminator + 'min gap' + deliminator + 'max gap' + deliminator + 'av gap'
     if span_heu:
-        table_columns += deliminator + 'Spanning tree'
+        table_columns += deliminator + 'min gap' + deliminator + 'max gap' + deliminator + 'av gap'
     table_columns += '\\ \hline' + '\n'
     f.write(table_columns)
 
     # Fill table rows
+    for n in sizes:
+        min_gap_set = 100.0
+        max_gap_set = 0.0
+        min_gap_tree = 100.0
+        max_gap_tree = 0.0
 
-    for k in range(iterations):
-        G, D = gg.random_weighted_spg(size, *weights)
+        gaps_set = []
+        gaps_tree = []
 
-        if (k + 1) % (iterations/10) == 0:
-            print('Iteration ' + str(k + 1))
+        for k in range(iterations):
+            size = 0
+            while size != n:
+                G, D = gg.random_weighted_spg(2 * n - 3, *weights)
+                size = G.number_of_nodes()
+            G = G.to_undirected()
 
-        (H, weight_ip) = dp.solve_dynamic_prog_on_spg(G, D, mode)
-        G = G.to_undirected()
+            if (k + 1) % (iterations/10) == 0:
+                print('Iteration ' + str(k + 1))
+
+            G = G.to_undirected()
+            (H, weight_ip) = dp.solve_dynamic_prog_on_spg(G, D, mode)
+
+            if set_heu:
+                H, weight_set = heu.node_set_heuristic(G, mode)
+                gap_set = ((weight_ip - weight_set) / float(weight_ip))*100
+                alg = 'Node set'
+                gaps_set.append(gap_set)
+                if gap_set > max_gap_set:
+                    max_gap_set = gap_set
+                if gap_set < min_gap_set:
+                    min_gap_set = gap_set
+
+            if span_heu:
+                H, weight_tree = heu.spanning_tree_heuristic(G, mode)
+                gap_tree = ((weight_ip - weight_tree) / float(weight_ip)) * 100
+                alg = 'Spanning tree'
+                gaps_tree.append(gap_tree)
+                if gap_tree > max_gap_tree:
+                    max_gap_tree = gap_tree
+                if gap_tree < min_gap_tree:
+                    min_gap_tree = gap_tree
+
+        table_row = str(n)
 
         if set_heu:
-            start = timer()
-            H, weight_set = heu.node_set_heuristic(G, mode)
-            end = timer()
-            alg = 'Node set'
+            av_gap_set = sum(gaps_set) / float(iterations)
 
+            table_row += deliminator + "{0:.2f}".format(max_gap_set)
+            table_row += deliminator + "{0:.2f}".format(min_gap_set)
+            table_row += deliminator + "{0:.2f}".format(av_gap_set)
         if span_heu:
-            start = timer()
-            H, weight_tree = heu.spanning_tree_heuristic(G, mode)
-            end = timer()
-            alg = 'Spanning tree'
+            av_gap_tree = sum(gaps_tree) / float(iterations)
 
-        table_row = str(int(weight_ip))
-        if set_heu:
-            table_row += deliminator + str(int(weight_set))
-        if span_heu:
-            table_row += deliminator + str(int(weight_tree))
+            table_row += deliminator + "{0:.2f}".format(max_gap_tree)
+            table_row += deliminator + "{0:.2f}".format(min_gap_tree)
+            table_row += deliminator + "{0:.2f}".format(av_gap_tree)
         table_row += "\\\\ \hline \n"
         f.write(table_row)
 

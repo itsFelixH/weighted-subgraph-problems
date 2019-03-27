@@ -97,6 +97,7 @@ def random_weighted_path(number_of_nodes, min_node_weight, max_node_weight, min_
     P : NetworkX graph"""
 
     P = nx.path_graph(number_of_nodes)
+    P = nx.convert_node_labels_to_integers(P)
     P = weight_graph(P, min_node_weight, max_node_weight, min_edge_weight, max_edge_weigth)
 
     return P
