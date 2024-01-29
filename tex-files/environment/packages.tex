@@ -1,0 +1,117 @@
+% Packages
+
+% Provides the algorithm environment.
+\usepackage{algorithm}
+% Basic math packages
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{latexsym}
+% For declaring MathOperators
+\usepackage{amsopn}
+% A reimplementation of the bibliographic facilities. Here used to use the 'alphabetic' citation style
+\usepackage[backend = biber, style = alphabetic]{biblatex}
+\addbibresource{bibliography.bib}
+% Provides options to change the style of captions. Also avoids hyperref to jump to the caption of a float, but to the top of the float instead (like package hypcap).
+\usepackage{caption}
+% For adding subcaptions to plots/figures
+\usepackage{subcaption}
+% For defining new colors
+\usepackage{color}
+% Provides \mathds for double struck letters and digits
+\usepackage{dsfont}
+% Provides options to manually change the layout of enumerate or itemize environments
+\usepackage{enumitem}
+% For layout settings concerning the geometry of the page
+\usepackage{geometry}
+% For hyperlinks in references. Includes hyperlinks automatically for all references
+\usepackage{hyperref}
+% For declaring new theorem styles. Produces warnings if loaded before hyperref when cleverref is used.
+\usepackage{amsthm}
+% Adds the number of the current section to the number of an equation (e.g. (3.x) in section 3. Produced warnings when used after loading cleveref
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+\numberwithin{algorithm}{section}
+% Costumizing sections
+\usepackage{titlesec}
+% Provides the algorithmic environment for using pseudocode. 'noend' suppresses the 'end' statement for loops etc. Has to be loaded after hyperref and before cleveref to work without warnings.
+\usepackage[noend]{algpseudocode}
+% For adding an appendix
+\usepackage[titletoc]{appendix}
+% For using better references, for instance references to enumerate items in an environment. Has to be loaded after hyperref
+\usepackage{cleveref}
+% Sets the encoding of the input
+\usepackage[utf8]{inputenc}
+% T1 font encoding, better than default encoding
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+% Rechtschreibung
+\usepackage[english]{babel}
+% Ensures that quotes are typeset according to the rules of the main language. Should be loaded after inputenc
+\usepackage{csquotes}
+% For alignment in matrices
+\usepackage{mathtools}
+% Improves appearence of the text by adjusting whitespace between words and other things. Also provides some options.
+\usepackage[final]{microtype}
+% For using multiple columns of text
+\usepackage{multicol}
+% For fractions in the style of 1/4.
+\usepackage{nicefrac}
+% Avoids widows and orphans (single lines at the top or bottom of a page) by shifting it to the preceding or subsequent page. Can cause more unequal length of pages.
+\usepackage[all]{nowidow}
+% Avoids warnings with older packages like listings, floatrow, float, algorithm
+\usepackage{scrhack}
+% For changing the line distance
+\usepackage{setspace}
+% For text markup like highlighting, crossing, bold text, etc.
+\usepackage{soul}
+% For using tikzpictures for graphics.
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{automata}
+\usetikzlibrary{trees}
+\usetikzlibrary{graphs}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes}
+\usetikzlibrary{shapes.arrows}
+\usetikzlibrary{calc}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{decorations.pathmorphing}
+% For plotting diagrams
+\usepackage{pgfplots}
+% for drawing trees
+\usepackage{forest}
+% For using figures wrapped by text
+\usepackage{wrapfig}
+% Allows block commenting
+\usepackage{verbatim}
+% Optional arguments to the \includegraphics command
+\usepackage{graphicx}
+\graphicspath{{graphics/}}
+% for appendix
+\usepackage[titletoc]{appendix}
+% for programming code in Latex
+\usepackage{listings}
+\lstset{basicstyle=\footnotesize, tabsize=4, language=Python}
+% Improved interface for floating objects
+\usepackage{float}
+% Customise captions in floating environments
+\usepackage{caption}
+% Extends the array and tabular environments
+\usepackage{array}
+% an extension of tabular
+\usepackage{tabularx}
+% interface for environments
+\usepackage{environ}
+% Allows to use if in \newcommand
+\usepackage{ifthen}
+% For defining optimization problems
+\usepackage[short]{optidef}
+% Necessary to make hyperref, cleveref and algpseudocode work together properly
+\makeatletter
+\newcounter{algorithmicH}% New algorithmic-like hyperref counter
+\let\oldalgorithmic\algorithmic
+\renewcommand{\algorithmic}{%
+\stepcounter{algorithmicH}% Step counter
+\oldalgorithmic}% Do what was always done with algorithmic environment
+\renewcommand{\theHALG@line}{ALG@line.\thealgorithmicH.\arabic{ALG@line}}
+\makeatother

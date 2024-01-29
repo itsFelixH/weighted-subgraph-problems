@@ -1,0 +1,147 @@
+% New commands
+
+% Produces a well scaled := sign
+\newcommand{\defeq}{\mathrel{\vcenter{\baselineskip0.45ex \lineskiplimit0pt
+                     \hbox{\footnotesize.}\hbox{\footnotesize.}}}=}
+% Produces a well scaled =: sign
+\newcommand{\eqdef}{=\mathrel{\vcenter{\baselineskip0.45ex \lineskiplimit0pt
+                     \hbox{\footnotesize.}\hbox{\footnotesize.}}}}
+
+% Produces an empty page after a newpage (the newpage command has to be used before)
+\newcommand{\emptypage}{\thispagestyle{empty}~\newpage}
+
+% Manually produces the circle for the end of environments. The first command is for text mode the second for displaymode
+\newcommand{\tendcirc}{\hfill\ensuremath{\mathscale{0.75}{\bigcirc}}}
+\newcommand{\dendcirc}{\tag*{\ensuremath{\mathscale{0.75}{\bigcirc}}}}
+										
+% Produces smaller fractionals in display mode
+\newcommand{\fracs}[2]{\raisebox{0pt}{$\frac{#1}{#2}$}}
+
+% Produces a box wich is scaled (by a given factor) in math-mode.
+\newcommand{\mathscale}[2]{\vcenter{\hbox{\text{\scalebox{#1}{$#2$}}}}}
+
+% Adds only one line in an align* environment to the counter
+\newcommand{\numberthis}{\addtocounter{equation}{1}\tag{\theequation}}
+
+% Label with custom text
+\newcommand{\textlabel}[2]{% 
+	\edef\@currentlabel{#1}% Set target label 
+	\phantomsection% Correct hyper reference link 
+	#1\protect\label{#2}% Print and store label 
+}
+
+% For the opening of an optimization problem (appropriate whitespace included)
+\newcommand{\progmin}{\min\hspace{0.5em}}
+\newcommand{\progmax}{\max\hspace{0.5em}}
+
+% For defining graphs
+\newcommand{\graph}{\ensuremath{G=(V,R,\alpha,\omega)}}
+\newcommand{\ugraph}{\ensuremath{G=(V,E,\gamma)}}
+
+% For easier usage of number sets
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\BB}{\mathbb{B}}
+\newcommand{\ONE}{\mathds{1}}
+
+% For easier usage of complexity notations
+\newcommand{\OO}{\ensuremath{\mathcal{O}}}
+\newcommand{\PP}{\ensuremath{\mathcal{P}}}
+\newcommand{\NP}{\ensuremath{\mathcal{NP}}}
+
+% Easier definitions of vectors
+\newcommand{\Vector}[2][x]{(#1_1,#1_2,\ldots,#1_{#2})} %x=\Vector[x]{5}
+
+% Adds commands for argmin and argmax
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+
+% epsilon
+\newcommand{\eps}{\varepsilon}
+
+% Produces a nonitalic OP, LP, IP in brackets
+\newcommand{\OP}{\text{OP}}
+\newcommand{\LP}{\text{LP}}
+\newcommand{\IP}{\text{IP}}
+
+% Produces a nonitalic transposed T, or a -T respectively
+\newcommand{\tran}{^\text{T}}
+\newcommand{\mtran}{^{-\text{T}}}
+
+% Nonitalic E for the expactation
+\newcommand{\Exp}{\text{E}}
+
+% Makes a non-italic d
+\newcommand{\dif}{\text{d}}
+
+% Makes a non-italic D for the Differential \difff produces a superscript 2 addtitionally
+\DeclareMathOperator{\diff}{D\hspace{-0.12em}}
+\DeclareMathOperator{\difff}{D^2\hspace{-0.12em}}
+
+\DeclareMathOperator{\rank}{rank}
+
+% Recession cone
+\DeclareMathOperator{\rec}{rec}
+
+% For colored highlighting
+\newcommand{\hlc}[2][yellow]{{\sethlcolor{#1}\hl{#2}}}
+
+\definecolor{darkgreen}{rgb}{0.1,0.5,0}
+\definecolor{lightred}{rgb}{1,0.4,0.4}
+\definecolor{lightyellow}{rgb}{0.97,0.97,0.55}
+
+% Draws an irregular circle in tikz
+\newcommand\irregularcircle[2]{% radius, irregularity
+	\pgfextra {\pgfmathsetmacro\len{(#1)+rand*(#2)}}
+	+(0:\len pt)
+	\foreach \a in {10,20,...,350}{
+		\pgfextra {\pgfmathsetmacro\len{(#1)+rand*(#2)}}
+		-- +(\a:\len pt)
+	} -- cycle
+}
+
+
+% document specific macros
+
+% Macros
+\newcommand{\WSP}{\textsc{Weighted Subgraph Problem}}
+\newcommand{\minWSP}{\ensuremath{\text{\textsc{min-wsp}}}}
+\newcommand{\maxWSP}{\ensuremath{\text{\textsc{max-wsp}}}}
+
+\newcommand{\WISP}{\textsc{Weighted Induced Subgraph Problem}}
+\newcommand{\minWISP}{\ensuremath{\text{\textsc{min-wisp}}}}
+\newcommand{\maxWISP}{\ensuremath{\text{\textsc{max-wisp}}}}
+
+\newcommand{\RWSP}{\textsc{Rooted Weighted Subgraph Problem}}
+\newcommand{\minRWSP}{\ensuremath{\text{\textsc{min-rwsp}}}}
+\newcommand{\maxRWSP}{\ensuremath{\text{\textsc{max-rwsp}}}}
+
+\newcommand{\RWISP}{\textsc{Rooted Weighted Induced Subgraph Problem}}
+\newcommand{\minRWISP}{\ensuremath{\text{\textsc{min-rwisp}}}}
+\newcommand{\maxRWISP}{\ensuremath{\text{\textsc{max-rwisp}}}}
+
+\newcommand{\WkSP}{\textsc{Weighted k-Subgraph Problem}}
+\newcommand{\minWkSP}{\ensuremath{\text{\textsc{min-wksp}}}}
+\newcommand{\maxWkSP}{\ensuremath{\text{\textsc{max-wksp}}}}
+
+\newcommand{\WIkSP}{\textsc{Weighted Induced k-Subgraph Problem}}
+\newcommand{\minWIkSP}{\ensuremath{\text{\textsc{min-wiksp}}}}
+\newcommand{\maxWIkSP}{\ensuremath{\text{\textsc{max-wiksp}}}}
+
+\newcommand{\BCWSP}{\textsc{Budget-Constraint Weighted Subgraph Problem}}
+\newcommand{\maxBCWSP}{\ensuremath{\text{\textsc{bcwsp}}}}
+
+\newcommand{\HPath}[2]{\ensuremath{H_{#1}^{\text{#2}}}}
+\newcommand{\HSSP}[2]{\ensuremath{H_{#1}^{#2}}}
+\newcommand{\WSPt}[2]{\ensuremath{t_{#1}^{#2}}}
+\newcommand{\WSPT}[2]{\ensuremath{T_{#1}^{#2}}}
+\newcommand{\WSPP}[2]{\ensuremath{P_{#1}^{#2}}}
+
+\newcommand{\DkS}{\textsc{Densest k-Subgraph}}
+\newcommand{\SAT}{\textsc{Satisfiability Problem}}
+
+\newcommand{\cutr}{\ensuremath{(\mathrm{CUT}_r)}}
+\newcommand{\cut}{\ensuremath{(\mathrm{CUT})}}
+\newcommand{\flow}{\ensuremath{(\mathrm{FLOW})}}

@@ -1,0 +1,514 @@
+\section{Approximations and Heuristics}
+\label{sec:approximation}
+
+
+This chapter is dedicated to solving the \WSP\ approximately or heuristically. The goal of this chapter is to determine whether \WSP\ can be approximated and, if so, finding a procedure with provable ratio. Throughout this chapter several procedures are presented. In Chapter \ref{sec:study} the practical relevance of these procedures is determined.\medskip
+
+In Section \ref{sec:approximation:hardness} we show that approximating the \WSP\ and the \WISP\ within a constant factor is \NP-complete. Subsequently, this hardness is shown to hold even for a budget-constrained version of the problem in Section \ref{sec:approximation:budget}. Hereafter, Section \ref{sec:approximation:preprocess} presents a preprocessing scheme for reducing instances of the \WSP\ and Section \ref{sec:approximation:postprocess} proposes a postprocessing procedure to improve sub-optimal or heuristic solutions. We complete this chapter by proposing two heuristic procedures in Sections \ref{sec:approximation:nodeset} and \ref{sec:approximation:spanningtree}.
+
+\subsection{Hardness of Approximation}
+\label{sec:approximation:hardness}
+
+Since the \WSP\ is \NP-complete the next natural step is to try to solve the problem approximately.\medskip
+
+Unfortunately it turns out that the \WSP\ and the \WISP\ are \NP-complete to approximate by a constant factor. We start by proving the approximation hardness for the rooted version of the problem and will generalize the result for the unrooted problem.
+
+\begin{theorem}
+	\label{thm:rwspapproximation}
+	Given an undirected graph with node weights $d \colon V \to \RR$, edge weights $c \colon E \to \RR$, and a root node $r \in V$, the \RWSP\ and the \RWISP\ are \NP-complete to approximate within a constant factor. Moreover, this hardness result holds even under Assumption \ref{assumption:wsprestricted}.
+\end{theorem}
+
+For the proof of Theorem \ref{thm:rwspapproximation} we use the \SAT. Before defining the problem we need some notations: A \textit{literal} is either a variable, called positive literal, or the negation of a variable, called negative literal. A \textit{clause} is a disjunction of literals (or a single literal). A formula is in \textit{conjunctive normal form} if it is a conjunction of clauses (or a single clause). The \SAT\ is the problem of deciding whether a given Boolean formula in conjunctive normal form has an assignment that makes the formula evaluate to true, that is the formula is satisfiable.
+
+\begin{problembox}[framed]{Satisfiability Problem (sat)}
+	Given: & A set of literals $(x_1, \ldots, x_n)$ and clauses $(C_1, \ldots, C_m)$ that comprise a formula $f$.\\
+	Question: & Is there an assignment to $x_1, \ldots, x_n$ such that $f(x_1, \ldots, x_n) = 1$?
+	\label{problem:sat}
+\end{problembox}\vspace{1em}
+
+\begin{proof}[Proof of Theorem \ref{thm:rwspapproximation}]
+	For this proof we consider the maximization version of the problem. Consequently, let $0 < \alpha < 1$ be an arbitrary constant. Due to Lemma \ref{lemma:wspnegation} the result also holds for the minimization variant.\medskip
+	
+	Let $(x_1, \ldots, x_n, C_1, \ldots, C_m)$ be an arbitrary instance of \textsc{sat}. For every literal $x_i, 1 \leq i \leq n$ we add a new clause $C_{m+i} = (x_i \lor \bar{x_i})$ to the formula. This does not change the satisfiability of the formula since these clauses are trivially satisfied. We obtain a modified instance $(x_1, \ldots, x_n, C_1, \ldots, C_{m'})$ with $m'=m + n$. We describe how to construct an equivalent graph. The nodes are arranged in four levels. Let $M > n + 1$.
+	\begin{itemize}
+		\item The first level contains the root vertex $r$. It is given weight $0$.
+		\item On the second level there is a node $r'$ with weight $0$ that is connected to $r$ via an edge with weight $-m'M + n+ 1$.
+		\item On the third level there are $2n$ vertices. One for each literal $x_i$ and $\bar{x_i}$. All of them with weight $-1$ and connected to $r'$ via an edge with weight $0$.
+		\item The fourth level contains $m'$ vertices, each corresponding to a clause and with weight $M$. These clause-vertices are connected to the literal-vertices of level three that they contain.
+	\end{itemize}
+
+	\begin{figure}[H]
+		\centering
+		\resizebox{\textwidth}{!}{%
+			\begin{tikzpicture}[scale=1.6]
+			\begin{scope}[every node/.style={fill=white!80!gray, inner sep=0pt, minimum size=0.7cm}]
+			\node[circle, draw, label=right:$r$] (r) at (4,6.5) {$0$};
+			\node[circle, draw, label=right:$r'$] (rbar) at (4,5) {$0$};
+			
+			\node[circle, draw] (x1) at (1,3) {\color{red}$-1$};
+			\node[circle, draw] (x1bar) at (2,3) {\color{red}$-1$};
+			\node[circle, draw] (x2) at (3,3) {\color{red}$-1$};
+			\node[circle, draw] (x2bar) at (4,3) {\color{red}$-1$};
+			\node[circle, draw] (xn) at (6,3) {\color{red}$-1$};
+			\node[circle, draw] (xnbar) at (7,3) {\color{red}$-1$};
+			
+			\node[circle, draw] (c1) at (1,1) {\color{darkgreen}$M$};
+			\node[circle, draw] (c2) at (3,1) {\color{darkgreen}$M$};
+			\node[circle, draw] (cm) at (7,1) {\color{darkgreen}$M$};
+			\end{scope}
+			
+			\node[align=center] (note1left) at (0,6.5) {root\\ vertex};
+			\node[align=center] (note3left) at (0,3) {literal\\ vertices};
+			\node[] (note3right) at (8,3) {$2n$};
+			\node[align=center] (note4left) at (0,1) {clause\\ vertices};
+			\node[] (note4right) at (8,1) {$m'$};
+			
+			\begin{scope}[every node/.style={inner sep=3pt}]
+			\path (r) edge node [right] {\color{red}$-m'M+n+1$} (rbar);
+			
+			\path (rbar) edge node [above left, pos=0.8] {$0$} (x1);
+			\path (rbar) edge node [above left, pos=0.8] {$0$} (x1bar);
+			\path (rbar) edge node [above left, pos=0.8] {$0$} (x2);
+			\path (rbar) edge node [left, pos=0.7] {$0$} (x2bar);
+			\path (rbar) edge node [right, pos=0.7] {$0$} (xn);
+			\path (rbar) edge node [above right, pos=0.8] {$0$} (xnbar);
+			
+			\path (c1) edge node [left] {$0$} (x1);
+			\path (c1) edge node [below right] {$0$} (x1bar);
+			\path (c2) edge node [left] {$0$} (x2);
+			\path (c2) edge node [below right] {$0$} (x2bar);
+			
+			\path (x2bar) -- node[auto=false]{\ldots} (xn);
+			\path (c2) -- node[auto=false]{\ldots\ldots\ldots} (cm);
+			\end{scope}
+			\end{tikzpicture}
+		}%
+		\caption{Construction of the graph $G$ for reducing an instance of \textsc{sat} to an instance of \maxRWSP.}
+		\label{fig:rwspapproximation}
+	\end{figure}
+
+	Figure \ref{fig:rwspapproximation} shows the construction of $G$. Since $G$ is a tree, \maxWSP\ and \maxWISP\ are equivalent (see Lemma \ref{lemma:wspwisp}). The trivial solution just containing $r$ has weight $0$. To get a better value we need to include the edge $(r, r')$ and all clause-vertices on level four. Since $M > n+1$ including only $m' - 1$ clause vertices results in a weight at most $-m'M+n+1 + (m'-1)M < - M + n+1 < 0$. In order to reach clause $C_{m+i}$ one of the literal-vertices on level three corresponding to $x_i$ and $\bar{x_i}$ must be included for each $1 \leq i \leq n$. Consequently, at least $n$ literal-vertices are included. Also, to improve the value of the weight function at most $n$ vertices on level three can be included obtaining a subgraph with weight $-m'M+n+1 -n +m'M = 1$. If $n+1$ vertices are included then the weight would be at most $- m'M+n+1 -n+1 + M'M = 0$ which is not an improvement. Thus, a solution with weight larger than $0$ corresponds to a satisfying assignment and has weight $1$.\medskip
+		
+	Suppose there exists a polynomial time $\alpha$-approximation algorithm \textsc{approx} for \textsc{rwsp} or \textsc{rwisp}.
+	We now claim, that the formula is satisfiable if and only if \textsc{approx} returns a solution with weight larger than $\alpha$.\medskip
+	
+	If the formula is satisfiable then the optimal solution has weight $1$ so \textsc{approx} would return a solution with weight at least $\alpha\cdot1 > 0$. Conversely, if the formula is not satisfiable the optimal solution has weight $0$. Then \textsc{approx} would return a solution with weight at most (exactly) $0$.\medskip
+	
+	In particular, any polynomial time $\alpha$-approximation algorithm would be able to distinguish the two cases, and thus to solve \textsc{sat} in polynomial time. Thus $\alpha$-approximating \textsc{rwsp} and \textsc{rwisp} is \NP-complete.\medskip
+	
+	To obtain a hardness result for the restricted case under Assumption \ref{assumption:wsprestricted}, we modify the reduction as follows. The nodes are arranged in six levels.
+	\begin{itemize}
+		\item We add an level between $r'$ and the literal-vertices containing a vertex $r''$ with weight $-m'M+n+1$. An edge $(r', r'')$ with weight $0$ is added.
+		\item The edges between all literal-vertices and $r'$ are removed. Instead each literal vertex is connected to $r''$ via an zero-weighted edge.
+		\item The weight of the clause-vertices is changed to $0$.
+		\item A level below the forth level is added containing yet another vertex for each clause. All of those is given weight $0$ and they are connected to the corresponding clause-vertex on level four via an edge of weight $M$.
+	\end{itemize}
+	All of the edges in this reduction have non-negative weight and all vertices have non-positive weight. It is easy to see that the argumentation above works as it did in the original	reduction.
+\end{proof}
+
+Continuing, we use the same proof idea and built upon the construction created to obtain a hardness result for approximating the \WSP\ and the \WISP.
+
+\begin{theorem}
+	\label{thm:wspapproximation}
+	Given an undirected graph with node weights $d \colon V \to \RR$ and edge weights $c \colon E \to \RR$, the \WSP\ and the \WISP\ are \NP-complete to approximate within a constant factor. Moreover, this hardness result holds even under Assumption \ref{assumption:wsprestricted}.
+\end{theorem}
+\begin{proof}
+	As in the previous proof, we consider the maximization version and let $0 < \alpha < 1$ be an arbitrary constant.\medskip
+	
+	Let $f = (x_1, \ldots, x_n, C_1, \ldots, C_m)$ be an arbitrary instance of \textsc{sat}. We expand the formula and construct a graph $G'$ as in the proof of Theorem \ref{thm:rwspapproximation} (either for \textsc{rwsp} or \textsc{rwisp}). This construction is now extended to a graph $G$ as follows. Let $K > \frac{1}{\alpha} \cdot Mm'$.
+	\begin{itemize}
+		\item Create $K$ copies of $G'$.
+		\item Connect the root nodes of all $K$ copies with each other by an edge with weight $0$, creating a $0$-clique.
+	\end{itemize}
+	The graph $G$ is shown in Figure \ref{fig:wspapproximation}. Note, that all vertices and edges added were given weight $0$. Thus, this construction works for both the general as well as the restricted version of \textsc{wsp} or \textsc{wisp}.\medskip
+	\begin{figure}[h]
+		\centering
+		\resizebox{.7\textwidth}{!}{%
+			\begin{tikzpicture}[scale=1.6]
+			\draw[rounded corners=1mm] (0, 0) \irregularcircle{1cm}{1mm};
+			\draw[rounded corners=1mm] (0, 3) \irregularcircle{1cm}{1mm};
+			\draw[rounded corners=1mm] (3, 0) \irregularcircle{1cm}{1mm};
+			\draw[rounded corners=1mm] (3, 3) \irregularcircle{1cm}{1mm};
+			
+			\node at (-0.25, -0.25) {$G'$};
+			\node at (-0.25, 3.25) {$G'$};
+			\node at (3.25, -0.25) {$G'$};
+			\node at (3.25, 3.25) {$G'$};
+			
+			\begin{scope}[every node/.style={fill=white!80!gray, inner sep=0pt, minimum size=0.7cm}]
+				\node[circle, draw] (r1) at (0.25,0.25) {$0$};
+				\node[circle, draw] (r2) at (0.25,2.75) {$0$};
+				\node[circle, draw] (r3) at (2.75,0.25) {$0$};
+				\node[circle, draw] (r4) at (2.75,2.75) {$0$};
+			\end{scope}
+			
+			\path (r1) edge node [left] {$0$} (r2);
+			\path (r1) edge node [below] {$0$} (r3);
+			\path (r1) edge node [below right, pos=0.3] {$0$} (r4);
+			
+			\path (r2) edge node [below left, pos=0.3] {$0$} (r3);
+			\path (r2) edge node [above] {$0$} (r4);
+			
+			\path (r3) edge node [right] {$0$} (r4);
+			\end{tikzpicture}
+		}%
+		\caption{Construction of the graph $G$ for reducing an instance of \textsc{sat} to an instance of \maxWSP.}
+		\label{fig:wspapproximation}
+	\end{figure}
+	
+	From Theorem \ref{thm:rwspapproximation} we know that an optimal solution $H'$ of $G'$ which contains the root vertex $r$ has weight $1$ if and only if the formula is satisfiable and weight $0$ else.	If a subgraph of $G'$ does not have to contain its root $r$, its weight is at most $m'M$ by collecting all weight at the bottom level of the graph. More precisely it is at most $m'M - n$ since it has to collect at least $n$ literal-vertices on level $3$ to connect all clause-vertices. Summarizing, if $H' = \maxWSP(G')$ then:
+	\begin{equation}
+		\label{equation:wspapproximation}
+		\begin{aligned}
+			w(H') &= 1,  && \text{if } r \in H' \text{ and } f \text{ is satisfiable},\\
+			w(H') &= 0,  && \text{if } r \in H' \text{ and } f \text{ is not satisfiable},\\
+			w(H') &\leq m'M - n \leq m'M,  && \text{if } r \notin H'.
+		\end{aligned}
+	\end{equation}
+	Now consider the graph $G$. Suppose the formula $f$ is not satisfiable. If the root $r$ of any copy of $G'$ is selected, this copy does not contribute any value to the weight of a subgraph of $G$ (see \ref{equation:wspapproximation}). Therefore, the optimal subgraph is a subgraph of only one of the copies of $G'$ with weight less than $m'M$. It cannot select vertices in more than one of the copies from $G'$ since then it would have to connect those, forcing the roots of those copies to be in the solution. Conversely, suppose the formula $f$ is satisfiable. If the subgraph of $G$ does exclusively contain vertices from one of the copies of $G'$ its weight is at most $m'M$. But, connecting the roots of all copies and collecting weight $1$ from each copy in the process (see \ref{equation:wspapproximation}) yields a subgraph of $G$ with weight $K > \frac{1}{\alpha} \cdot m'M > m'M$. Thus, a solution with weight larger than $m'M$ corresponds to a satisfying assignment and has weight $K$.\medskip
+	
+	Suppose there exists an polynomial time $\alpha$-approximation algorithm \textsc{alg} for \textsc{wsp} or \textsc{wisp}. If the formula is satisfiable then the optimal solution has weight $K$ so \textsc{alg} would return a solution with weight at least $\alpha K > m'M$. Conversely, if the formula is not satisfiable the optimal solution has weight at most $m'M$. Thus \textsc{alg} would return a solution with weight at most $m'M$, too.\medskip
+	
+	In conclusion, any polynomial time $\alpha$-approximation algorithm would be able to distinguish the two cases, and thus to solve \textsc{sat} in polynomial time. Thus $\alpha$-approximating \textsc{wsp} and \textsc{wisp} is \NP-complete.\medskip
+\end{proof}
+
+\subsection{Budget-Constraint Problem}
+\label{sec:approximation:budget}
+
+In principle, one could approximately solve \maxWSP\ by formulating it as a Knapsack problem. For a bound $B$ one seeks a subgraph $H$ whose value $w(E) = \sum_{e \in E(H)} c(e)$ is maximal under the secondary condition that $w(V) = \sum_{v \in V(H)} d(v) \geq B$ holds. In this section, we want to investigate how the resulting problem with knapsack constraints differs from the original problem in terms of complexity and approximability.\medskip
+
+The Knapsack problem is defined as follows:
+
+\begin{problembox}[framed]{Knapsack Problem}
+	Given: & Nonnegative integers $n, c_1, \ldots, c_n, v_1, \ldots, v_n$ and an integer $B \in \ZZ$.\\
+	Problem: & Find a subset $S \subseteq \{1, \ldots, n\}$ such that $\sum_{i \in S} c_i \leq B$ and $\sum_{i \in S} v_i$ is maximal.
+	\label{problem:knapsack}
+\end{problembox}\vspace{1em}
+
+Knapsack is an \NP-complete problem which is well-studied in literature. We refer the reader to \cite{AMO93}.\medskip
+
+A simple Knapsack formulation would not be interesting due to it not requiring the connectivity of the subgraph. Therefore, in order to use this approach for solving the \WSP, the Knapsack formulation is altered and we obtain a budget-constraint version of the problem: Given an undirected graph \ugraph\ the \textsc{Budget-Constraint Weighted Subgraph Problem} is defined as:
+
+\begin{definition}[Budget-Constraint Weighted Subgraph Problem]
+	\label{def:wspbudget}
+	Given an undirected graph \ugraph\ with node weights $d \colon V \to \RR$ and edge weights $c \colon E \to \RR$, a weight function $w$ according to Definition \ref{def:weightfunction}, and an integer $B \in \NN$. The \textsc{Budget-Constraint Weighted Subgraph Problem} (\textsc{bcwsp}) asks for a connected subgraph $H$ of $G$ where $w(E)$ is maximized under the secondary condition that $w(V) \geq B$.
+\end{definition}
+
+Let \ugraph\ be an undirected graph with node weights $c\colon V \to \RR$ and edge weights $d\colon E \to \RR$. Let $H = \maxWSP(G)$ be an optimal solution with weight $w(H) = w* = w_E^* + w_V^*$, where $w_E^* = \sum_{e \in E(H)} c(e)$ and $w_V^* = \sum_{v \in V(H)} d(v)$. Furthermore, let $H(B) = \maxBCWSP(G, B)$ be an optimal solution for the bound $B \in \ZZ$. We denote the weight of $H(B)$ by $w^*(B) = w(H(B)) = w_E^*(B) + w_V^*(B)$. It holds that $w_V^*(B) \leq B$ and $w^*(B) \leq w^*$ for all bounds $B \in \ZZ$.\medskip
+
+It follows that, for $B = w_V^*$, we have $w_E^*(B) \geq w_E^*$ since $H$ is a feasible solution for $\maxBCWSP(G, B)$. Let
+$$p \defeq 
+\begin{cases}
+\max_{\substack{v \in V\\ d(v) > 0}} d(v), & \text{if } \exists v \in V \text{ with } d(v) > 0,\\
+0, & \text{otherwise}
+\end{cases}
+$$
+be the largest and
+$$q \defeq
+\begin{cases}
+\min_{\substack{v \in V\\ d(v) < 0}} d(v), & \text{if } \exists v \in V \text{ with } d(v) < 0,\\
+0, & \text{otherwise}
+\end{cases}
+$$
+be the smallest node weight in $G$. Then $w(V) \geq nq$ and $w(V) \leq np$. Theoretically, one can solve \maxWSP\ by solving \maxBCWSP\ for all $B \in W \defeq \{ nq, nq + 1, \ldots, -1, 0, 1, \ldots, np - 1, np\}$ and taking the best solution.\medskip
+
+Suppose there exists an polynomial $\alpha$-approximation algorithm $\textsc{alg}(B)$ for the budget-constraint problem \eqref{def:wspbudget}. Using the idea described above, we can use $\textsc{alg}(B)$ to obtain an approximation algorithm $\textsc{alg}$ for \maxWSP. Since $w_V^* \in W$, $\textsc{alg}$ would return a solution $H'$ with weight $w(H') \geq \alpha w_E^* + w_V^* \geq \alpha (w_E^* + w_V^*)$. In particular, approximation ration of $\textsc{alg}$ would be $\alpha$.\medskip
+
+But $\textsc{alg}$ is pseudo-polynomial since it is depended on the values of $p$ and $q$. Instead of running $\textsc{alg}(B)$ for all $B \in W$ we run it for all $B \in W_{1+\eps}$ where
+\begin{align*}
+	W_{1+\eps} \defeq \Big\{&-(1 + \eps)^{\lceil \log_2 |q| \rceil}, \ldots, -(1+\eps)^2, -(1+\eps), -1, 0,\\
+	&1, 1+\eps, (1+\eps)^2, \ldots, (1+\eps)^{\lceil \log_2 p \rceil} \Big\}
+\end{align*}
+for some $\eps > 0$. This will make it a polynomial algorithm. Using this grid, $\textsc{alg}(\cdot)$ is executed for some $\bar{B} \in \left[\frac{w_V^*}{1+\eps}, w_V^*\right]$. Since $H$ is feasible for $\textsc{alg}(\bar{B})$, this will yield a solution $w(H') \geq \alpha w_E^* + \frac{w_V^*}{1+\eps} \geq \frac{\alpha}{1 + \eps} (w_E^* + w_V^*)$.\medskip
+
+In summary, this describes an polynomial time $\frac{\alpha}{1 + \eps}$-approximation algorithm for the \WSP. Thus, Theorem \ref{thm:wspapproximation} yields the following corollary:
+
+\begin{corollary}
+	\label{corollary:wspbudgetapproximation}
+	Given an undirected graph \ugraph\ with node weights $d \colon V \to \RR$, edge weights $c \colon E \to \RR$, and an integer $B$, the \textsc{Budget-Constraint Weighted Subgraph Problem} is \NP-complete to approximate within a constant factor $\alpha$ for any $0 < \alpha < 1$.
+\end{corollary}
+
+
+\subsection{Preprocessing}
+\label{sec:approximation:preprocess}
+
+We describe two preprocessing phases adapted from \cite{EK14} that simplify an instance of the \WSP\ without losing optimality. These reduction rules make a new graph with a smaller number of vertices and edges in such a way that the \maxWSP\ solution for the original graph can be easily recovered from the \maxWSP\ solution for the simplified graph. The rules can be slightly changed for reducing instances of \minWSP. This procedure can be executed before solving \maxWSP\ either optimally or heuristically.\medskip
+
+\begin{figure}[H]
+	\centering
+	\resizebox{\textwidth}{!}{%
+		\begin{tikzpicture}
+		\tikzstyle{decision} = [diamond, draw, text width=4em, text badly centered, node distance=3cm, inner sep=0pt]
+		\tikzstyle{block} = [rectangle, draw, text width=5em, text centered, rounded corners, minimum height=4em, inner sep=0pt]
+		\tikzstyle{line} = [draw, -latex']
+		\tikzstyle{cloud} = [draw, ellipse, node distance=3cm, minimum height=2em, inner sep=0pt]
+		\tikzstyle{every node}=[font=\small, node distance=2cm]
+		
+		\node [block] (phase1) {apply\\\textbf{Phase I}\\rules};
+		\node [cloud, left of=phase1] (instance) {instance};
+		\node [block, below of=phase1] (phase2) {apply\\\textbf{Phase II}\\rules};
+		\node [decision, right of=phase2] (decide) {change?};
+		\node [cloud, right of=decide, node distance=4cm] (reduced) {reduced instance};
+		
+		\path [line] (phase1) -- (phase2);
+		\path [line] (phase2) -- (decide);
+		\path [line] (decide) |- node [near start, right] {yes} (phase1);
+		\path [line] (instance) -- (phase1);
+		\path [line] (decide) -- node [above] {no} (reduced);
+		\end{tikzpicture}
+	}%
+	\caption{Preprocessing scheme.}
+	\label{fig:preprocess:scheme}
+\end{figure}
+
+A \maxWSP\ instance passes through two phases of rules that are run exhaustively until no rules apply anymore. The result is a reduced instance.\medskip
+
+\textbf{Phase I}
+\begin{enumerate}
+	\item \textit{Isolated node rule}. Let $v$ be an isolated vertex. The node $v$ will only be part of an optimal solution if it is the solution itself since it is not connected to the rest of the graph. Consequently, we can remove $v$ from the graph and, in case the weight of $v$ is positive, save that weight as an unlikely, but possible solution. Identifying all isolated nodes takes $\OO(n)$ time.
+	\item \textit{Adjacent nodes rule}. Let $e = (u,v)$ be an edge with $w(e) \geq 0$, $w(e) + w(u) \geq 0$, and $w(e) + w(v) \geq 0$. In this case, if one vertex is part of the solution  the edge and the other vertex can also be included without decreasing the total weight. Thus, we can contract the edge $e$ into a new vertex $w$ with weight $w(w) = w(e) + w(u) + w(v)$. Finding all adjacent nodes takes $\OO(m)$ time.
+\end{enumerate}
+
+\begin{figure}[H]
+	\centering
+	\resizebox{\textwidth}{!}{%
+		\begin{tikzpicture}[scale=2.5]
+		\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+		\node[circle, draw] (02) at (0,2) {\color{red}$-6$};
+		\node[circle, draw] (12) at (1,2) {\color{red}$-3$};
+		\node[circle, draw] (22) at (2,2) {\color{black!40!green}$0$};
+		\node[circle, draw] (01) at (0,1) {\color{red}$-4$};
+		\node[circle, draw] (21) at (2,1) {\color{black!40!green}$2$};
+		\node[circle, draw] (10) at (1,0) {\color{black!40!green}$5$};
+		\node[circle, draw] (20) at (2,0) {\color{red}$-1$};
+		
+		\path (02) edge node[fill=white, anchor=center, pos=0.5, left] {\color{black!40!green}$3$} (01);
+		\path (12) edge node[fill=white, anchor=center, pos=0.5, below right] {\color{black!40!green}$7$} (01);
+		\path (12) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{black!40!green}$2$} (21);
+		\path (22) edge node[fill=white, anchor=center, pos=0.5, right] {\color{red}$-3$} (21);
+		\path (01) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{black!40!green}$4$} (21);
+		\path (01) edge node[fill=white, anchor=center, pos=0.5, below left] {\color{red}$-1$} (10);
+		\path (10) edge node[fill=white, anchor=center, pos=0.5, above left] {\color{red}$-2$} (21);
+		\path (21) edge node[fill=white, anchor=center, pos=0.5, right] {\color{black!40!green}$1$} (20);
+		
+		\node [single arrow, draw, minimum width=0.8cm, minimum height=1cm, inner sep=1.3ex] at (3,1) {};
+		
+		\node[circle, draw] (022) at (4,1.7) {\color{red}$-6$};
+		\node[circle, draw] (122) at (5,2) {\color{red}$-3$};
+		\node[circle, draw] (222) at (6,1.7) {\color{black!40!green}$0$};
+		\node[circle, draw, fill=white!80!yellow] (m) at (5,1) {\color{black!40!green}$2$};
+		\node[circle, draw] (102) at (5,0) {\color{black!40!green}$5$};
+		\node[circle, draw] (202) at (6,0.3) {\color{red}$-1$};
+		
+		\path (022) edge node[fill=white, anchor=center, pos=0.5, below left] {\color{black!40!green}$3$} (m);
+		\path (122) edge [bend right] node[fill=white, anchor=center, pos=0.5, above left] {\color{black!40!green}$7$} (m);
+		\path (122) edge [bend left] node[fill=white, anchor=center, pos=0.5, above right] {\color{black!40!green}$2$} (m);
+		\path (222) edge node[fill=white, anchor=center, pos=0.5, below right] {\color{red}$-3$} (m);
+		\path (m) edge [bend right] node[fill=white, anchor=center, pos=0.5, below left] {\color{red}$-1$} (102);
+		\path (102) edge [bend right] node[fill=white, anchor=center, pos=0.5, below right] {\color{red}$-2$} (m);
+		\path (m) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{black!40!green}$1$} (202);
+		\end{tikzpicture}
+	}%
+	\caption{Applying the adjacent nodes rule.}
+	\label{fig:preprocess:adjnodes}
+\end{figure}
+
+\begin{enumerate}\addtocounter{enumi}{2}
+	\item \textit{Parallel edges rule}. Let $u$ and $v$ be nodes with parallel edges between them. In that case we merge all non-negative ones into a single edge with weight of the sum of their weights. The reason being that if one of those edges will be chosen, it is only beneficial to choose the other non-negative edges, too. After that, we can remove all edges between $u$ and $v$ except the one with maximum weight. If there is a positive edge between $u$ and $v$ the last step removes all negative edges between them. Otherwise it will keep only one negative edge, the one with maximal weight, essentially making the graph simple. This step takes $\OO(m)$ time.
+\end{enumerate}
+
+\begin{figure}[H]
+	\centering
+	\resizebox{\textwidth}{!}{%
+		\begin{tikzpicture}[scale=3]
+		\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+		\node[circle, draw] (u) at (0,1) {\color{red}$-4$};
+		\node[circle, draw] (v) at (0,0) {\color{black!40!green}$7$};
+		\node[circle, draw] (w) at (1,1) {\color{black!40!green}$2$};
+					
+		\path (u) edge [bend left=40] node[fill=white, anchor=center, pos=0.5, right, minimum size=0.5cm] {\color{black!40!green}$3$} (v);
+		\path (u) edge [bend right=40] node[fill=white, anchor=center, pos=0.5, left] {\color{red}$-5$} (v);
+		\path (u) edge node[fill=white, anchor=center, pos=0.5, right, minimum size=0.5cm] {\color{black!40!green}$4$} (v);
+		\path (u) edge [bend right] node[fill=white, anchor=center, pos=0.5, below] {\color{red}$-3$} (w);
+		\path (u) edge [bend left] node[fill=white, anchor=center, pos=0.5, above] {\color{red}$-2$} (w);
+		
+		\node [single arrow, draw, minimum width=0.8cm, minimum height=1cm, inner sep=1.3ex] at (1.8,0.5) {};
+		
+		\node[circle, draw] (u2) at (3,1) {\color{red}$-4$};
+		\node[circle, draw] (v2) at (3,0) {\color{black!40!green}$7$};
+		\node[circle, draw] (w2) at (4,1) {\color{black!40!green}$2$};
+		
+		\path (u2) edge [very thick, gray!20!yellow] node[fill=white, anchor=center, pos=0.5, right] {\color{black!40!green}$7$} (v2);
+		\path (u2) edge [very thick, gray!20!yellow] node[fill=white, anchor=center, pos=0.5, above] {\color{red}$-2$} (w2);
+		\end{tikzpicture}
+	}%	
+	\caption{Applying the parallel edges rule.}
+	\label{fig:preprocess:parallel}
+\end{figure}
+
+\begin{enumerate}\addtocounter{enumi}{3}
+	\item \textit{Chain rule}. Let $v$ be a vertex with degree $g(v) = 2$ with corresponding incident edges $e_1 = (u, v)$ and $e_2 = (v,w)$. If all three weights $w(v)$, $w(e_1)$ and $w(e_2)$ are non-positive, then $v$, $e_1$ and $e_2$ can be replaced by a single edge $e = (u, w)$ with a weight $w(e) = w(v) + w(e_1) + w(e_2)$. Either both $e_1$ and $e_2$ will be part of an optimal solution or none of them. In the latter case they are used as a connection between positive parts. Merging negative chains is implemented in a single pass by iteratively trying to apply the rule for all the nodes. Identifying all nodes which satisfy the condition takes $\OO(n)$ time.
+\end{enumerate}
+
+\begin{figure}[H]
+	\centering
+	\resizebox{\textwidth}{!}{%
+		\begin{tikzpicture}[scale=2.5]
+		\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (02) at (0,2) {\color{black!40!green}$1$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (22) at (2,2) {\color{red}$-3$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (01) at (0,1) {\color{red}$-5$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (11) at (1,1) {\color{red}$-1$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (21) at (2,1) {\color{black!40!green}$4$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (00) at (0,0) {\color{red}$-2$};
+		
+		\path (02) edge node[fill=white, anchor=center, pos=0.5, left] {\color{red}$-3$} (01);
+		\path (01) edge node[fill=white, anchor=center, pos=0.5, left] {\color{black!40!green}$4$} (00);
+		\path (22) edge node[fill=white, anchor=center, pos=0.5, right] {\color{black!40!green}$2$} (21);
+		\path (01) edge node[fill=white, anchor=center, pos=0.5, below] {\color{red}$-1$} (11);
+		\path (11) edge node[fill=white, anchor=center, pos=0.5, below] {\color{red}$-5$} (21);
+		
+		\node [single arrow, draw, minimum width=0.8cm, minimum height=1cm, inner sep=1.3ex] at (3,1) {};
+		
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (022) at (4,2) {\color{black!40!green}$1$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (222) at (6,2) {\color{red}$-3$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (012) at (4,1) {\color{red}$-5$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (212) at (6,1) {\color{black!40!green}$4$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (002) at (4,0) {\color{red}$-2$};
+		
+		\path (022) edge node[fill=white, anchor=center, pos=0.5, left] {\color{red}$-3$} (012);
+		\path (012) edge node[fill=white, anchor=center, pos=0.5, left] {\color{black!40!green}$4$} (002);
+		\path (222) edge node[fill=white, anchor=center, pos=0.5, right] {\color{black!40!green}$2$} (212);
+		\path (012) edge[very thick, gray!20!yellow] node[fill=white, anchor=center, pos=0.5, below] {\color{red}$-7$} (212);
+		\end{tikzpicture}
+	}%
+	\caption{Applying the chain rule.}
+	\label{fig:preprocess:chain}
+\end{figure}
+
+\textbf{Phase II}
+\begin{enumerate}
+	\item \textit{Mirrored hubs rule}. Let $u,v \in V$ be two distinct nodes with non-positve weights. Without loss of generality assume that $w(u) \leq w(v)$. If $u$ and $v$ are adjacent to the same nodes and all edge weights $w(e)$, $e$ incident to $u$, are non-positive then we can remove $u$ from the graph. The reason is that $v$ will always be preferred over $u$ in an optimal solution, because it is adjacent to exactly the same nodes as $u$ and costs less. More generally, this reduction is also executable if the neighborhood of $u$ is a subset of neighborhood of $v$.
+	Finding all pairs takes $\OO(\Delta \cdot n^2)$ time where $\Delta$ is the maximum degree of the graph.
+\end{enumerate}
+
+\begin{figure}[H]
+	\centering
+	\resizebox{\textwidth}{!}{%
+		\begin{tikzpicture}[scale=2.5]
+		\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (u) at (0,1) {\color{red}$-3$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (n1) at (1,0) {\color{black!40!green}$3$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (n2) at (1,1) {\color{red}$-2$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (n3) at (1,2) {\color{black!40!green}$4$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (v) at (2,1) {\color{red}$-1$};
+		
+		\path (u) edge node[fill=white, anchor=center, pos=0.5, below left] {\color{red}$-2$} (n1);
+		\path (u) edge node[fill=white, anchor=center, pos=0.5, above] {\color{red}$-5$} (n2);
+		\path (u) edge node[fill=white, anchor=center, pos=0.5, above left] {\color{black!40!green}$0$} (n3);
+		\path (v) edge node[fill=white, anchor=center, pos=0.5, below right] {\color{red}$-3$} (n1);
+		\path (v) edge node[fill=white, anchor=center, pos=0.5, above] {\color{black!40!green}$6$} (n2);
+		\path (v) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{black!40!green}$1$} (n3);
+		
+		\node [single arrow, draw, minimum width=0.8cm, minimum height=1cm, inner sep=1.3ex] at (3,1) {};
+		
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (n12) at (4,0) {\color{black!40!green}$3$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (n22) at (4,1) {\color{red}$-2$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (n32) at (4,2) {\color{black!40!green}$4$};
+		\node[circle, draw, inner sep=0pt, minimum size=0.7cm] (v2) at (5,1) {\color{red}$-1$};
+		
+		\path (v2) edge node[fill=white, anchor=center, pos=0.5, below right] {\color{red}$-3$} (n12);
+		\path (v2) edge node[fill=white, anchor=center, pos=0.5, above] {\color{black!40!green}$6$} (n22);
+		\path (v2) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{black!40!green}$1$} (n32);
+		\end{tikzpicture}
+	}%
+	\caption{Applying the mirrored hubs rule.}
+	\label{fig:preprocess:hubs}
+\end{figure}
+
+During this process we keep a mapping from the merged nodes to sets of original nodes to map solutions of the reduced instance to solutions of the original instance.
+
+
+\subsection{Postprocessing}
+\label{sec:approximation:postprocess}
+
+Similar to the preprocessing procedure presented in the last Section \ref{sec:approximation:preprocess} one can execute a postprocessing procedure to improve a given heuristic solution for the \WSP. Given a sub-optimal or heuristic solution we describe operations that can be performed to improve the weight of the subgraph. Again, we give a procedure for maximizing the value of the weight function. The procedure can be changed slightly for the minimization case.\medskip
+
+A sub-optimal subgraph $H$ of $G$ passes through four rules that are run exhaustively until no rules apply anymore. The result is a subgraph with larger weight.
+
+\begin{enumerate}
+	\item \textit{Positive edges rule}. Let $e \in G$ be an edge in $G$. If $e = (u, v)$ is not in $H$ but $u, v \in H$ and $w(e) \geq 0$, adding $e$ to $H$ will not reduce the weight of the subgraph. Identifying all missing positive edges takes $\OO(m)$ time.
+	\item \textit{Negative node rule}. Let $v \in H$ be an vertex with $w(v) + \sum_{e \in \delta_H(v)} w(e) < 0$. If $H$ stays connected when removing $v$, the weight of the subgraph can be improved by doing so. This step takes $\OO(n + m)$ time.
+	\item \textit{Negative edges rule}. Let $e \in H$ be an edge with weight $w(e) < 0$. Analogous to the last rule if $H$ stays connected when removing $e$, it is safe to do so. Identifying all negative edges takes $\OO(m)$ time.	
+	\item \textit{Neighboring nodes rule}. Let $v$ be a neighbor of a node $u \in H$ with $w(v) + \sum_{e \in \delta_H(u)} w(e) \geq 0$. Then we can add $u$ along with the edges in the sum without reducing the weight of the subgraph. Going through all neighbors and all incident edges can be done in time $\OO(n+m)$
+\end{enumerate}
+
+It follows from the description of the operations that the subgraph returned by the procedure has a larger weight then the input subgraph.
+
+
+\subsection{Node Set Heuristic}
+\label{sec:approximation:nodeset}
+
+Due to the \WSP\ being \NP-complete to approximate within a constant factor we present a heuristic procedure for obtaining approximative solutions.\medskip
+
+Given an undirected graph \ugraph. Suppose we are given the set of nodes $V(H)$ of an optimal solution $H = \maxWSP(G)$. How do we select the edges? What is the complexity of this problem? Can it be solved efficiently?\medskip
+
+We describe a procedure that reduces a copy of the graph $G$ to an optimal \maxWSP-subgraph $H'$ of $G$.
+
+\begin{procedure}
+	\label{proc:gwspgivennodes}
+	Given an undirected graph \ugraph\ and a set of nodes $V(\bar{H})$ of an optimal solution $\bar{H}$ for \maxWSP\ on $G$ do the following steps to create a graph $H'$. Start with $H'$ being a copy of $G$.
+	\begin{enumerate}
+		\item Remove all vertices $v \in V \setminus V(\bar{H})$ from $H'$.
+		\item Select all non-negative edges $P = \{e \in E | w(e) \geq 0\}$ in $H'$. If the resulting graph $(V(\bar{H}), P)$ is connected, STOP: Then $H \defeq (V(\bar{H}), P)$ is an optimal solution for \maxWSP.
+		\item Contract each connected component $C$ of $(V(\bar{H}), P)$ to a single node $v_C$ in $H'$ with weight $w(v_C) = w(C)$.
+		\item Compute a maximum edge-weighted spanning tree $T$ in $H'$. Then $H \defeq (V(\bar{H}), P \cup E(T))$ is an optimal solution for \maxWSP.
+	\end{enumerate}
+\end{procedure} 
+
+\begin{theorem}
+	\label{thm:wspgivennodes}
+	Given a set of nodes $V(\bar{H})$ of an optimal solution $\bar{H}$ for \maxWSP\ on a graph \ugraph\ Procedure \ref{proc:gwspgivennodes} computes an optimal solution for \maxWSP\ in time $\OO(m + n \log n)$.
+\end{theorem}
+\begin{proof}
+	Assume the solution $H$ returned by Procedure \ref{proc:gwspgivennodes} is not optimal. Since both subgraphs have the same set of vertices $V(H) = V(\bar{H})$, which means that also the vertex weights $w(V(H)) = w(V(\bar{H}))$ are equal, the selected edges have to differ and $w(E(H)) < w(E(\bar{H}))$.\medskip
+	
+	Suppose the Procedure \ref{proc:gwspgivennodes} terminated in step 2. Removing all vertices $v \in V \setminus V(\bar{H})$ in step 1 (and hereby removing incident edges) from $H'$ did not remove edges selected by the solution $\bar{H}$. Otherwise if $\bar{H}$ selected one of those edges it would have to select the corresponding incident vertex from $v \in V \setminus V(\bar{H})$ which is not possible. But then $H$ contains all non-negative edges from $H'$ and thus all nonegative edges from $\bar{H}$ as well implying that $w(E(H)) \geq w(E(\bar{H}))$ which is a contradiction.\medskip
+	
+	Suppose the procedure terminated in step 4 and assume $H \defeq (V(\bar{H}), P \cup E(T))$ is not optimal, meaning $w(H) < w(\bar{H})$. But then the maximum edge-weighted spanning tree in $H'$ has less weight than the edges connecting $(V(\bar{H}), P)$ in $\bar{H}$ which is contradiction. Thus $H$ is an optimal solution for \maxWSP.\medskip
+	
+	For the complexity observe that step 1 needs $\OO(n)$, step 2 $\OO(n + m)$, and step 3 $\OO(n + m)$ time. For step 4 we can use Kruskals Algorithm to compute in maximum weighted spanning tree in time $\OO(m + n \log n)$ \cite{KN12}.
+\end{proof}
+
+Suppose we are given a random set of nodes $S$, can we still use Procedure \ref{proc:gwspgivennodes} with that set as an input to compute a feasible solution for the \WSP? Unfortunately no, since we cannot execute step 1 in the same way. Step 1 used the fact that the nodes originated from an optimal solution. The problem now is that after removing all vertices $v \in V \setminus S$ it might not be possible to connect all nodes from $S$. For this reason we might need to add additional nodes to $S$ to obtain a feasible solution.\medskip
+
+To obtain a practical heuristic it might be essential to pick a ``good'' set of nodes for the procedure instead of a random one. Consider the following procedure. Note that if it is possible to execute Procedure \ref{proc:gwspgivennodes} for a random set of nodes, we get a lower bound for the value of the optimal \maxWSP-subgraph. Let $N$ be a constant such that computing \maxWSP\ exactly on a graph with at most $N$ nodes can be done within a reasonable amount of time. In Chapter \ref{sec:study} of this thesis we investigate in the practical use of this heuristic and how to choose $N$.
+
+\begin{procedure}[Node Set Heuristic for \maxWSP]
+	\label{proc:wspnodes}
+	Given an undirected graph \ugraph\ do the following steps to create a subgraph $H$. Start with $H$ being a copy of $G$.
+	\begin{enumerate}		
+		\item Take all non-negative nodes of $G$, that is $S \defeq \{ v \in V \colon w(v) \geq 0 \}$ and add them to $V(H)$.
+		\item Select all non-negative edges $P = \{e \in E \colon w(e) \geq 0\}$ in $G'$ and add them to $E(H)$. If the graph $H$ is connected, STOP: Then $H$ is an solution for \maxWSP.
+		\item Otherwise, contract each connected component $C$ of $H$ in $G$ to a single node $v_C$ with weight $w(v_C) = w(S) + w(P)$.
+		\item Pick $|V(G)| - N$ vertices in $G$ and solve a modified version of \textsc{wsp} where all picked vertices are forced to be in the solution using an exact algorithm.
+		\item Apply the postprocessing scheme from Section \ref{sec:approximation:postprocess} to the output of the modified \textsc{wsp} version to obtain $H$.
+		\item Repeat steps 4 and 5 multiple times and take the best solution returned.
+	\end{enumerate}
+\end{procedure}
+
+
+\subsection{Spanning Tree Heuristic}
+\label{sec:approximation:spanningtree}
+
+Similarly to last section, we describe a heuristic procedure for the \WSP. This time, the heuristic uses the dynamic programming algorithm from Chapter \ref{sec:dynamicprog}. Before applying the following procedure we recommend using the preprocessing scheme from Section \ref{sec:approximation:preprocess}.\medskip
+
+Given an undirected graph \ugraph\ with node weights $c\colon V \to \RR$ and edge weights $d\colon E \to \RR$. Assume we want to maximize the value of the weight function. The heuristic works as follows:
+
+\begin{enumerate}
+	\item Compute a maximum edge-weighted spanning tree $T$ on the graph $G$.
+	\item Solve the \WSP\ on $T$ using the dynamic program \ref{alg:wsptree} described in Section \ref{sec:dynamicprog:trees} and obtain a subgraph $H_T = \maxWSP(T)$.
+	\item Apply the postprocessing procedure to $H_T$ to obtain heuristic solution $H$.
+\end{enumerate}
+
+We compare the practical use in terms of running time and solution quality of this heuristic to an IP solver in Chapter \ref{sec:study}.

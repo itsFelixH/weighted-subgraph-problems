@@ -1,0 +1,403 @@
+\section{Dynamic Programming Algorithm}
+\label{sec:dynamicprog}
+
+In the last chapter we have seen that the problem is generally \NP-complete. In this chapter, we want to ask ourselves: Are there classes of graphs on which the \WSP\ or the \WISP\ are polynomially or even linearly solvable?\medskip
+
+Throughout this chapter a dynamic program will be presented which is executable in polynomial time for certain graph classes. In each section we focus on a specific class. From section to section the procedure is gradually enhanced.\medskip
+
+We start by looking at paths in Section \ref{sec:dynamicprog:paths}. This approach will be extended to trees and series-parallel graphs in Sections \ref{sec:dynamicprog:trees} and \ref{sec:dynamicprog:spg}, respectively. In Section \ref{sec:dynamicprog:decomposable} we proceed with decomposable graphs and in the last Section \ref{sec:dynamicprog:rooted} we have a brief glimpse on how to alter the dynamic program for solving the \RWSP\ and the \RWISP.
+
+\subsection{Basic Idea and Dynamic Program on Paths}
+\label{sec:dynamicprog:paths}
+
+Let us first start with the \WSP\ on paths. If $G$ is a path, every subgraph of $G$ is a sub-path, since it has to be connected. Also note that Lemma \ref{lemma:wspwisp} makes a differentiation between the \WSP\ and the \WISP\ unnecessary. In order to solve the \WSP\ one simply needs to look at the values of all sub-paths.\medskip
+
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}
+		[scale=.6,auto=middle]
+		\node[circle, draw, label=below:$v_1$] (v1) at (0,0) {};
+		\node[circle, draw, label=below:$v_2$] (v2) at (2,0) {};
+		\node[circle, draw, label=below:$v_3$] (v3) at (4,0) {};
+		
+		\node[circle, draw, label=below:$v_{n-2}$] (vn2) at (8,0) {};
+		\node[circle, draw, label=below:$v_{n-1}$] (vn1) at (10,0) {};
+		\node[circle, draw, label=below:$v_n$] (vn) at (12,0) {};
+		
+		%\draw[dotted] ($($(v3)!.5!(vn2)$)!1cm!(v3)$) -- ($($(v3)!.5!(vn2)$)!1cm!(vn2)$);
+		\path ($($(v3)!.5!(vn2)$)!1cm!(v3)$) -- node[auto=false]{\ldots\ldots\ldots} ($($(v3)!.5!(vn2)$)!1cm!(vn2)$);
+		
+		\draw (v3) -- ($($(v3)!.5!(vn2)$)!1cm!(v3)$);
+		\draw ($($(v3)!.5!(vn2)$)!1cm!(vn2)$) -- (vn2);
+		 
+		\foreach \from/\to in {v1/v2,v2/v3,vn2/vn1,vn1/vn}
+		\draw[] (\from) -- (\to);
+	\end{tikzpicture}
+	\caption{A path graph.}
+	\label{fig:pathgraph}
+\end{figure}
+
+A path of length $n$ has $(n-k)$ sub-paths of length $k$ and $\binom{n}{2} = \frac{n(n-1)}{2}$ sub-paths in total, which is polynomial in $n$. Calculating the weight of a sub-path of length $k$ takes $(k+1)+k$ time, since it has $k+1$ vertices and $k$ edges. In total, this yields a running time of:
+
+$$\sum_{k=1}^{n-1} (n-k) \cdot (2k+1) = \frac{1}{3}n^3 + \frac{1}{2}n^2 - \frac{5}{6}n.$$ 
+
+Therefore, the simple algorithm of going through all sub-paths yields the correct solution in polynomial time $\OO(n^3)$.\medskip
+
+We can achieve a better runtime by using a dynamic programming approach. Let $G=\Vector[v]{n}$ be a path. Instead of looking at all sub-paths of $G$, we start with the sub-path consisting of only the node $v_1$ and start increasing the length of the sub-path. In step $i$ we calculate $\textsc{wsp}(G_i)$ for the sub-path $G_i = \Vector[v]{i}$. We have to calculate and save two solutions to recursively reuse when increasing the length of the sub-path. One containing the current node $v_i$ and one not containing it. By $\HPath{v_i}{in}$ we denote the solution containing the current node $v_i$ and by $\HPath{v_i}{out}$ the one not containing it.\medskip
+
+Our dynamic programming algorithm starts with $\HPath{v_1}{in} = G_1 = v_1$ and $\HPath{v_1}{out} = \emptyset$. When increasing the length of the sub-path from $i-1$ to $i$ there are two possible solution candidates for $\HPath{v_i}{in}$. One is the optimal solution $\HPath{v_{i-1}}{in}$ containing $v_{i-1}$ which we extend by adding $v_i$ and the edge $(v_{i-1}, v_i)$ to it. The other one is the graph just containing $v_i$. The algorithm compares the weight of both graphs and takes the maximum. Analogously, there are two possibilities for $\HPath{v_{i}}{out}$, which are the two solutions for $G_{i-1}$, namely $\HPath{v_{i-1}}{in}$ and $\HPath{v_{i-1}}{out}$. Again, our algorithm compares their weights and takes the maximum.\medskip
+
+Note, that we can compute the $\argmax$ in our algorithm in linear time because of Lemma \ref{lemma:weightfunction}.
+
+\begin{algorithm}[H]
+	\caption{\maxWSP\ on paths}
+	\label{alg:wsppath}
+	\begin{algorithmic}[1]
+		\Procedure{wsp}{$G$}
+		\State $\HPath{v_1}{in} = v_1$
+		\State $\HPath{v_1}{out} = \emptyset$
+		\State $i=2$
+		\While{$i \leq n$}
+		\State $\HPath{v_i}{in} = \argmax \Big\{ w(\HPath{v_{i-1}}{in} + (v_{i-1}, v_i)), w(v_i) \Big\}$
+		\State $\HPath{v_i}{out} = \argmax \Big\{ w(\HPath{v_{i-1}}{in}), w(\HPath{v_{i-1}}{out}) \Big\}$
+		\EndWhile
+		\State\Return $\argmax \Big\{w(\HPath{v_n}{in}), w(\HPath{v_n}{out}) \Big\}$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+Algorithm \ref{alg:wsppath} can be used to solve \minWSP\ by computing the $\argmin$ instead of $\argmax$. The argumentation is the same as before.
+
+\begin{theorem}
+	Algorithm \ref{alg:wsppath} calculates a solution for the \WSP\ and the \WISP\ on paths correctly in $\mathcal{O}(n)$ time.
+\end{theorem}
+\begin{proof}
+	Let $G = \Vector[v]{n}$ be a path. We prove that when computing $\HPath{v_i}{in}$ and $\HPath{v_i}{out}$ as described in Algorithm \ref{alg:wsppath} the $\argmax$ or $\argmin$ of $\{ w(\HPath{v_i}{in}), w(\HPath{v_i}{out}) \}$ is the optimal solution for \textsc{wsp} on the subgraph $G_i = \Vector[v]{i}$ of $G$ for all $1 \leq i \leq n$ and, consequently, the correctness of the algorithm, that is $\HPath{v_i}{in}$ is the optimal for $G_i$ which contains $v_i$ and $\HPath{v_i}{out}$ is the optimal solution for $G_{i-1}$.\medskip
+	
+	For the first vertex $v_1$, $\HPath{v_1}{in}$ is initialized as the graph just containing $v_1$ and $\HPath{v_1}{out}$ is the empty set, which are both optimal for the weight function $w$ by construction. Suppose the solutions  $\HPath{v_{i-1}}{in}$ and $\HPath{v_{i-1}}{out}$ are correctly computed and $\argmax$ or $\argmin$ of $\{ w(\HPath{v_{i-1}}{in}), w(\HPath{v_{i-1}}{out}) \}$ is the optimal solution for \textsc{wsp} on the subgraph $G_{i-1}$. Then $\HPath{i}{out}$ is the $\argmax$ or $\argmin$ of $\{ w(\HPath{v_{i-1}}{in}), w(\HPath{v_{i-1}}{out}) \}$, since it is the optimal solution for \textsc{wsp} on $G_{i-1}$ and $\HPath{i}{out}$ is not allowed to contain the new vertex $v_i$.\medskip
+	
+	Suppose $\HPath{v_i}{in}$ is not the optimal solution for $G_i$, which contains $v_i$. Then neither the graph just containing $v_i$ nor $\HPath{v_{i-1}}{in}$ extended by adding the vertex $v_i$ and the edge $(v_{i-1}, v_i)$ are optimal. But those are the only possible subgraphs, since by induction $\HPath{v_{i-1}}{in}$ is the optimal solution for $G_{i-1}$ containing $v_{i-1}$ and a connected subgraph of $G_i$ containing $v_i$ either is $v_i$ itself or has to contain $v_{i-1}$.\medskip
+	
+	The algorithm loops through each vertex exactly once. In each step the length of the sub-path $G_i$ increases by one and the algorithm has to calculate the weight of four sub-graphs. If we save the weights of the solutions for $G_{i-1}$ we can calculate the weights for $G_i$ in constant time (see Lemma \ref{lemma:weightfunction}). This yields a running time of $\mathcal{O}(n)$.
+\end{proof}
+
+
+\subsection{Continuing with Trees}
+\label{sec:dynamicprog:trees}
+
+Now, that we can solve the \WSP\ and the \WISP\ on paths efficiently, we want to continue with a bigger class of graphs, namely trees. If $G$ is a tree, every connected subgraph of $G$ is also a tree. Again, theres no need to differentiate between connected and induced subgraphs. The dynamic programming approach we used to solve the problem on paths can be applied to trees, too.\medskip
+
+\begin{figure}[h]
+	\centering
+	\label{fig:wsptree}
+	\begin{forest}
+		[,s sep=1cm,circle,draw
+			[,s sep=1cm,circle,draw
+				[,s sep=1cm,circle,draw
+					[,circle,draw][,circle,draw]
+				]
+				[,circle,draw]
+				[,circle,draw]
+			]
+			[,s sep=1cm,circle,draw,label=above:$v$ 
+				[,circle,draw,label=above:$v_1$] {\node[regular polygon,regular polygon sides=3, draw, minimum height=1cm, below= 0.17cm] (t1) at () {};} 
+				[,circle,draw,label=above:$v_2$] {\node[regular polygon,regular polygon sides=3, draw, minimum height=1cm, below= 0.17cm] (t1) at () {};}
+			]
+		]
+	\end{forest}
+	\caption{A rooted tree.}
+\end{figure}
+
+Let $\ugraph$ be any tree. If $G$ is not rooted choose any node as the root of $G$ (see Definition \ref{def:binarytree}) and continue. For each node $v \in V$ we call the corresponding subtree $G_v$ rooted at $v$.\medskip
+
+Given the \textsc{wsp}-subgraphs of all children $\Vector[v]{k}$, we can calculate the solution for the parent node $v$. We save two solutions per node. By $\HPath{v}{in}$ we denote the \textsc{wsp}-subgraph of $G_v$ including $v$ itself and by $\HPath{v}{out}$ we denote the \textsc{wsp}-subgraph of $G_v$ not including $v$. We start computing solutions for the leaves of the tree and go up level by level recursively reusing previous solutions until we reach the root and therefore obtain a solution for the complete tree.\medskip
+
+Our dynamic programming algorithm starts by computing $\HPath{v}{in} = v$ and $\HPath{v}{out} = \emptyset$ for all leaves $v \in V$. In the next step the algorithm goes through the next level of the tree. It is sufficient to consider all children which would benefit the objective value $w(\HPath{v}{in})$ when adding them, i.e. all children with $w(\HPath{v}{in} + (v, v_i)) > 0$, $i \in \{1,\ldots,k\}$. Those children are then concatenated (see Lemma \ref{lemma:weightfunction}) to obtain $\HPath{v}{in}$. The solution $\HPath{v}{out}$ is computed as follows: There are solutions for each child $v_i$, $i \in \{1,\ldots,k\}$, namely $\HPath{v_{i}}{in}$ and $\HPath{v_{i}}{out}$. The algorithm compares their weights and takes the maximum.
+
+\begin{algorithm}[h]
+	\caption{\maxWSP\ on trees}
+	\label{alg:wsptree}
+	\begin{algorithmic}[1]
+		\Procedure{wsp}{$G$}
+		\State Let $Q = \emptyset$ be a queue
+		\State Add all leaves of $G$ to $Q$
+		\While{$Q \neq \emptyset$}
+		\State Choose $v\in Q$
+		\If{$v$ is a leaf}
+		\State $\HPath{v}{in} = v$
+		\State $\HPath{v}{out} = \emptyset$
+		\Else
+		\State Let $\Vector[v]{k}$ be the children of $v$ in $G$
+		\State ${\displaystyle \HPath{v}{in} = v + \sum_{\substack{i=1 \\ w(\HPath{v_i}{in} + (v_i, v)) > 0}}^{k} \HPath{v_i}{in} + (v_i, v)}$
+		\State ${\displaystyle \HPath{v}{out} = \argmax \left \{ w(\HPath{v_i}{in}), w(\HPath{v_i}{out}) | i\in \{1,\ldots,k\} \right \}}$
+		\EndIf
+		\State Mark $v$ and remove it from $Q$
+		\If{all siblings of $v$ are marked}
+		\State Add parent of $v$ to $Q$
+		\EndIf
+		\EndWhile
+		\State\Return $\argmax \Big\{w(\HPath{v_n}{in}), w(\HPath{v_n}{out}) \Big\}$
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+As in the case for paths, Algorithm \ref{alg:wsptree} can be used to solve \minWSP\ by computing the $\argmin$ instead of $\argmax$. The same arguments hold.
+
+\begin{theorem}
+	\label{thm:wsptree}
+	Algorithm \ref{alg:wsptree} computes a solution for the \WSP\ and \WISP\ on trees correctly in $\mathcal{O}(n)$ time.
+\end{theorem}
+\begin{proof}
+	Let $G$ be a tree with root $r \in V$. We prove that when computing $\HPath{v}{in}$ and $\HPath{v}{out}$ as described in Algorithm \ref{alg:wsptree} $\argmax$ or $\argmin$ of $\{ w(\HPath{v}{in}), w(\HPath{v}{out}) \}$ is the optimal solution for \textsc{wsp} on the subtree $G_v$ of $G$ for all $v \in V$ and, consequently, the correctness of the algorithm. In particular, for every $v \in V$ the graph $\HPath{v}{in}$ is the optimal solution for $G_v$ which contains $v$ and $\HPath{v}{out}$ is the optimal solution for $G_v$ not including $v$.\medskip
+	
+	For a leaf $v$ of the tree, $\HPath{v}{in}$ is initialized as the graph just containing $v$ and $\HPath{v}{out}$ is the empty set, which are both optimal for the weight function $w$. Now, suppose $v$ is a parent node with children $\Vector[v]{k}$, the solutions  $\HPath{v_i}{in}$ and $\HPath{v_i}{out}$ are correctly computed and $\argmax$ or $\argmin$ of $\{ w(\HPath{v_{i-1}}{in}), w(\HPath{v_{i-1}}{out}) \}$ is the optimal solution for \textsc{wsp} on the subgraph $G_{v_i}$ for all $i \in I = \{1, \ldots, k\}$.\medskip
+		
+	Then $\HPath{v}{out}$ is $\argmax$ or $\argmin$ of $\left \{ w(\HPath{v_i}{in}), w(\HPath{v_i}{out}) \colon i\in \{1,\ldots,k\} \right \}$, since by induction those are the optimal solutions for \textsc{wsp} on $G_{v_i}$, respectively and $\HPath{v}{out}$ is not allowed to contain the new vertex $v$.\medskip
+	
+	Suppose $\HPath{v}{in}$ computed in the algorithm is not the optimal solution for $G_v$ which contains $v$. Since we only consider the \textsc{wsp}-subgraphs whose weight $w(\HPath{v_i}{in} + (v_i, v)) > 0$ is greater than zero and, therefore,  benefits the value of the weight function, this implies that either the graph just containing $v$ or at least one of the graphs $\HPath{v_{i}}{in}$ extended by adding the vertex $v$ and the edge $(v_{i}, v)$ are not optimal. But this is a contradiction, since by induction $\HPath{v_{i}}{in}$ is the optimal solution for $G_{v_i}$ containing $v_{i}$ for all $i \in \{1,\ldots,k\}$ and a connected subgraph of $G_v$ containing $v$ either is $v$ itself or has to contain at least one of its children $v_i$, $i \in \{1,\ldots,k\}$.\medskip
+		
+	The algorithm loops through each vertex exactly once. In each step the algorithm has to calculate the weight of three subgraphs for each child of the current node. Using Lemma \ref{lemma:weightfunction} this can be done in constant time and yields a total running time of $\mathcal{O}(n)$.
+\end{proof}
+
+
+\subsection{Expanding to Series-Parallel Graphs}
+\label{sec:dynamicprog:spg}
+
+Another interesting class of graphs is the class of series-parallel graphs. We want to transfer our results from trees to solve the \WSP\ on series-parallel graphs. The idea is the same as for paths and trees. This time though, there is a difference between connected and induced subgraphs, since SP-graphs can have parallel edges and cycles. In this section we want to focus on the \WSP\ of finding connected subgraphs. We explain how to modify the dynamic program for solving the \WISP, too. Note, that there is no need for all sub-solutions to be connected as long as the complete solution is connected. We focus on maximizing the weight function. The procedure can be slightly changed to solve the minimization variant of the problem.\medskip
+
+Let $G$ be any series-parallel graph with decomposition tree $D$. The idea is to work from the bottom to the top of the decomposition tree recursively reusing previous solutions until we reach the root and, as a result, obtain a solution for the graph $G$. For each node $d$ in the decomposition tree we call the corresponding series-parallel graph $G_d$ with source $s_d\in G_d$ and sink $t_d\in G_d$.\medskip
+
+This time, we need to save 5 partial solutions per node: One only containing the source $s\in G_d$ denoted by $\HSSP{d}{s}$ and one only containing the sink $t\in G_d$ called $\HSSP{d}{t}$. Another one containing none of the terminals, which we call $\HSSP{d}{\emptyset}$. All of those solutions need to be connected. Additionally, we need two subgraphs which contain both the source $s_d$ and the sink $t_d$: $\HSSP{d}{s,t,C}$ which is already connected and $\HSSP{d}{s,t,N}$ which is not (yet) connected.\medskip
+
+We begin by computing the solution for all leaves in the decomposition tree. Any leaf $d \in D$ corresponds to a graph $G_d$ consisting of a single edge $(s_d, t_d)$. This graph has no further nodes except the sink $s_d$ and the source $t_d$. All five solutions are computed as follows:
+
+\begin{align}
+	\label{equ:spinint}
+	\begin{split}
+		\HSSP{d}{s} &= s_d,\\
+		\HSSP{d}{t} &= t_d,\\
+		\HSSP{d}{\emptyset} &= \emptyset,\\
+		\HSSP{d}{s,t,C} &= (s_d,t_d),\\
+		\HSSP{d}{s,t,N} &= \{ s_d, t_d \}.
+	\end{split}
+\end{align}
+
+Regard a node $d$ of $D$ with sons $d_1, d_2\in D$. We explain how to compute the \maxWSP\ solution for $G_d$ given the solutions for $G_{d_1}$ and $G_{d_2}$. We distinguish two cases.\medskip
+
+Assume the node $d$ specifies a parallel composition. Then $G_d$ is the union of $G_{d_1}$ and $G_{d_2}$ where the sources $s_{d_1}, s_{d_2}$ and the sinks $t_{d_1}, t_{d_2}$ are identified. The new terminals are $s_d = s_{d_1} = s_{d_2}$ and $t_d = t_{d_1} = t_{d_2}$.
+Before we start, note that it holds that:
+
+\begin{align}
+	\label{equ:spparallel}
+	\begin{split}
+		w(\HSSP{d_1}{s}), w(\HSSP{d_2}{s}) &\geq w(s_{d}),\\
+		w(\HSSP{d_1}{t}), w(\HSSP{d_2}{t}) &\geq w(t_{d}).
+	\end{split}
+\end{align}
+
+The dynamic program works as follows:
+\begin{equation}
+	\label{equ:parallelupdate}
+	\begin{alignedat}{4}
+		\HSSP{d}{s} &= \argmax \Big\{ &&w(\HSSP{d_1}{s}), w(\HSSP{d_2}{s}), w(\HSSP{d_1}{s} + \HSSP{d_2}{s}) \Big\}, \\
+		\HSSP{d}{t} &= \argmax \Big\{ &&w(\HSSP{d_1}{t}), w(\HSSP{d_2}{t}), w(\HSSP{d_1}{t} + \HSSP{d_2}{t}) \Big\}, \\
+		\HSSP{d}{\emptyset} &= \argmax \Big\{ &&w(\HSSP{d_1}{\emptyset}), w(\HSSP{d_2}{\emptyset}) \Big\}, \\
+		\HSSP{d}{s,t,C} &= \argmax \Big\{ &&w(\HSSP{d_1}{s,t,C}), w(\HSSP{d_2}{s,t,C}), w(\HSSP{d_1}{s,t,C} + \HSSP{d_1}{s,t,C}), \\ 
+		& &&w(\HSSP{d_1}{s,t,C} + \HSSP{d_2}{s}), w(\HSSP{d_1}{s,t,C} + \HSSP{d_2}{t}), \\
+		& &&w(\HSSP{d_1}{s} + \HSSP{d_2}{s,t,C}), w(\HSSP{d_1}{t} + \HSSP{d_2}{s,t,C}), \\
+		& &&w(\HSSP{d_1}{s,t,N} + \HSSP{d_2}{s,t,C}), w(\HSSP{d_1}{s,t,C} + \HSSP{d_2}{s,t,N}) \Big\}, \\		
+		\HSSP{d}{s,t,N} &= \argmax \Big\{ &&w(\HSSP{d_1}{s,t,N}), w(\HSSP{d_2}{s,t,N}), w(\HSSP{d_1}{s,t,N} + \HSSP{d_2}{s,t,N}), \\
+		& &&w(\HSSP{d_1}{s,t,N} + \HSSP{d_2}{s}), w(\HSSP{d_1}{s,t,N} + \HSSP{d_2}{t}), w(\HSSP{d_1}{s} + \HSSP{d_2}{s,t,N}), \\
+		& &&w(\HSSP{d_1}{t} + \HSSP{d_2}{s,t,N}) \Big\}.
+	\end{alignedat}
+\end{equation}
+
+Assume now the node $d$ specifies a series composition. Then $G_d$ is the disjoint union of $G_{d_1}$ and $G_{d_2}$. Further, suppose the terminals $t_{d_1}$ and $s_{d_2}$ are identified. The new terminals are $s_d = s_{d_1}$ and $t_d = t_{d_2}$. The following holds:
+
+\begin{align}
+	\label{equ:spseries}
+	\begin{split}
+		w(\HSSP{d_1}{s,t,C} + \HSSP{d_2}{s}) &\geq w(\HSSP{d_1}{s,t,C}),\\
+		w(\HSSP{d_1}{t} + \HSSP{d_2}{s,t,C}) &\geq w(\HSSP{d_2}{s,t,C}),\\
+		w(\HSSP{d_1}{s} + \HSSP{d_2}{t}) \} &\geq w(\HSSP{d_1}{t}), w(\HSSP{d_2}{s}).
+	\end{split}
+\end{align}
+
+In this case, the solutions can be extended as follows:
+\begin{equation}
+	\label{equ:seriesupdate}
+		\begin{alignedat}{4}
+		\HSSP{d}{s} &= \argmax \Big\{ &&w(\HSSP{d_1}{s}), w(\HSSP{d_1}{s,t,C} + \HSSP{d_2}{s}) \Big\}, \\
+		\HSSP{d}{t} &= \argmax \Big\{ &&w(\HSSP{d_2}{t}), w(\HSSP{d_1}{t} + \HSSP{d_2}{s,t,C}) \Big\}, \\
+		\HSSP{d}{\emptyset} &= \argmax \Big\{ &&w(\HSSP{d_1}{t} + \HSSP{d_2}{s}), w(\HSSP{d_1}{\emptyset}), w(\HSSP{d_2}{\emptyset}) \Big\}, \\
+		\HSSP{d}{s,t,C} &= \rlap{$\HSSP{d_1}{s,t,C} + \HSSP{d_2}{s,t,C}$},\\
+		\HSSP{d}{s,t,N} &= \argmax \Big\{ &&w(\HSSP{d_1}{s,t,N} + \HSSP{d_2}{s,t,C}), w(\HSSP{d_2}{s,t,C} + \HSSP{d_2}{s,t,N}), w(\HSSP{d_1}{s} + \HSSP{d_2}{t}), \\
+		& &&w(\HSSP{d_1}{s,t,C} + \HSSP{d_2}{t}), w(\HSSP{d_1}{s} + \HSSP{d_2}{s,t,C}) \Big\}.\\
+	\end{alignedat}
+\end{equation}
+
+Changing the procedure to minimize the weight function, again, one simply needs to compute $\argmin$ instead of $\argmax$. The dynamic program works as in the maximization case.
+
+\begin{theorem}
+	\label{thm:wspsp}
+	Let $G$ be a series-parallel graph. Given the decomposition tree $D$ of $G$ we can calculate a solution for the \WSP\ on $G$ correctly in $\OO(|D|) = \OO(m)$ time, as the decomposition tree has $2m - 1$ nodes.
+\end{theorem}
+\begin{proof}
+	Let $G$ be a series-parallel graph with decomposition tree $D$. We regard the procedure from above. We need to show that for each node $d \in D$ when computing the solution sets $\HSSP{d}{s}, \HSSP{d}{t}, \HSSP{d}{\emptyset}, \HSSP{d}{s,t,C}$, and $\HSSP{d}{s,t,N}$ as described in the algorithm $\argmin$ or $\argmax$ of $\{ w(\HSSP{d}{s}), w(\HSSP{d}{t}), w(\HSSP{d}{\emptyset}), w(\HSSP{d}{s,t,C}), w(\HSSP{d}{s,t,N}) \}$ is the optimal solution for \textsc{wsp} on the subgraph $G_d$ of $G$ and therefore the correctness of the algorithm. In particular, for every $d \in D$ the graphs $\HSSP{d}{s}$, $\HSSP{d}{t}$, $\HSSP{d}{\emptyset}$, $\HSSP{d}{s,t,C}$ and $\HSSP{d}{s,t,N}$ are optimal solutions for $G_d$ while containing or not containing the specified terminals.\medskip
+	
+	For the leaves this is obvious. So regard a node $d$ with sons $d_1$ and $d_2$, suppose the solutions $\HSSP{d_i}{s}$, $\HSSP{d_i}{t}$, $\HSSP{d_i}{\emptyset}$, $\HSSP{d_i}{s,t,C}$ and $\HSSP{d_i}{s,t,N}$ are correctly computed and the $\argmin$ or $\argmax$ of $\{ w(\HSSP{d_i}{s}), w(\HSSP{d_i}{t}), w(\HSSP{d_i}{\emptyset}), w(\HSSP{d_i}{s,t,C}), w(\HSSP{d_i}{s,t,N}) \}$ is the optimal solution for \textsc{wsp} on the subgraph $G_{d_i}$ for all $i \in \{1, 2\}$. We distinguish two cases.\medskip 
+	
+	Assume $d$ specifies a parallel composition. 
+	\begin{itemize}
+		\item $\HSSP{d}{s}$ has to contain the source $s$. Therefore the candidates for a solution have to contain $s$, as well and $\HSSP{d}{s}$ is a combination of those candidates. Suppose $\HSSP{d}{s}$ computed in the algorithm is not the optimal solution for $G_d$ which contains $s$. But due to \eqref{equ:spparallel} this means either $\HSSP{d_1}{s}$, $\HSSP{d_2}{s}$ or $\HSSP{d_1}{s} + \HSSP{d_2}{s}$ which are the only candidates are not optimal for their subgraphs which is a contradiction. The same argumentation holds for $\HSSP{d}{t}$.
+		\item $\HSSP{d}{\emptyset}$ is not allowed to contain $s$ or $t$. Since $d$ specifies a parallel composition it has to be  either $\HSSP{d_1}{\emptyset}$ or $\HSSP{d_2}{\emptyset}$. A combination is not possible, since $\HSSP{d}{\emptyset}$ has to be connected.
+		\item Both $\HSSP{d_i}{s,t,C}$ and $\HSSP{d_i}{s,t,N}$ have to be combinations of previous solutions. Suppose they are not optimal. Then they would contain nodes or edges not included in any subsolutions. But then the corresponding subsolution could be improved which is a contradiction to its optimality.
+	\end{itemize}
+
+	Now, assume $d$ specifies a series composition. The new terminals are $s_d = s_{d_1}$ and $t_d = t_{d_2}$.
+	\begin{itemize}
+		\item $\HSSP{d}{s}$ has to contain the new source $s_d$. Therefore the candidates for a solution have to contain $s_{d_1}$ and $\HSSP{d}{s}$ is a combination of those candidates. Suppose $\HSSP{d}{s}$ computed in the algorithm is not the optimal solution for $G_d$ which contains $s$. But due to \eqref{equ:spseries} this means either $\HSSP{d_1}{s}$ or $\HSSP{d_1}{s,t,C} + \HSSP{d_2}{s}$ which are the only candidates are not optimal for their subgraphs which is a contradiction. The same argumentation holds for $\HSSP{d}{t}$.
+		\item $\HSSP{d}{\emptyset}$ is not allowed to contain $s$ or $t$. Since $d$ specifies a series composition it has to be either $\HSSP{d_1}{\emptyset}$ , $\HSSP{d_2}{\emptyset}$ or $\HSSP{d_1}{t} + \HSSP{d_2}{s}$.
+		\item The same arguments as for the parallel composition hold.
+	\end{itemize}
+
+	We now regard the complexity of the procedure. The decomposition tree $D$ has $2m - 1$ vertices. The algorithm loops through each vertex exactly once. In each step the algorithm has to calculate the weight of at most $14$ subgraphs. Using Lemma \ref{lemma:weightfunction} this can be done in constant time and yields a total running time of $\OO(|D|) = \OO(m)$.	
+\end{proof}
+
+We describe how to modify the dynamic program for solving the \WISP\ on series-parallel graphs. Initializing the sets $\HSSP{d}{s}, \HSSP{d}{t}, \HSSP{d}{\emptyset}$, and $\HSSP{d}{s,t,C}$ for primitive graphs works as in \eqref{equ:spinint}. $\HSSP{d}{s,t,N}$ has to initialized as the empty set for all primitive graphs.
+
+\begin{equation}
+	\label{equ:initwisp}
+	\HSSP{d}{s,t,N} = \emptyset.
+\end{equation} 
+
+In case of a series composition the sets can be extended as in \eqref{equ:seriesupdate}. Otherwise, in a parallel composition, we need to adjust the update rule for $\HSSP{d}{s,t,C}$ and $\HSSP{d}{s,t,N}$ in \eqref{equ:parallelupdate}. If there are edges from $s_{d_1}$ to $t_{d_1}$ in $G_{d_1}$ we need to include those edges to $\HSSP{d_2}{s,t,C}$, since they are induced edges between $s_d$ and $t_d$ in the new graph $G_d$. Vice versa, if there are edges from $s_{d_2}$ to $t_{d_2}$ in $G_{d_2}$ they have to be added to $\HSSP{d_1}{s,t,C}$.\medskip
+
+By $E_{d_1}$ we denote the set of edges between $s_{d_1}$ to $t_{d_1}$ (analogous: $E_{d_2}$). The new rules for the \WISP\ are:
+\begin{equation}
+	\label{equ:parallelwisp}
+	\begin{alignedat}{4}
+		\HSSP{d}{s,t,C} &= \argmax \Big\{ &&w(\HSSP{d_1}{s,t,C} + E_{d_2}), w(\HSSP{d_2}{s,t,C} + E_{d_1}), w(\HSSP{d_1}{s,t,C} + \HSSP{d_1}{s,t,C}), \\ 
+		& &&w(\HSSP{d_1}{s,t,C} + E_{d_2} + \HSSP{d_2}{s}), w(\HSSP{d_1}{s,t,C} + E_{d_2} + \HSSP{d_2}{t}), \\
+		& &&w(\HSSP{d_1}{s} + \HSSP{d_2}{s,t,C} + E_{d_1}), w(\HSSP{d_1}{t} + \HSSP{d_2}{s,t,C} + E_{d_1}), \\
+		& &&w(\HSSP{d_1}{s,t,N} + \HSSP{d_2}{s,t,C} + E_{d_1}), w(\HSSP{d_1}{s,t,C} + E_{d_2} + \HSSP{d_2}{s,t,N}) \Big\}.		
+	\end{alignedat}
+\end{equation}
+
+If either $E_{d_1} \neq \emptyset$ or $E_{d_2}  \neq \emptyset$ this means there is a direct edge between $s_{d}$ and $t_{d}$. So it is not possible to obtain an induced subgraph containing both these vertices which is not connected. In that case we set:
+\begin{equation}
+\label{equ:parallelwisp2}
+	\HSSP{d}{s,t,N} = \emptyset.
+\end{equation}
+
+\begin{lemma}
+	\label{lemma:wispsp}
+	Using rules \eqref{equ:initwisp}, \eqref{equ:parallelwisp} and \eqref{equ:parallelwisp2} for updating $\HSSP{d}{s,t,C}$ the procedure from above returns an induced subgraph.
+\end{lemma}
+\begin{proof}
+	Suppose the procedure returns a subgraph $H$ of $G$ which is not an induced subgraph of $G$, that is there exists an edge $e=(u, v) \in G$ with $u, v \in V(H)$, but $e \notin E(H)$. Then at some point in the procedure $u$ was the source and $v$ was the sink of a graph $G_{d_1}$ or vice versa. When combing this graph with another graph $G_{d_2}$, rule \eqref{equ:parallelwisp} ensures, that the edge $e$ has been added to all connected subgraphs containing both $u$ and $v$. Additionally, due to \eqref{equ:parallelwisp2} we ``delete'' subgraphs which would no longer be induced without adding edge $e$. Adding edge $e$ would make them connected which is not intended for that subgraph.
+\end{proof}
+
+\begin{corollary}
+	\label{cor:wispsp}
+	Let $G$ be a series-parallel graph. Given the decomposition tree $D$ of $G$ we can calculate a solution for the \WISP\ on $G$ correctly in $\OO(|D|) = \OO(m)$ time.
+\end{corollary}
+\begin{proof}
+	This follows from Theorem \ref{thm:wspsp} and Lemma \ref{lemma:wispsp}.
+\end{proof}
+
+
+\subsection{Generalizing to Decomposable Graphs}
+\label{sec:dynamicprog:decomposable}
+
+In a next step we want to generalize the procedure to decomposable graphs.\medskip
+
+Let $\Gamma$ be a class of decomposable graphs, let $l$ be the maximum number of terminals associated with any graph in $\Gamma$. For simplicity of notation we assume that all graphs in $\Gamma$ have exactly $l$ terminals.\medskip
+
+The idea of the procedure is the same as in the procedure for series-parallel graphs. For a given graph $G \in \Gamma$ we work on the decomposition tree $D_G$ from the bottom to the top.\medskip
+
+For each node $d \in D_G$ we call the corresponding partial graph $G_d$ with terminals $\WSPT{d}{} \subset V(G_d)$.\medskip
+
+For every subset $K$ of $L \defeq \{1,\ldots, l\}$, we have to consider the terminals $\WSPT{d}{K} \defeq \{\WSPt{k}{d} \colon k \in K \} \subseteq \WSPT{d}{}$. In addition, we need to calculate solutions for each possible combination of connected components containing these terminals. This can be achieved by looking at all partitions $\WSPP{1}{K},\ldots,\WSPP{B_{|K|}}{K}$ of the set $K$. The corresponding solutions are denoted by $\HSSP{d}{K,P^K_i}$, for all $i\in \{1,\ldots,B_{|K|}\}$.\medskip
+
+We begin by computing the solution for all leaves in the decomposition tree. Any leaf $d$ corresponds to a primitive graph $G_d$. Since the number of primitive graphs is finite, the size of the primitive graphs is bounded by a constant. We can calculate all induced subgraphs of each primitive graph and thus compute all needed sets for the leaves in constant time.\medskip
+
+Regard a node $d$ of $D$ with sons $d_1, d_2\in D$. We explain how to compute the \maxWSP\ solution for $G_d$ given the solutions for $G_{d_1}$ and $G_{d_2}$. The terminals $\WSPT{d}{}$ of $G_d$ are a subset of the terminals of the composing graphs: $\WSPT{d}{} \subset (\WSPT{d_1}{} \cup \WSPT{d_2}{})$. We need to compute $\HSSP{d}{K,P}$ for all partitions $P \in \{\WSPP{1}{K},\ldots,\WSPP{B_{|K|}}{K}\}$ of $K$ and for all sets $K \subseteq L$. Using the composition rule specified by $d$, the terminals are either identified with each other, a single edge is added between them or they are left untouched.\medskip
+
+Fix $K \subseteq L$ and $P\in \{\WSPP{1}{K},\ldots,\WSPP{B_{|K|}}{K}\}$. We describe how to compute $\HSSP{d}{K,P}$ containing the terminals $\WSPT{d}{K}$ and the connected components specified by $P$. Assume the partition $P$ has $r$ sets: $P = \{X_1,X_2,\ldots,X_r\}$. For each set $X_i$ we have terminals that were identified $X_i^{id}$, that an edge was added to $X_i^{e}$ and which were untouched $X_i^{u}$. We have to construct the connected components of $\HSSP{d}{K,P}$ by selecting the corresponding $\HSSP{d_1}{K_1,P_1}$ and $\HSSP{d_2}{K_2,P_2}$ and possibly selecting the new edges for our new solution. Terminals in $X_i^{id}$ are in the same connected component now, for the ones in $X_i^{e}$ we can choose to select the edge to connect their components and the ones in $X_i^{u}$ stay in their component if no other node or selected edge connects their components. We need to look at all $\HSSP{d_1}{K_1,P_1}$ and $\HSSP{d_1}{K_2,P_2}$ with $K = \bar{K_1} \cup \bar{K_2}$ to avoid selecting terminals form $L\setminus \WSPT{d}{K}$. In addition, the union $\bar{P_1} \cup \bar{P_2}$ either has to equal $P$ or has to be a refinement $P$, where $\bar{P_1} = \{ X \cap \WSPT{d}{K} | X \in P_1\}$ and $\bar{P_2} = \{ X \cap \WSPT{d}{K} | X \in P_2\}$, $\bar{K_1} = K_1 \cap \WSPT{d}{K}$ and $\bar{K_2} = K_2 \cap \WSPT{d}{K}$ are restrictions of $P_1$, $P_2$, $K_1$ and $K_2$, respectively. Write
+
+$$\bar{P_1} \cup \bar{P_2} = \{Y_{11}, Y_{12}, \ldots, Y_{1a_{1}}, Y_{21}, Y_{22}, \ldots, Y_{2a_{2}}, Y_{31}, \ldots Y_{ra_{r}} \},$$
+
+where $Y_{ij}, j\in \{1,\ldots a_i\}$ specifies the refinement of $X_i \in P$ for all $i \in \{1, \ldots, r\}$. Let $\mathcal{H}_d^{K,P}$ be the set of all possible candidates for the solution $\HSSP{d}{K,P}$. Add all $\HSSP{d_1}{K_1,P_1}$ with $K_1 \cap \WSPT{d}{K} = K$ and $\{ X \cap \WSPT{d}{K} | X \in P_1\} = P$ to $\mathcal{H}_d^{K,P}$. Analogously for $d_2$.  Combined solutions for $\HSSP{d_1}{K_1,P_1}$ and $\HSSP{d_2}{K_2,P_2}$ are valid if by identifying terminals or adding edges according to the composition rule the components $Y_{ij}, j\in \{1,\ldots a_i\}$ become the component $X_i$ for all $i \in \{1, \ldots, r\}$. If edges were added to connect the components, call the set of added edges $\tilde{E}$, append these, and add the solution candidate $\HSSP{d_1}{K_1,P_1} + \HSSP{d_2}{K_2,P_2} + \tilde{E}$. Otherwise, add $\HSSP{d_1}{K_1,P_1} + \HSSP{d_2}{K_2,P_2}$ to $\mathcal{H}_d^{K,P}$. Then calculate the solution with
+
+$$\HSSP{d}{K,P} = \argmax \{w(H) \colon H \in \mathcal{H}_d^{K,P} \}.$$
+
+\begin{theorem}
+	\label{thm:dyndecomposable}
+	Let $\Gamma$ be a class of decomposable graphs and let $G \in \Gamma$ be a graph of that class. Given the decomposition tree $D$ of $G$ we can calculate \WSP\ on $G$ correctly in polynomial time.
+\end{theorem}
+
+\begin{proof}
+	We regard the procedure from above. Let 
+	$$\mathcal{H}_d \defeq \{ \HSSP{d}{K,P}, K \subseteq L \text{ where } P \allowdisplaybreaks \text{ is a permutation of } \allowdisplaybreaks K \}.$$
+	We need to show that for each node $d \in D$ when computing the solution set $\HSSP{d}{K,P}$ for all $K \subseteq L$ and $i\in \{1,\ldots,B_{|K|}\}$ as described in the procedure $\argmin$ or $\argmax$ of $\{ w(H) \colon H \in \mathcal{H}_d \}$ is the optimal solution for \textsc{wsp} on the partial graph $G_d$ of $G$ and consequently, the correctness of the algorithm. In particular, for every $d \in D$, the graph $\HSSP{d}{K,P}$ is an optimal solution for $G_d$ containing the terminals $\WSPT{d}{K}$ and having the connected components specified in $\WSPP{}{}$.\medskip
+	
+	For the leaves which are primitive graphs this is obvious. Any leaf $d$ corresponds to a primitive graph $G_d$. Since the number of primitive graphs is finite, the size of the primitive graphs is bounded by a constant, all subgraphs of each primitive graph and thus the sets $\HSSP{d}{K,P^K_i}$ with $K \subseteq L$ and $i\in \{1,\ldots,B_{|K|}\}$ can be computed in constant time.\medskip
+	
+	So regard a node $d$ with sons $d_1$ and $d_2$, suppose the solutions $\HSSP{d_j}{K,P^K_i}$ for all $K \subseteq L$ and $i\in \{1,\ldots,B_{|K|}\}$ are correctly computed and $\argmin$ or $\argmax$ of $\{ w(H) \colon H \in \mathcal{H}_{d_j} \}$ is the optimal solution for \textsc{wsp} on the subgraph $G_{d_j}$ for $j \in \{1, 2\}$. Assume $\HSSP{d}{K,P}$ is not is not optimal for $G_d$ containing the terminals $\WSPT{d}{K}$ and having the connected components specified in $\WSPP{}{}$. We distinguish multiple cases.\medskip
+	
+	First, assume $\HSSP{d}{K,P}$ does not contain all terminals $\WSPT{d}{K}$ or has additional terminals. This is not possible since we only looked at $\HSSP{d_1}{K_1,P_1}$ and $\HSSP{d_1}{K_2,P_2}$ with $K = \bar{K_1} \cup \bar{K_2}$ with $\bar{K_1} = K_1 \cap \WSPT{d}{K}$ and $\bar{K_2} = K_2 \cap \WSPT{d}{K}$. None of these subgraphs contain additional terminals and their composition has all terminals $\WSPT{d}{K}$.\medskip
+	
+	Now, suppose $\HSSP{d}{K,P}$ does not have the connected components specified in $\WSPP{}{}$. Similar to before, this does not happen due to the construction of $\HSSP{d}{K,P}$.\medskip
+	
+	Finally, assume there is a subgraph $\tilde{H}$ containing the terminals $\WSPT{d}{K}$, having the connected components specified in $\WSPP{}{}$ and $w(\tilde{H} > w(\HSSP{d}{K,P}))$, that is $\tilde{H}$ is an optimal solution. Then $\tilde{H}$ is not in $\mathcal{H}_{d}$. Since $\tilde{H}$ is an optimal solution on $G_d$, it has to be either a subgraph of $G_{d_1}$, $G_{d_2}$, or a combination of two subgraphs.\medskip
+	
+	In the former case, it would be an optimal solution on that subgraph meaning $\tilde{H} = \HSSP{d_j}{K_j,P_j}$ for $j = 1$ or $j = 2$. But then since $\tilde{H}$ contains the terminals $\WSPT{d}{K}$ and has the connected components specified in $\WSPP{}{}$ it would have been added to $\mathcal{H}_{d}$. In the latter case each of its subgraphs is an optimal solution on $G_{d_j}$ containing the terminals $\WSPT{d_j}{K}$ meaning it would have been added to $\mathcal{H}_{d_j}$ for $j = 1$ or $j = 2$, respectively. But since the combination of both these subgraphs fulfills all criteria, it would have been added to $\mathcal{H}_{d}$ and thus $w(\tilde{H} \leq w(\HSSP{d}{K,P}))$.\medskip
+	
+	We now regard the complexity of the procedure. Let $|D|$ denote the size of the decomposition tree $D$. The algorithm loops through each vertex exactly once. There are $\binom{l}{k}$ subsets of size $k$ of the set of all terminals $T$ with $|T|=l$ and $2^l$ subsets in total. A set of size $k$ has $B_k$ unique partitions (see Definition \ref{def:bellnumber} in the appendix). Therefore the algorithm has to calculate the weight of at most $\sum_{k=1}^{l} \binom{l}{k} \cdot B_k$ subgraphs in each step. Since $l$ is fixed for all graphs in $G$, and calculating the weight for each subgraph can be done in constant time (see Lemma \ref{lemma:weightfunction}). In total, this yields a total running time of $\mathcal{O}(|D| \cdot \sum_{k=1}^{l} \binom{l}{k} \cdot B_k)$.	
+\end{proof}
+
+
+\subsection{Solving the Rooted Problem}
+\label{sec:dynamicprog:rooted}
+
+We want to finish this chapter by modifying the dynamic program to solve the rooted version of the problem (see Definition \ref{def:rwsp}). We briefly present how this is done.\medskip
+
+For paths and trees this can be achieved by changing the return statement of the dynamic program (Algorithm \ref{alg:wsptree}, line $8$) to return the following instead:
+
+\begin{align}
+	\label{equation:dynrooted}
+	\textbf{return } \HPath{v_n}{in}.
+\end{align}
+
+\begin{theorem}
+	Using return statement \eqref{equation:dynrooted} in Algorithm \ref{alg:wsptree} computes a solution for the \RWSP\ and \RWISP\ on trees correctly in $\mathcal{O}(n)$ time.
+\end{theorem}
+\begin{proof} 
+	This stems from the fact, that we can choose any node in the tree as the root of the tree. Let $T$ be any tree and $r \in V$ be a vertex. Choosing $r$ as the root, we have $r \in \HPath{v_n}{in}$ (since $v_n=r$) and due to Theorem \ref{thm:wsptree} the modified dynamic program yields an optimal solution for $\textsc{wsp}(G)$ containing $r$, that is an optimal solution for $\textsc{rwsp}(G, r)$.
+\end{proof}
+
+Since every path is a tree, Algorithm \ref{alg:wsptree} can be used to solve the \RWSP\ and \RWISP\ on paths, too.\medskip
+
+For series-parallel graphs, subgraphs containing $r$ need to be favored over subgraphs not containing $r$. In each step of the algorithm the extension of $\HSSP{d}{s}, \HSSP{d}{t}, \HSSP{d}{\emptyset}, \HSSP{d}{s,t,C}$ and $\HSSP{d}{s,t,N}$ is changed as follows.\medskip
+
+Let $\mathcal{H}$ denote the set of subgraphs which are eligible for extending one of the solutions $H$ (according to \eqref{equ:parallelupdate} and \eqref{equ:seriesupdate}). If there exists a graph $\bar{H} \in \mathcal{H}$ with $r \in \bar{H}$ then
+
+\begin{equation}
+	\label{equation:rwsp:update}
+	H = \argmax \left\{ w(\bar{H}) \colon \bar{H} \in \mathcal{H} \text{ with } r \in \bar{H} \right\}.
+\end{equation}
+
+Otherwise we extend the solution as previously:
+
+\begin{equation}
+	\label{equation:rwsp:update2}
+	H = \argmax \left\{ w(\bar{H}) \colon \bar{H} \in \mathcal{H} \right\}.
+\end{equation}
+
+\begin{theorem}
+	Using the update rules \eqref{equation:rwsp:update} and \eqref{equation:rwsp:update2} described above the procedure presented in Section \ref{sec:dynamicprog:spg} computes a solution for the \RWSP\ and \RWISP\ on series-parallel graphs correctly in $\OO(|D|) = \\OO(m)$ time.
+\end{theorem}
+\begin{proof} 
+	Let $G$ be any series-parallel graph and $r \in V$ be a vertex. Update rules \eqref{equation:rwsp:update} and \eqref{equation:rwsp:update2} favor solutions which contain $r$. Using Theorem \ref{thm:wspsp} the claim follows.
+\end{proof}

@@ -1,0 +1,143 @@
+\section{Densest k-Subgraph Problem}
+\label{sec:dks}
+
+A similar problem to the \WSP\ is the \DkS\ (\textsc{dks}) maximization problem, of finding the densest $k$-vertex subgraph of a given graph. This chapter is based on \cite{Feige97}. The goal is to examine whether one can use the techniques for solving or approximating the \WSP\ and its variations.
+
+\begin{problembox}[framed]{Densest k-Subgraph Problem}
+	Given: & An undirected graph \ugraph\ and a parameter $k$.\\
+	Problem: & Find a subgraph $G^*$ of $G$, induced on $k$ vertices, such that $G^*$ is of maximum density.
+	\label{problem:dks}
+\end{problembox}\vspace{1em}
+
+We denote the density of $G^*$ among all the subgraphs by $d^*(G,k)$. It can be shown that the \DkS\ problem is \NP-complete.\medskip
+
+In \cite{Feige97} Feige, Kortsarz, and Peleg developed two polynomial time approximation algorithms for \DkS. They showed the following two theorems:
+
+\begin{theorem}
+	\label{thm:dksapprox}
+	There is a polynomial time algorithm $A$ that approximates \DkS\ within a factor of $2\sqrt[3]{n}$. That is, for every graph $G$ and every $1 \leq k \leq n, A(G,k) \geq \frac{d^{*}(G,k)}{2\sqrt[3]{n}}$.
+\end{theorem}
+
+\begin{theorem}
+	\label{thm:dksapprox2}
+	There is a polynomial time algorithm $B$ that approximates \DkS\ within	a factor of $n^{\frac{1}{3} - \eps}$, for some $\eps > 0$. That is, for every graph $G$ and every $1 \leq k \leq n, B(G,k) \geq \frac{d^{*}(G,k)}{n^{\frac{1}{3} - \eps}}$
+\end{theorem}
+
+Unfortunately, simply computing the densest subgraph of a graph is not a good approximation for the \WkSP\ (or the \WIkSP) as the following example illustrates: 
+
+\begin{figure}[h]
+	\begin{minipage}[t]{.32\linewidth}
+		\resizebox{\linewidth}{!}{%
+			\begin{tikzpicture}[scale=2.5]
+			\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+			\node[circle, draw] (00) at (0,0) {\color{red}$-4$};
+			\node[circle, draw] (01) at (0,1) {\color{darkgreen}$2$};
+			\node[circle, draw] (10) at (1,0) {\color{darkgreen}$2$};
+			\node[circle, draw] (11) at (1,1) {\color{red}$-3$};
+			
+			\node[circle, draw] (hut) at (0.5,1.6) {\color{red}$-1$};
+			
+			\path (00) edge node[fill=white, anchor=center, pos=0.5, below] {\color{darkgreen}$1$} (10);
+			\path (00) edge node[fill=white, anchor=center, pos=0.5, left] {\color{darkgreen}$5$} (01);
+			\path (00) edge node[fill=white, minimum size=0.4cm, anchor=center, pos=0.3, below right] {\color{darkgreen}$3$} (11);
+			\path (10) edge node[fill=white, anchor=center, pos=0.5, right] {\color{red}$-2$} (11);
+			\path (01) edge node[fill=white, minimum size=0.4cm, anchor=center, pos=0.3, above right] {\color{red}$-4$} (10);
+			\path (01) edge node[fill=white, anchor=center, pos=0.5, above] {\color{red}$-1$} (11);
+			
+			\path (01) edge node[fill=white, anchor=center, pos=0.5, above left] {\color{darkgreen}$20$} (hut);
+			\path (11) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$20$} (hut);
+			\end{tikzpicture}
+		}%
+		\label{fig:dkswksp:graph}
+		\subcaption{Input graph $G$.}
+	\end{minipage}
+	\begin{minipage}[t]{.32\linewidth}
+		\resizebox{\linewidth}{!}{%
+			\begin{tikzpicture}[scale=2.5]
+			\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+			\node[circle, draw, fill=white!80!yellow] (00) at (0,0) {\color{red}$-4$};
+			\node[circle, draw, fill=white!80!yellow] (01) at (0,1) {\color{darkgreen}$2$};
+			\node[circle, draw, fill=white!80!yellow] (10) at (1,0) {\color{darkgreen}$2$};
+			\node[circle, draw, fill=white!80!yellow] (11) at (1,1) {\color{red}$-3$};
+			
+			\node[circle, draw] (hut) at (0.5,1.6) {\color{red}$-1$};
+			
+			\path (00) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, below] {\color{darkgreen}$1$} (10);
+			\path (00) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, left] {\color{darkgreen}$5$} (01);
+			\path (00) edge[thick, blue] node[fill=white, minimum size=0.4cm, anchor=center, pos=0.3, below right] {\color{darkgreen}$3$} (11);
+			\path (10) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, right] {\color{red}$-2$} (11);
+			\path (01) edge[thick, blue] node[fill=white, minimum size=0.4cm, anchor=center, pos=0.3, above right] {\color{red}$-4$} (10);
+			\path (01) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, above] {\color{red}$-1$} (11);
+			
+			\path (01) edge node[fill=white, anchor=center, pos=0.5, above left] {\color{darkgreen}$20$} (hut);
+			\path (11) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$20$} (hut);
+			\end{tikzpicture}
+		}%
+		\subcaption{Densest $4$-subgraph of $G$.}
+		\label{fig:dkswksp:dks}
+	\end{minipage}
+	\begin{minipage}[t]{.32\linewidth}
+		\resizebox{\linewidth}{!}{%
+			\begin{tikzpicture}[scale=2.5]
+			\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+			\node[circle, draw, fill=white!80!yellow] (00) at (0,0) {\color{red}$-4$};
+			\node[circle, draw, fill=white!80!yellow] (01) at (0,1) {\color{darkgreen}$2$};
+			\node[circle, draw] (10) at (1,0) {\color{darkgreen}$2$};
+			\node[circle, draw, fill=white!80!yellow] (11) at (1,1) {\color{red}$-3$};
+			
+			\node[circle, draw, fill=white!80!yellow] (hut) at (0.5,1.6) {\color{red}$-1$};
+			
+			\path (00) edge node[fill=white, anchor=center, pos=0.5, below] {\color{darkgreen}$1$} (10);
+			\path (00) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, left] {\color{darkgreen}$5$} (01);
+			\path (00) edge[thick, blue] node[fill=white, minimum size=0.4cm, anchor=center, pos=0.3, below right] {\color{darkgreen}$3$} (11);
+			\path (10) edge node[fill=white, anchor=center, pos=0.5, right] {\color{red}$-2$} (11);
+			\path (01) edge node[fill=white, minimum size=0.4cm, anchor=center, pos=0.3, above right] {\color{red}$-4$} (10);
+			\path (01) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, above] {\color{red}$-1$} (11);
+			
+			\path (01) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, above left] {\color{darkgreen}$20$} (hut);
+			\path (11) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$20$} (hut);
+			\end{tikzpicture}
+		}%
+		\subcaption{A maximum weighted $4$-subgraph of $G$.}
+		\label{fig:dkswksp:wksp}
+	\end{minipage}
+	\caption{Difference between densest $4$-subgraph and maximum weighted $4$-subgraph.}
+	\label{fig:dkswksp}
+\end{figure}
+
+\begin{example}
+	Figure \ref{fig:dkswksp} shows that we cannot approximate \maxWIkSP\ by solving \textsc{dks}. The densest $4$-subgraph $H_{\textsc{dks}}$ of $G$ (see \ref{fig:dkswksp:dks}) has density 
+	$$d_{H_{\textsc{dks}}} = 2 \frac{|E(H_{\textsc{dks}})|}{|V(H_{\textsc{dks}})|} = \frac{12}{4} = 3$$
+	and weight
+	$$w(H_{\textsc{dks}}) = -1.$$
+	On the contrary the maximum weigthed $4$-subgraph of $G$ (see \ref{fig:dkswksp:wksp}) has density
+	$$d_{H_{\textsc{wksp}}} = 2 \frac{|E(H_{\textsc{wksp}})|}{|V(H_{\textsc{wksp}})|} = \frac{10}{4} < 3$$
+	and weight
+	$$w(H_{\textsc{dks}}) = 41 > -1.$$
+	It is easy to see that by increasing the weight on the edges not contained in $H_{\textsc{dks}}$ or reducing the weights of the nodes and egdes contained in $H_{\textsc{dks}}$ the gap becomes arbitrarily large.
+\end{example}
+
+There is a weighted version of the \DkS\ problem, where edges have nonnegative weights, and the goal is to find the $k$-vertex induced subgraph with the maximum total weight of edges.\medskip
+
+Feige, Kortsarz and Peleg sketched in \cite{Feige97} how to reduce the weighted problem to the unweighted \DkS\ problem with a loss of at most $\OO(\log n)$ in the approximation ratio. 
+
+\begin{procedure}[Solving the weighted \DkS\ problem]
+	\label{procedure:dksweighted}
+	~\begin{enumerate}
+		\item Scale edge weights such that the maximum edge weight is $n^2$.
+		\item Round up each edge weight to the nearest (nonnegative) power of $2$.
+		\item Solve $2 \log n$ \textsc{dks} problems, one for each edge weight (with all other edges removed).
+		\item Select the best of the $\OO(\log n)$ solutions.
+	\end{enumerate}
+\end{procedure}
+
+\begin{corollary}
+	There is a polynomial time algorithm $C$ that approximates the weighted \DkS\ problem within a factor of $\alpha \cdot \log n \cdot n^{\frac{1}{3} - \eps}$, for some $\eps > 0$ and $\alpha \in \NN$.
+\end{corollary}
+\begin{proof}
+	This follows from Theorem \ref{thm:dksapprox2} and Procedure \ref{procedure:dksweighted}.
+\end{proof}
+
+In general, we cannot use this procedure in the above from to approximate the \WIkSP\ since we have to consider node weights and negative edge weights. For special cases where edge weights are non-negative and node weights are significantly smaller than the absolute values of the edge weights one could use procedure \ref{procedure:dksweighted} to approximately solve the \WIkSP\ on those instances.\medskip
+
+In conclusion, using an approximation algorithm for the weighted \DkS\ problem to approximately solve the \WIkSP\ is only feasible for a small subset of instances. For general instances this procedure is either not employable or would result in a very bad approximation ratio, especially if the absolute values of node weights are larger than the edge weights.

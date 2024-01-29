@@ -1,0 +1,76 @@
+% New environments and changes on environments
+
+% Makes it possible for an align environment to start on a new page (even if there is no blank line in the code) and avoids unnecessary whitespace above an align environment at the top of a page.
+\AtBeginEnvironment{align}{\par\noindent}
+\AtBeginEnvironment{align*}{\par\noindent}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{claim}[theorem]{Claim}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{procedure}[theorem]{Procedure}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{notation}[theorem]{Notation}
+
+% for specifying a name
+\newcommand{\thistheoremname}{}
+\newtheorem{genericthm}[theorem]{\thistheoremname}
+\newenvironment{namedthm}[1]
+{\renewcommand{\thistheoremname}{#1}%
+	\begin{genericthm}}
+	{\end{genericthm}}
+\newtheorem*{genericthm*}{\thistheoremname}
+\newenvironment{namedthm*}[1]
+{\renewcommand{\thistheoremname}{#1}%
+	\begin{genericthm*}}
+	{\end{genericthm*}}
+
+% Environment for Problem Definitions
+\makeatletter
+\newcolumntype{\expand}{}
+\long\@namedef{NC@rewrite@\string\expand}{\expandafter\NC@find}
+\NewEnviron{problembox}[2][]{%
+	\def\problem@arg{#1}%
+	\def\problem@framed{framed}%
+	\def\problem@lined{lined}%
+	\def\problem@doublelined{doublelined}%
+	\ifx\problem@arg\@empty%
+	\def\problem@hline{}%
+	\else%
+	\ifx\problem@arg\problem@doublelined%
+	\def\problem@hline{\hline\hline}%
+	\else%
+	\def\problem@hline{\hline}%
+	\fi%
+	\fi%
+	\ifx\problem@arg\problem@framed%
+	\def\problem@tablelayout{|>{\bfseries}lX|c}%
+	\def\problem@title{\multicolumn{2}{|l|}{%
+			\raisebox{-\fboxsep}{\textsc{\Large #2}}%
+	}}%
+	\else
+	\def\problem@tablelayout{>{\bfseries}lXc}%
+	\def\problem@title{\multicolumn{2}{l}{%
+			\raisebox{-\fboxsep}{\textsc{\Large #2}}%
+	}}%
+	\fi%
+	\bigskip\par\noindent%
+	\renewcommand{\arraystretch}{1.2}%
+	\begin{tabularx}{\textwidth}{\expand\problem@tablelayout}%
+		\problem@hline%
+		\problem@title\\[2\fboxsep]%
+		\BODY\\\problem@hline%
+	\end{tabularx}%
+	\medskip\par%
+}
+\makeatother

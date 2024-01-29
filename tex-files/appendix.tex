@@ -1,0 +1,34 @@
+\begin{appendices}
+	\setcounter{table}{0}
+	\renewcommand{\thetable}{B\arabic{table}}
+	\captionsetup[figure]{list=no}
+	\captionsetup[table]{list=no}
+	
+	\section{Definitions}
+	\label{app:def}
+	
+	\begin{definition}[Partition]
+		\label{def:partition}
+		A \textit{partition} of a set $X$ is a set of nonempty subsets of $X$ such that every element $x \in X$ is in exactly one of these subsets, i.e. the set $X$ is a disjoint union of the subsets. Equivalently, a family of sets $P$ is a partition of $X$ if and only if all of the following conditions hold:
+		\begin{itemize}
+			\item[(i)] $\emptyset \notin P$,
+			\item[(ii)] $\bigcup _{A\in P} A = X$, 
+			\item[(iii)] $A \cap B = \emptyset \text{ for all } A, B \in P \text{ with } A \neq B$.
+		\end{itemize}
+		The sets in $P$ are said to cover $X$. The \textit{rank} of $P$ is $|X| - |P|$, if $X$ is finite. If $P_1$ and $P_2$ are partitions of $X$ and every set of $P_2$ is a subset of some set of $P_1$, we call $P_2$ a \textit{refinement} of $P_1$. We denote the number of partitions of $n$ by $p_n$.
+	\end{definition}
+	
+	\begin{definition}[Bell Number]
+		\label{def:bellnumber}
+		The \textit{Bell number} $B_n$ is the number of partitions of a set with $n$ elements. The Bell numbers satisfy a recurrence relation involving binomial coefficients:
+		\begin{align*}
+		B_0 &= B_1 = 1,\\
+		B_{n} &= \sum_{k=0}^{n-1} \binom{n-1}{k} B_k.
+		\end{align*}
+		Formulas for the $n$-th Bell number are:
+		\begin{align*}
+		B_n &= \frac{1}{e} \sum_{k=0}^\infty \frac{k^n}{k!},\\
+		B_n &= \sum_{k=1}^n \frac{k^n}{k!} \sum_{j=0}^{n-k} \frac{(-1)^j}{j!}.
+		\end{align*}
+	\end{definition}
+\end{appendices}

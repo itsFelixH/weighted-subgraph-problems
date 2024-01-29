@@ -1,0 +1,511 @@
+\section{Weighted Subgraph Problems}
+\label{sec:wsp}
+
+This chapter is dedicated to describing the main problem of this thesis. In Section \ref{sec:wsp:problem} we define several variants of the \WSP, all seeking for a weighted subgraph of a given graph fulfilling certain properties. We continue by restricting the problem in Section \ref{sec:wsp:restricted}, where we consider a special case when all node weights are negative and all edge weights are positive. After that, in Section \ref{sec:wsp:general} we develop some properties for the \WSP. We finish the chapter by looking at the complexity of weighted subgraph problems in Section \ref{sec:wsp:complexity}.
+
+\subsection{Problem Description}
+\label{sec:wsp:problem}
+
+We start by defining the \WSP\ and some variations. The problems discussed here can be formally described as follows: Let \ugraph\ be a graph. We indicate the \textit{weight} of an edge $e \in E$ with $c(e)$ and the \textit{weight} of a vertex $v \in V$ with $d(v)$.\medskip
+
+To define the \WSP\ we need the definition of a weight function:
+
+\begin{definition}
+	\label{def:weightfunction}
+	Let \ugraph\ be an undirected graph with node weights $d \colon V \to \RR$ and edge weights $c \colon E \to \RR$. A \textit{weight function} $w$ is defined as:
+	\begin{itemize}
+		\item[(i)] $w(e) \defeq c(e)$ for all $e\in E$.
+		\item[(ii)] $w(E') \defeq \sum_{e\in E'} c(e)$ for all $E' \subseteq E$.
+		\item[(iii)] $w(v) \defeq d(v)$ for all $v\in V$.
+		\item[(iv)] $w(V') \defeq \sum_{v\in V'} d(v)$ for all $V' \subseteq V$.
+		\item[(v)] $w(G) \defeq \sum_{e\in E} c(e) + \sum_{v\in V} d(v)$.
+	\end{itemize}
+\end{definition}
+
+\begin{definition}[Weighted Subgraph Problem]
+	\label{def:wsp}
+	Let \ugraph\ be an undirected graph with node weights $d\colon V \to \RR$ and edge weights $c\colon E \to \RR$. Further, let $w$ be a weight function according to Definition \ref{def:weightfunction}.
+	Then:
+	\begin{itemize}
+		\item[(i)] The \WSP\ (\textsc{wsp}) asks for a connected subgraph $H$ of $G$ where $w(H)$ is minimized or maximized.
+		\item[(ii)] The \WISP\ (\textsc{wisp}) asks for a connected, induced subgraph $H$ of $G$ where $w(H)$ is minimized or maximized.
+	\end{itemize}
+\end{definition}
+
+Now we define a rooted variant of the problem with one of the vertices forced to be in any solution.
+
+\begin{definition}[Rooted Weighted Subgraph Problem]
+	\label{def:rwsp}
+	Given an undirected graph \ugraph\ with node weights $d\colon V \to \RR$ and edge weights $c\colon E \to \RR$, a weight function $w$ according to Definition \ref{def:weightfunction} and a root node $r \in V$.
+	\begin{itemize}
+		\item[(i)] The \RWSP\ (\textsc{rwsp}) is the problem of finding a connected subgraph $H$ of $G$ such that $r \in V(H)$ and $w(H)$ is minimized or maximized.
+		\item[(ii)] The \RWISP\ (\textsc{rwisp}) is the problem of finding a connected, induced subgraph $H$ of $G$ such that $r \in V(H)$ and $w(H)$ is minimized or maximized.
+	\end{itemize}
+\end{definition}
+
+We can look at variations of the problem by specifying the number of nodes of the desired subgraph. Let $k \in \NN$ be a natural number. Then:
+
+\begin{definition}[Weighted k-Subgraph Problem]
+	\label{def:wksp}
+	Given an undirected graph \ugraph\ with node weights $d\colon V \to \RR$ and edge weights $c\colon E \to \RR$, a weight function $w$ according to Definition \ref{def:weightfunction} and an integer $k \in \NN$.
+	\begin{itemize}
+		\item[(i)] The \WkSP\ (\textsc{wksp}) asks for a connected subgraph $H$ of $G$ containing exactly $k$ nodes where $w(H)$ is minimized or maximized.
+		\item[(ii)] The \WIkSP\ (\textsc{wiksp}) asks for a connected, induced subgraph $H$ of $G$ containing exactly $k$ nodes where $w(H)$ is minimized or maximized.
+	\end{itemize}
+\end{definition}
+
+In general, the input for these problems is assumed to consist of a description of the graph (with node and edge weights). The problem can be modified by restricting the graph. For an undirected graph \ugraph\ with node and edge weights, we denote by $\maxWSP(G)$ a solution for the \WSP\ which has maximum weight, that is a subgraph of $G$. We use similar notations to denote solutions for all other weighted subgraph problems.\medskip
+
+Since we are asking for connected subgraphs we assume input graphs to be connected. If a graph is not connected, solving any of these problems can be done by solving the problem on every connected component of the graph. Moreover for all problem except the rooted ones, the empty subgraph is a valid solution with weight zero.\medskip
+
+For the remainder of this thesis we need the following lemma to recursively calculate weight function values:
+
+\begin{lemma}
+	\label{lemma:weightfunction}
+	Let \ugraph\ be an undirected graph with node weights $d \colon V \to \RR_{\geq 0}$ and edge weights $c \colon E \to \RR_{\geq 0}$ and let $H \leq G$ be a subgraph of $G$. For a weight function $w$ according to Definition \ref{def:weightfunction} it holds, that:	
+	\begin{itemize}
+		\item[(i)] When adding a vertex $v \in V \setminus V(H)$ to $H$ then:
+		$$ w(H+v) = w(H) + w(v) = w(H) + d(v).$$
+		\item[(ii)] When adding an edge $(u,v)$ with $u \in V(H)$ and $v \in V \setminus V(H)$ to $H$ then:
+		$$ w(H+(u,v)) = w(H) + w(v) + w((u, v)) = w(H) + d(v) + c(e).$$
+		\item[(iii)] Suppose $H$ is decomposable and was constructed from two graphs $H_1$ and $H_2$. Call the set of identified vertices $I$ and the set of added edges $A$. Then:
+		\begin{align*}
+			w(H) &= w(H_1 + H_2)\\
+			&= w(H_1) + w(H_2) - w(I) + w(A)\\
+			&= w(H_1) + w(H_2) - \sum_{v \in I} d(i) + \sum_{e \in A} c(e).
+		\end{align*}
+	\end{itemize}
+\end{lemma}
+
+\subsection{Restricting the Problem}
+\label{sec:wsp:restricted}
+
+Before we start looking at the general \WSP, we want to focus on a restricted version of the problem where all node weights are non-positive and all edge weights are non-negative. This restriction allows us to gain structural benefits. Later we also generalize some of the results developed here.
+
+\begin{assumption}
+	\label{assumption:wsprestricted}
+	Let \ugraph\ be an undirected graph with node weights $d\colon V \to \RR$ and edge weights $c\colon E \to \RR$. We assume that $c(e) \geq 0$ for all $e \in E$ and $d(v) \leq 0$ for all $v \in V$.
+\end{assumption}
+
+\begin{figure}[H]
+	\begin{minipage}[t]{\linewidth}
+		\centering
+		\resizebox{.49\linewidth}{!}{%
+			\begin{tikzpicture}[scale=2.5]
+			\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+			\node[circle, draw] (02) at (0,2) {\color{red}$-6$};
+			\node[circle, draw] (12) at (1,2) {\color{red}$-3$};
+			\node[circle, draw] (22) at (2,2) {\color{red}$-0$};
+			\node[circle, draw] (01) at (0,1) {\color{red}$-4$};
+			\node[circle, draw] (21) at (2,1) {\color{red}$-2$};
+			\node[circle, draw] (10) at (1,0) {\color{red}$-5$};
+			\node[circle, draw] (20) at (2,0) {\color{red}$-1$};
+			
+			\path (02) edge node[fill=white, anchor=center, pos=0.5, left] {\color{darkgreen}$3$} (01);
+			\path (12) edge node[fill=white, anchor=center, pos=0.5, below right] {\color{darkgreen}$7$} (01);
+			\path (12) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$2$} (21);
+			\path (22) edge node[fill=white, anchor=center, pos=0.5, right] {\color{darkgreen}$3$} (21);
+			\path (01) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$4$} (21);
+			\path (01) edge node[fill=white, anchor=center, pos=0.5, below left] {\color{darkgreen}$1$} (10);
+			\path (10) edge node[fill=white, anchor=center, pos=0.5, above left] {\color{darkgreen}$2$} (21);
+			\path (21) edge node[fill=white, anchor=center, pos=0.5, right] {\color{darkgreen}$1$} (20);
+			\end{tikzpicture}
+		}%
+		\label{fig:wsprestricted:graph}
+		\subcaption{Input graph $G$.}
+	\end{minipage}
+	\begin{minipage}[t]{\linewidth}
+		\vphantom{1.5cm}
+	\end{minipage}
+	\begin{minipage}[t]{.49\linewidth}
+		\resizebox{\linewidth}{!}{%
+			\begin{tikzpicture}[scale=2.5]
+			\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]
+			\node[circle, draw] (02) at (0,2) {\color{red}$-6$};
+			\node[circle, draw, fill=white!80!yellow] (12) at (1,2) {\color{red}$-3$};
+			\node[circle, draw, fill=white!80!yellow] (22) at (2,2) {\color{red}$-0$};
+			\node[circle, draw, fill=white!80!yellow] (01) at (0,1) {\color{red}$-4$};
+			\node[circle, draw, fill=white!80!yellow] (21) at (2,1) {\color{red}$-2$};
+			\node[circle, draw] (10) at (1,0) {\color{red}$-5$};
+			\node[circle, draw, label=right:$u$] (20) at (2,0) {\color{red}$-1$};
+			
+			\path (02) edge node[fill=white, anchor=center, pos=0.5, left] {\color{darkgreen}$3$} (01);
+			\path (12) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, below right] {\color{darkgreen}$7$} (01);
+			\path (12) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$2$} (21);
+			\path (22) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, right] {\color{darkgreen}$3$} (21);
+			\path (01) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$4$} (21);
+			\path (01) edge node[fill=white, anchor=center, pos=0.5, below left] {\color{darkgreen}$1$} (10);
+			\path (10) edge node[fill=white, anchor=center, pos=0.5, above left] {\color{darkgreen}$2$} (21);
+			\path (21) edge node[fill=white, anchor=center, pos=0.5, right] {\color{darkgreen}$1$} (20);
+			\end{tikzpicture}
+		}%
+		\subcaption{A maximum weighted subgraph of $G$.}
+		\label{fig:wsprestricted:max}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[t]{.49\linewidth}
+		\resizebox{\linewidth}{!}{%
+			\begin{tikzpicture}[scale=2.5]
+			\tikzstyle{every node}=[fill=white!80!gray, inner sep=0pt, minimum size=0.7cm]			
+			\node[circle, draw, fill=white!80!yellow] (022) at (3,2) {\color{red}$-6$};
+			\node[circle, draw] (122) at (4,2) {\color{red}$-3$};
+			\node[circle, draw] (222) at (5,2) {\color{red}$-0$};
+			\node[circle, draw, fill=white!80!yellow] (012) at (3,1) {\color{red}$-4$};
+			\node[circle, draw, label=right:$v$] (212) at (5,1) {\color{red}$-2$};
+			\node[circle, draw, fill=white!80!yellow] (102) at (4,0) {\color{red}$-5$};
+			\node[circle, draw] (202) at (5,0) {\color{red}$-1$};
+			
+			\path (022) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, left] {\color{darkgreen}$3$} (012);
+			\path (122) edge node[fill=white, anchor=center, pos=0.5, below right] {\color{darkgreen}$7$} (012);
+			\path (122) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$2$} (212);
+			\path (222) edge node[fill=white, anchor=center, pos=0.5, right] {\color{darkgreen}$3$} (212);
+			\path (012) edge node[fill=white, anchor=center, pos=0.5, above right] {\color{darkgreen}$4$} (212);
+			\path (012) edge[thick, blue] node[fill=white, anchor=center, pos=0.5, below left] {\color{darkgreen}$1$} (102);
+			\path (102) edge node[fill=white, anchor=center, pos=0.5, above left] {\color{darkgreen}$2$} (212);
+			\path (212) edge node[fill=white, anchor=center, pos=0.5, right] {\color{darkgreen}$1$} (202);
+			\end{tikzpicture}
+		}%
+		\subcaption{A minimum weighted subgraph of $G$.}
+		\label{fig:wsprestricted:min}
+	\end{minipage}
+	\caption{A graph $G$ satisfying Assumption \ref{assumption:wsprestricted} and two weighted subgraphs of $G$.}
+	\label{fig:wsprestricted}
+\end{figure}
+
+\begin{example}
+	\label{ex:wsprestricted}
+	Figure \ref{fig:wsprestricted} shows a graph $G$ and two weighted subgraphs of $G$. On the left side of the figure a \maxWSP\ subgraph of $G$ is shown. It has weight
+	\begin{align*}
+	w(H) &= \sum_{e\in E(H)} c(e) + \sum_{v\in V(H)} d(v)\\
+	&= (7 + 4 + 2 + 3) + (-4 - 3 - 2 - 0) = 7.
+	\end{align*}
+	The nodes of the subgraph are highlighted in yellow and the chosen edges are highlighted in blue. Notice that if we include the node $u$ on the bottom right of $G$ and the corresponding incident edge to be in the subgraph $H$, the weight $w(H)$ does not change. We can conclude that the maximum weighted subgraph is generally not unique.\medskip
+	
+	On the right side of Figure \ref{fig:wsprestricted} a \minWSP\ subgraph of $G$ is shown. Its weight is
+	\begin{align*}
+	w(H) &= \sum_{e\in E(H)} c(e) + \sum_{v\in V(H)} d(v)\\
+	&= (3 + 1) + (-6 - 4 - 5) = -11.
+	\end{align*}
+	In this case, if the node $v$ and the corresponding incident edge is added to the subgraph $H$, the weight $w(H)$ does not change.
+\end{example}
+
+The following lemma shows that in the restricted case there is no need to differentiate between \maxWSP\ and \maxWISP.
+
+\begin{lemma}
+	\label{lemma:maxwsprestricted}
+	Let \ugraph\ be an undirected graph according to Assumption \ref{assumption:wsprestricted}. Then the problems \maxWSP\ and \maxWISP\ are equivalent on $G$.
+\end{lemma}
+\begin{proof}
+	Since edge weights always contribute non-negative values to $w(G)$ any optimal solution for \maxWSP\ can be extended to be an induced subgraph of $G$. Suppose $H = \maxWSP(G)$ is not an induced subgraph, adding the missing edges will not worsen the value of the weight function $w$, thus making $H$ an optimal solution for \maxWISP. Conversely, every optimal solution for \maxWISP\ is already optimal for \maxWSP.
+\end{proof}
+
+This implies that the \maxWSP\ subgraph on the right side of Figure \ref{fig:wsprestricted} is a solution for \maxWISP\ on $G$, too. Consequently, due to Lemma \ref{lemma:maxwsprestricted}, in the restricted version of the problem one can solve \maxWSP\ by solving the more restrictive problem \maxWISP. Note, that we do need to differentiate between \minWSP\ and \minWISP\ since in that case removing edges from an induced subgraph improves the value of the weight function. This yields the following lemma.
+
+\begin{lemma}
+	\label{lemma:minwsprestricted}
+	Let \ugraph\ be an undirected graph according to Assumption \ref{assumption:wsprestricted}. Then a solution $H$ for \minWSP\ on $G$ is a spanning tree on a set $V' \subseteq V$.
+\end{lemma}
+\begin{proof}
+	Suppose $H$ is an optimal solution for \minWSP\ but is not a spanning tree. Then removing the edge $e$ with the biggest cost $c(e)$ in $H$ such that $H$ will stay connected and repeating that process as long as possible will not make the value of the weight function $w$ worse, but yield a spanning tree on a set $V' \subseteq V$.
+\end{proof}
+
+From \ref{lemma:minwsprestricted} we get an immediate consequence for a relation between solutions of \minWSP\ and \minWISP.
+
+\begin{corollary}
+	\label{cor:minwsp}
+	Let \ugraph\ be an undirected graph according to Assumption \ref{assumption:wsprestricted}. Then it holds that $\minWSP(G) \leq \minWISP(G)$.
+\end{corollary}
+\begin{proof}
+	This follows from the fact that all edge weights are non-negative and every solution for \minWISP\ is feasible for \minWSP, but not vice-versa.
+\end{proof}
+
+\subsection{General Problem}
+\label{sec:wsp:general}
+
+In the last Section \ref{sec:wsp:restricted}, we have considered a restricted version of the \WSP\ and the \WISP. Now, we want to look at a general version of these problems where the node and edge weights are not restricted and ask ourselves whether the results obtained can be can be applied here, too.
+
+\begin{lemma}
+	\label{lemma:wspnegation}
+	Let \ugraph\ be an undirected graph with node weights $c\colon V \to \RR$ and edge weights $d\colon E \to \RR$. Define the \textit{weight-negated graph} $G^- (\defeq V, E, \delta)$ with node weights $c'(v) = -c(v)$ for all $v \in V$ and edge weights $d'(e) = -d(e)$ for all $e \in E$. Then for two solutions $H = \maxWSP(G)$ and $H' = \minWSP(G^-)$ it holds that $w(H) = -w(H')$.
+\end{lemma}
+\begin{proof}
+	This follows directly from the construction of $G^-$.
+\end{proof}
+
+Although Lemma \ref{lemma:wspnegation} seems very trivial it shows us that every instance of \maxWSP\ can be transformed to an instance of \minWSP\ and there is no need to differentiate between maximizing or minimizing the weight function. For the remainder of this chapter, we refer to both problems simply as \textsc{wsp}.\medskip
+
+The following lemma shows that under certain conditions solutions for the \WSP\ and the \WISP\ coincide.
+
+\begin{lemma}
+	\label{lemma:wspwisp}
+	Let \ugraph\ be an undirected graph with node weights $d \colon V \to \RR$ and edge weights $c \colon E \to \RR$. Then the \WSP\ and the \WISP\ are equivalent on $G$ if any one of the following conditions hold:
+	\begin{itemize}
+		\item[(i)] $G$ does not contain cycles or parallels, that is $G$ is a tree.
+		\item[(ii)] In the case of maximizing all edge weights are non-negative and in case of minimizing all edge weights are non-positive.
+	\end{itemize}
+\end{lemma}
+\begin{proof}
+	If $G$ does not contain cycles and parallel edges, every connected subgraph of $G$ is induced. The other case follows from Lemma \ref{lemma:maxwsprestricted} and Lemma \ref{lemma:wspnegation}.
+\end{proof}
+
+\begin{lemma}
+	\label{lemma:wksp}
+	Let \ugraph\ be an undirected graph with node weights $c\colon V \to \RR$ and edge weights $d\colon E \to \RR$. Then $\maxWSP(G) \geq \maxWkSP(G, k)$ for all $0 \leq k \leq |V|$. More precisely
+	$$ \maxWSP(G) = \max_{0 \leq k \leq |V|} \maxWkSP(G, k).$$
+	Analogously it holds that $\minWSP(G) \leq \minWkSP(G, k)$ for all $0 \leq k \leq |V|$ and
+	$$ \minWSP(G) = \min_{0 \leq k \leq |V|} \minWkSP(G, k).$$
+\end{lemma}
+\begin{proof}
+	This follows from the definitions of \textsc{wsp} and \textsc{wksp} because solving \textsc{wksp} for all $0 \leq k \leq |V|$ yields an optimal solution for \textsc{wsp}.
+\end{proof}
+
+Similarly to the previous lemma, there is a direct relation between solutions of the \WSP\ and \RWSP.
+
+\begin{lemma}
+	\label{lemma:rwsp}
+	Let \ugraph\ be an undirected graph with node weights $c\colon V \to \RR$ and edge weights $d\colon E \to \RR$. Then $\maxWSP(G) \geq \maxRWSP(G, v)$ for all $v \in V$. More precisely
+	$$ \maxWSP(G) = \max_{v \in V} \maxRWSP(G, v).$$
+	Analogously, it holds that $\minWSP(G) \leq \minRWSP(G, v)$ for all $v \in V$ and
+	$$ \minWSP(G) = \min_{v \in V} \minRWSP(G, v).$$
+\end{lemma}
+\begin{proof}
+	Solving \textsc{rwsp} for all $v \in V$ yields an optimal solution for \textsc{wsp}.
+\end{proof}
+
+\subsection{Complexity Results}
+\label{sec:wsp:complexity}
+
+In this section, we regard the complexity of the \WSP\ and show that the problem is \NP-complete. In the progress, we obtain a stronger result and show that both problems are \NP-complete even under Assumption \ref{assumption:wsprestricted}. We distinguish two cases: Maximizing and minimizing the weight function $w$.\medskip
+
+\begin{theorem}
+	\label{thm:wsprestrictednp}
+	Under Assumption \ref{assumption:wsprestricted} the \WSP\ and the \WISP\ on undirected graphs are \NP-complete.
+\end{theorem}
+
+Before we are able to prove Theorem \ref{thm:wsprestrictednp} we need to formulate \textsc{wsp} and the \textsc{wisp} as decision problems. If the decision problem is hard, then, by definition, so is the optimization version.\medskip
+
+For \maxWSP\ we can formulate the corresponding decision problem as follows: Given an undirected graph $G$ and a positive integer $W$, does $G$ have a connected subgraph $H$ with weight $w(H)$ at least $W$? Analogously the \minWSP\ decision problem: Given an undirected graph $G$ and a positive integer $W$, does $G$ have a connected subgraph $H$ with weight $w(H)$ at most $W$?\medskip
+
+We propose reductions from several well-known \NP-complete problems to prove Theorem \ref{thm:wsprestrictednp}.\medskip
+
+The first \NP-complete problem we define is called \textsc{Min-Steiner Tree}.
+
+\begin{problembox}[framed]{Min-Steiner Tree}
+	Given: & An undirected graph \ugraph\ and a subset of vertices $R \subseteq V$, usually referred to as \textit{terminals}.\\
+	Problem: & Find a subtree $D \leq G$ using the least amount of edges that contains all terminals, that is $R \subseteq V(D)$.
+	\label{problem:steinertree}
+\end{problembox}\vspace{1em}
+
+The \textsc{Min-Steiner Tree} problem in graphs is defined in decisional form as follows: Is there a subtree $D$ of $G$ that includes all the vertices of $R$ (i.e. a spanning tree for $R$) and contains at most $k$ edges? For more details on Steiner trees and Steiner tree problems, we refer to \cite{KN12}.
+
+\begin{problembox}[framed]{Exact Cover by $3$-Sets}
+	Given: & A ground set $X$ with $|X| = 3q$ and $q \in \NN$ (so, the size of $X$ is a multiple of $3$), and a collection $C$ of $3$-element subsets of $X$.\\
+	Problem: & Find a subset $C'$ of $C$ where every element of $X$ occurs in exactly one member of $C'$ (so, $C'$ is an \textit{exact cover} of $X$). In other words, is there a subset $C' \subseteq C$ such that $\bigcup_{S \in C'} S = X.$
+	\label{problem:exact3cover}
+\end{problembox}\vspace{1em}
+
+The \textsc{Exact Cover by $3$-Sets} problem is already in decisional form.\medskip
+
+We are now ready to formally prove the \NP-completeness of the \WSP\ and the \WISP\ under Assumption \ref{assumption:wsprestricted}.
+
+\begin{proof}[Proof of Theorem \ref{thm:wsprestrictednp}]
+	Suppose we are given a hypothetical solution $H$ for any of the problems \maxWSP, \minWSP, \maxWISP\ or \minWISP. We can check in polynomial time that:
+	\begin{itemize}
+		\item The subgraph $H$ of $G$ has the desired properties, that is it is connected and for \textsc{wisp} additionally induced.
+		\item In the case of maximizing, $H$ has at least weight $w(H) \geq W$ and in the case of minimizing $H$ has at most weight $w(H) \leq W$.
+	\end{itemize}
+	Thus, we can verify the solution in polynomial time which implies the problem is in \NP.\medskip
+	
+	We propose reductions starting from generic instances of the above mentioned problems which are executable in polynomial time.\medskip
+	
+	Let us start with \minWSP. Let $(G,R,k)$ be an arbitrary instance of the \textsc{Min-Steiner Tree} problem. We can construct an instance of \minWSP\ in polynomial time as follows:\medskip
+	
+	Define the set of vertices $V'$ as:
+	
+	$$V' = V \text{ with } d(v) = 
+	\begin{cases}
+	-M,  & \text{if } v \in R,\\
+	0,  & \text{if } v \notin R,
+	\end{cases}$$
+	
+	where $M > |E|$ is an integer. Basically, we put weight $-M$ on all vertices of the terminal set $R$ and weight $0$ on all other vertices in the graph $G'$.\medskip
+	
+	Now define the set of edges:
+	
+	$$E' = E \text{ with } c(e) = 1.$$
+	
+	All edges are given weight $1$ in $G'=(V',E')$. Now, if there exists a Steiner tree $D$ in $G$ with at most $k$ edges, there also exists a subgraph $H=D$ of $G'$ with weight $w(H) \leq k - |R|M$. Since $D$ has minimum weight it uses the least amount of edge while containing all terminals. Having additional edges in $H$ would only increase the weight $w(H)$. Having an additional vertex $v \notin R$ does not improve the total weight, since it has weight $w(v) = 0$, but worsens it since an additional edge would have to be used to connect $v$ to the remainder of $H$. Conversely, suppose a solution $H = \minWSP(G)$ with weight $w(H) = k - |R|M$ exists, but does not contain all terminals. This is not possible since only the terminal vertices have weight $-M$ and $M > |E|$. Additionally, $\minWSP(G)$ does not contain more than $k$ edges otherwise its weight would be greater than $k - |R|M$.\medskip
+	
+	With $W = k - |R|M$ we constructed an instance $(G, w, W)$ of \minWSP. Thus, the instance of \minWSP\ has a solution if and only if the initial instance of the \textsc{Min-Steiner Tree} problem has a solution.\medskip
+	
+	Now, assume we are maximizing and consider \maxWSP.
+	\begin{figure}[H]
+		\resizebox{\linewidth}{!}{%
+			\begin{tikzpicture}[scale=1.6]		
+			\begin{scope}[every node/.style={fill=white!80!gray, inner sep=0pt, minimum size=0.7cm}]
+			\node[circle,draw] (r) at (4,6) {\color{red}$0$};
+			\node[rectangle, draw, label=right:$S_1$] (s1) at (0.8,4) {\color{red}$-1$};
+			\node[rectangle, draw, label=right:$S_2$] (s2) at (3.2,4) {\color{red}$-1$};
+			\node[rectangle, draw, label=right:$S_\ell$] (sl) at (6.8,4) {\color{red}$-1$};
+			
+			\node[circle, draw] (e1) at (0.4,1) {\color{red}$0$};
+			\node[circle, draw] (e2) at (1.2,1) {\color{red}$0$};
+			\node[circle, draw] (e3) at (2,1) {\color{red}$0$};
+			\node[circle, draw] (e4) at (2.8,1) {\color{red}$0$};
+			\node[circle, draw] (e5) at (3.6,1) {\color{red}$0$};
+			\node[circle, draw] (e6) at (4.4,1) {\color{red}$0$};
+			\node[circle, draw] (e7) at (5.2,1) {\color{red}$0$};
+			\node[circle, draw] (en) at (6.8,1) {\color{red}$0$};
+			
+			\node[circle, draw] (m1) at (0.4,0) {\color{red}$0$};
+			\node[circle, draw] (m2) at (1.2,0) {\color{red}$0$};
+			\node[circle, draw] (m3) at (2,0) {\color{red}$0$};
+			\node[circle, draw] (m4) at (2.8,0) {\color{red}$0$};
+			\node[circle, draw] (m5) at (3.6,0) {\color{red}$0$};
+			\node[circle, draw] (m6) at (4.4,0) {\color{red}$0$};
+			\node[circle, draw] (m7) at (5.2,0) {\color{red}$0$};
+			\node[circle, draw] (mn) at (6.8,0) {\color{red}$0$};
+			\end{scope}
+			
+			\begin{scope}[every node/.style={inner sep=3pt}]
+			\path (r) edge node [above left] {\color{darkgreen}$0$} (s1);
+			\path (r) edge node [left] {\color{darkgreen}$0$} (s2);
+			\path (r) edge node [above right] {\color{darkgreen}$0$} (sl);
+			
+			\path (s1) edge node [left] {\color{darkgreen}$0$} (e1);
+			\path (s1) edge node [left] {\color{darkgreen}$0$} (e3);
+			\path (s1) edge node [above right,pos=0.8] {\color{darkgreen}$0$} (e4);
+			
+			\path (s2) edge[dashed,gray] node [left,pos=0.2] {\color{darkgreen}$0$} (e2);
+			\path (s2) edge[dashed,gray] node [above right] {\color{darkgreen}$0$} (e5);
+			\path (s2) edge[dashed,gray] node [above right] {\color{darkgreen}$0$} (e7);
+			
+			\path (s2) -- node[auto=false]{\ldots\ldots\ldots} (sl);
+			\path (e7) -- node[auto=false]{\ldots} (en);
+			\path (m7) -- node[auto=false]{\ldots} (mn);
+			
+			\path (e1) edge node [right] {\color{darkgreen}$M$} (m1);
+			\path (e2) edge node [right] {\color{darkgreen}$M$} (m2);
+			\path (e3) edge node [right] {\color{darkgreen}$M$} (m3);
+			\path (e4) edge node [right] {\color{darkgreen}$M$} (m4);
+			\path (e5) edge node [right] {\color{darkgreen}$M$} (m5);
+			\path (e6) edge node [right] {\color{darkgreen}$M$} (m6);
+			\path (e7) edge node [right] {\color{darkgreen}$M$} (m7);
+			\path (en) edge node [right] {\color{darkgreen}$M$} (mn);
+			\end{scope}
+			\end{tikzpicture}
+		}%
+		\caption{The basic \NP-hardness reduction from \textsc{Exact Cover by $3$-Sets} to \maxWSP}
+		\label{fig:x3creduction}
+	\end{figure}
+	
+	Let $(X,C)$ an arbitrary instance of the \textsc{Exact Cover by $3$-Sets} problem. We want to obtain an instance of \maxWSP\ by constructing a graph. For every set $S \in C$ we create a vertex $v_S$ and call it a set-vertex. For every element $x \in X$ we create two vertices $v_x$ and $w_x$ and call them element-vertices. The set-vertices are given weight $1$, all other vertices have weight $0$. More formally, we define the set of vertices $V$ as
+	
+	$$V = \{r\} \cup \{v_S \colon S \in C \} \cup \{ v_x \colon x \in X \} \cup \{ w_x \colon x \in X \} \text{ with}$$
+	$$d(v) =
+	\begin{cases}
+	-1,  & \text{if } v \text{ is a set-vertex } v_S \text{ belonging to a set } S \in C,\\
+	0,  & \text{otherwise}.
+	\end{cases}$$
+	
+	We create edges from the root vertex $r$ to all set-vertices, from each set-vertex $v_S$ to the $3$ vertices $v_x$ with $x \in S$ and between $v_x$ and $w_x$ for all $x \in X$. Those edges between $v_x$ and $w_x$ are given a weight $M > k$, all other edges have weight $0$.
+	
+	$$E = \{ (r,v_S) \colon S \in C \} \cup \{ (v_S, v_x) \colon S \in C \text{ and } x \in S \} \cup \{ (v_x, w_x) \colon x \in X \} \text{ with }$$
+	$$c(e) =
+	\begin{cases}
+	M,  & \text{if } e = (v_x, w_x) \text{ for any } x \in X,\\
+	0,  & \text{otherwise}.
+	\end{cases}$$
+	
+	The graph obtained is illustrated in Figure \ref{fig:x3creduction}.\medskip
+	
+	Assume the instance $(X,C)$ of \textsc{Exact Cover by $3$-Sets} has a solution, that is there exists a subset $C' \subseteq C$ which covers $X$ exactly. Suppose $C'$ contains $q$ $3$-sets, then this solution corresponds to a solution for \maxWSP, that is a connected subgraph $H$ of $G$ with weight $w(H) = |X|M - q$. All edges $(v_x, w_x)$, their adjacent vertices, the vertices $v_S$ with $S \in C'$, the edges $(v_x, v_S)$ with $S \in C' \text{ and } x \in S$, the root vertex and the edges $(r, v_S)$ with $S \in C'$ are selected. Since all edges with positive edge weights are selected and at least $q$ of the sets $S \in C$ have to be selected, this is an optimal solution for the instance $(G,w,W)$ of \maxWSP\ with weight $w(H) = |X|M - q$. Conversely, suppose the instance $(G,w,W)$ has a solution $H$ with weight $w(H) = |X|M - q$. In this case it has to contain all edges $(v_x, w_x)$ due to those being the only possibility to gain positive weight $|X|M$. The subgraph has to contain set-vertices to be connected. Since set-vertices decrease the value of the weight function, $H$ chooses as little as possible which cover all vertices associated with elements of $X$. Additionally, $H$ contains the root vertex and the edges to the $q$ selected set-vertices. Selecting additional set-vertices would decrease the value of the weight function, thus making it lower than $W$. Therefore this corresponds to a solution for the instance $(X,C)$ of \textsc{Exact Cover by $3$-Sets}.\medskip
+	
+	With $W = |X|M - q$ we constructed an instance $(G, w, W)$ of \maxWSP. Thus, the instance of \maxWSP\ has a solution if and only if the initial instance of the \textsc{Exact Cover by $3$-Sets} problem has a solution.\medskip
+	
+	A similar reduction is possible for \minWISP\ (see Figure \ref{fig:x3creduction2}). Let $M > 3q$ be an integer. We slightly change the set of vertices and the weights:
+	\begin{figure}[h]
+		\resizebox{\linewidth}{!}{%
+			\begin{tikzpicture}[scale=1.6]
+			\begin{scope}[every node/.style={fill=white!80!gray, inner sep=0pt, minimum size=0.7cm}]
+			\node[circle,draw] (r) at (4,6) {\color{red}$0$};
+			\node[rectangle, draw, label=right:$S_1$] (s1) at (0.8,4) {\color{red}$0$};
+			\node[rectangle, draw, label=right:$S_2$] (s2) at (3.2,4) {\color{red}$0$};
+			\node[rectangle, draw, label=right:$S_\ell$] (sl) at (6.8,4) {\color{red}$0$};
+			
+			\node[circle, draw] (e1) at (0.4,1) {\color{red}$-<M$};
+			\node[circle, draw] (e2) at (1.2,1) {\color{red}$-M$};
+			\node[circle, draw] (e3) at (2,1) {\color{red}$-M$};
+			\node[circle, draw] (e4) at (2.8,1) {\color{red}$-M$};
+			\node[circle, draw] (e5) at (3.6,1) {\color{red}$-M$};
+			\node[circle, draw] (e6) at (4.4,1) {\color{red}$-M$};
+			\node[circle, draw] (e7) at (5.2,1) {\color{red}$-M$};
+			\node[circle, draw] (en) at (6.8,1) {\color{red}$-M$};
+			\end{scope}
+			
+			\begin{scope}[every node/.style={inner sep=3pt}]
+			\path (r) edge node [above left] {\color{darkgreen}$0$} (s1);
+			\path (r) edge node [left] {\color{darkgreen}$0$} (s2);
+			\path (r) edge node [above right] {\color{darkgreen}$0$} (sl);
+			
+			\path (s1) edge node [left] {\color{darkgreen}$1$} (e1);
+			\path (s1) edge node [left] {\color{darkgreen}$1$} (e3);
+			\path (s1) edge node [above right,pos=0.8] {\color{darkgreen}$1$} (e4);
+			
+			\path (s2) edge[dashed,gray] node [left,pos=0.2] {\color{darkgreen}$1$} (e2);
+			\path (s2) edge[dashed,gray] node [above right] {\color{darkgreen}$1$} (e5);
+			\path (s2) edge[dashed,gray] node [above right] {\color{darkgreen}$1$} (e7);
+			
+			\path (s2) -- node[auto=false]{\ldots\ldots\ldots} (sl);
+			\path (e7) -- node[auto=false]{\ldots} (en);
+			\end{scope}
+			\end{tikzpicture}
+		}%
+		\caption{The basic \NP-hardness reduction from \textsc{Exact Cover by $3$-Sets} to \minWISP}
+		\label{fig:x3creduction2}
+	\end{figure}
+	
+	$$V = r \cup \{v_S  \colon S \in C \} \cup \{ v_x  \colon x \in X \} \text{ with}$$
+	$$d(v) =
+	\begin{cases}
+	-M,  & \text{if } v \text{ is an element-vertex } v_x \text{ belonging to an element } x \in X,\\
+	0,  & \text{otherwise}.
+	\end{cases}$$
+	
+	And the set of edges:
+	
+	$$E = \{ (r,v_S)  \colon S \in C \} \cup \{ (v_S, v_x)  \colon S \in C \text{ and } x \in S \} \text{ with }$$
+	$$c(e) =
+	\begin{cases}
+	1,  & \text{if } e = (v_S, v_x) \text{ for any } S \in C \text{ and } x \in S,\\
+	0,  & \text{otherwise}.
+	\end{cases}$$
+	
+	With $W = 3q -|X|M$ we constructed an instance $(G, w, W)$ of \minWISP. Using the same arguments as before, \minWISP\ has a solution if and only if the initial instance of the \textsc{Exact Cover by $3$-Sets} problem has a solution.
+	
+	It is easy to see that all reductions can be done in polynomial time. Therefore, \minWISP, \maxWISP, \minWSP\, and, due to Lemma \ref{lemma:maxwsprestricted}, \maxWSP\ are \NP-complete.
+\end{proof}
+
+\begin{corollary}
+	\label{corollary:wspnp}
+	The \WSP\ on undirected graphs with node weights $c\colon V \to \RR$ and edge weights $d\colon E \to \RR$ is \NP-complete.
+\end{corollary}
+\begin{proof}
+	We have shown that the \textsc{wsp} is \NP-complete even under Assumption \ref{assumption:wsprestricted} in Theorem \ref{thm:wsprestrictednp}. Since this is a restriction of \textsc{wsp}, the problem \textsc{wsp} is \NP-complete, too. Otherwise one could solve instances of the restricted problem by solving them as instances of the general problem.
+\end{proof}
+
+\begin{corollary}
+	\label{corollary:rwspnp}
+	Let \ugraph\ be an undirected graph with node weights $d\colon V \to \RR_{\geq 0}$ and edge weights $c\colon E \to \RR_{\geq 0}$. Then the \RWSP\ and the \RWISP\ are \NP-complete.
+\end{corollary}
+\begin{proof}
+	Suppose \textsc{rwsp} is not \NP-complete. Then any instance of \textsc{wsp} can be solved by solving \textsc{rwsp} for each node $v \in V$ as a root (possibly including the empty graph).
+\end{proof}
+
+\begin{corollary}
+	\label{corollary:wkspnp}
+	Let \ugraph\ be an undirected graph with node weights $d\colon V \to \RR_{\geq 0}$ and edge weights $c\colon E \to \RR_{\geq 0}$. Then the \WkSP\ and the \WIkSP\ are \NP-complete.
+\end{corollary}
+\begin{proof}
+	Suppose \textsc{wksp} is not \NP-complete. Then one can solve any instance of \textsc{wsp} by solving \textsc{wksp} for each $0 \leq k \leq |V|$.
+\end{proof}

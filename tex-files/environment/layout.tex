@@ -1,0 +1,21 @@
+% Layout settings
+
+% include headfoot includes the head and foot into the text body
+\geometry{top = 3cm, bottom = 3cm, footskip = 1cm, left = 3.5cm, right = 3.5cm}
+\setlength\parindent{0pt}
+
+% For the layout of the head and the foot
+\pagestyle{headings}
+
+% Prevents twosided document to stretch vertical spacing
+\raggedbottom
+
+% Makes sections look like chapters (document class "scrartcl" has no chapters)
+\newcommand\chaptername{Chapter}
+\titleformat{\section}[display]
+{\normalfont\huge\bfseries\sffamily}
+{\chaptername\ \thesection}
+{20pt}
+{\Huge}
+\titlespacing*{\section}
+{0pt}{50pt}{40pt}

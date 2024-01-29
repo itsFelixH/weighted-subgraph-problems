@@ -1,0 +1,230 @@
+\section{Basic Definitions}
+\label{sec:def}
+
+In this chapter, we go over some well-established concepts in the field of graph theory and mathematical optimization that are used in this thesis.\medskip
+
+In Section \ref{sec:def:graphtheory} we introduce the basic definitions and notations of graph theory. After this, we define optimization problems and introduce the basics of integer programming in Section \ref{sec:def:integer}. We complete this chapter by establishing some concepts of complexity theory in Section \ref{sec:def:complexity} where we define decision problems, the $\OO$-Notation and conclude with the introduction of the complexity classes \PP\ and \NP.
+
+\subsection{Graph Theory}
+\label{sec:def:graphtheory}
+
+Let us begin with the fundamentals and give several basic definitions from graph theory and present some notation that is used throughout the thesis. All of the definitions stated here can be found in \cite{KN12}. We begin with the definition of a graph itself.
+
+\begin{definition}[Directed Graph]
+	\label{def:graph}
+	A \textit{directed graph} is a quadruple \graph\ where
+	\begin{itemize}
+		\item[(i)] $V$ is a nonempty set, the set of \textit{nodes} or \textit{vertices} of $G$.
+		\item[(ii)] $R$ is a set, the set of \textit{arcs} of $G$.
+		\item[(iii)] It holds that $V \cap R = \emptyset$.
+		\item[(iv)] $\alpha \colon R \to V$ and $\omega \colon R \to V$ are functions ($\alpha(r)$ is the start node, $\omega(r)$ the end node of the arc $r$).
+	\end{itemize}
+\end{definition}
+
+For a graph $G$, we also refer to its set of vertices by $V(G)$ and its set of arcs by $R(G)$. We call a graph $G$ finite if both the $V$ and the $R$ are finite. In that case, we let $n \defeq |V|$ denote the number of nodes and $m \defeq |R|$ denote the number of arcs in $G$.
+
+\begin{definition}[Loops and Parallel Edges]
+	\label{def:loops}
+	Let \graph\ be a graph. An arc $r \in R$ is called \textit{loop} if $\alpha(r) = \omega(r)$.  The graph $G$ is called \textit{loop-free} if it contains no loops.\\
+	Two arcs $r, r' \in R$ with $r \neq r'$ are called \textit{parallel} if $\alpha(r) = \alpha(r')$ and $\omega(r) = \omega(r')$. If $G$ does not contain parallel edges or loops, it is called \textit{simple}. In this case, every arc $r$ is uniquely characterized by the pair $(\alpha(r), \omega(r))$ and we write $G = (V, R)$ for	the directed graph $G$, where $R \subseteq V \times V$.
+\end{definition}
+
+\begin{definition}[Adjacency, Incidence, Degree]
+	\label{def:adjacencydegree}
+	Let \graph\ be a graph. A vertex $v \in V$ and an arc $r \in R$ are called \textit{incident} if $v$ is either the start or the end vertex of $r$, that is $v \in \{ \alpha(r), \omega(r) \}$. Two arcs $r, r' \in R$ are called \textit{incident} if there is a vertex $v$ that is incident to both $r$ and $r'$. Two vertices $v, v' \in V$ are called \textit{adjacent} if there is an arc $r \in R$, such that $r$ is incident to $v$ and $v'$. For a vertex $v \in V$ we write:\medskip
+	
+	\begin{tabular}{ll}
+		$\delta_G^+(v) \defeq  \{r \in R \colon \alpha(r) = v  \}$ & for the set of \textit{outgoing arcs} of $v$,\\
+		$\delta_G^-(v) \defeq  \{r \in R \colon \omega(r) = v  \}$ & for the set of \textit{incoming arcs} of $v$,\\
+		$N_G^+(v) \defeq  \{ \omega(r) \colon r \in \delta_G^+(v)  \}$ & for the set of \textit{successors} of $v$, \\
+		$N_G^-(v) \defeq  \{ \alpha(r) \colon r \in \delta_G^-(v)  \}$ & for the set of \textit{predecessors} of $v$,\\
+		$g_G^+(v) \defeq |\delta_G^+(v)|$ & for the \textit{outdegree} of $v$,\\
+		$g_G^-(v) \defeq |\delta_G^-(v)|$ & for the \textit{indegree} of $v$,\\
+		$g_G(v) \defeq g^+(v) + g^-(v)$ & for the \textit{degree} of $v$.
+	\end{tabular}
+\end{definition}
+
+Oftentimes we only want to regard a part of a graph. Therefore we need the following definition.
+
+\begin{definition}[Subgraph, Induced Subgraph]
+	\label{def:subgraph}
+	Let \graph\ be a graph. A graph $G' = (V', R', \alpha', \omega')$ is called \textit{subgraph} of $G$ (we write $G' \leq G$) if
+	\begin{itemize}
+		\item[(i)] $V' \subset V$ and $R' \subset R$, and
+		\item[(ii)] $\alpha|_{R'} = \alpha'$ and $\omega|_{R'} = \omega'$.
+	\end{itemize}
+	For a subset $V' \subset V$ of the nodes we call
+	$$G[V'] \defeq (V', R', \alpha|_{R'}, \omega|_{R'})$$
+	the \textit{subgraph} of $G$ \textit{vertex-induced} by $V'$ with $R' = \left \{r \in R \colon \alpha(r) \in V' \text{ and } \omega(r) \in V' \right \}$.
+	For a subset $R' \subseteq R$ of the arcs we call
+	$$G_{R'} \defeq (V, R', \alpha|_{R'}, \omega|_{R'})$$
+	the \textit{subgraph} of $G$ \textit{arc-induced} by $R'$.
+	For $v \in V$ we write $G - v$ for the vertex-induced subgraph $G[V \setminus v]$. Analogously, for $r \in R$ we denote by $G - r$ the arc-induced graph $G_{R \setminus {r}}$.
+\end{definition}
+
+For some of the problems considered in this thesis the orientation of the arcs in the graph does not matter. Thus we would like to introduce the notion of an \textit{undirected graph}.
+
+\begin{definition}[Undirected Graph]
+	\label{def:ugraph}
+	An \textit{undirected graph} is a triple $G = (V, E, \gamma)$ where
+	\begin{itemize}
+		\item[(i)] $V$ is a nonempty set, the set of \textit{nodes} or \textit{vertices} of $G$.
+		\item[(ii)] $E$ is a set, the set of \textit{edges} of $G$.
+		\item[(iii)] It holds that $V \cap E = \emptyset$.
+		\item[(iv)] $\gamma \colon E \to \{ X \colon X \subseteq V \text{ with } 1 \leq |X| \leq 2 \}$ is a function that maps each edge to its two endpoints (possibly the same).
+	\end{itemize}
+\end{definition}
+
+Terms like \textit{incidence}, \textit{adjacency}, \textit{degree}, \textit{subgraph} etc. are defined analogously to the directed graphs. If for an edge $e$ in an undirected graph \ugraph\ the set $\gamma(e)$ contains a single element, that is $\gamma(e) = \{v\}$, then $e$ is referred to as a \textit{loop} on $v$. We use the following notations for undirected graphs:\medskip
+
+\begin{tabular}{ll}
+	$\delta_G(v) \defeq \left \{e \in E \colon v \in \gamma(e) \right \}$ & for the set of \textit{incident edges}\\
+	&to $v$,\\
+	$N_G(v) \defeq \left \{ u \in V \colon \gamma(e) = \{u, v\} \text{ for any } e \in E \right \}$ & for the set of \textit{neighbors} of $v$, \\
+	$g_G(v) \defeq \displaystyle \sum_{e \in E \colon v \in \gamma(e)} (3 - |\gamma(e)|)$ & for the \textit{degree} of $v$.
+\end{tabular}\vspace{1em}
+
+The undirected graph $G$ is called \textit{simple} if it does not contain loops or parallels. For simple graphs, more generally for undirected graphs without parallels, one can consider each edge $e \in E$ as a set $e = \{u, v\} \subseteq V$ with at most two members. In that case, we also write $e = (u, v)$ and $G = (V, E)$ for the undirected graph $G$.
+
+\begin{definition}[Density]
+	\label{def:density}
+	The density $d_G$ of an undirected graph \ugraph\ is its average degree. That is, $d_G = 2\frac{|E|}{|V|}$. When $G$ is clear from the context, we denote the density by $d$.
+\end{definition}
+
+\begin{definition}[Associated Undirected Graph, Orientation]
+	\label{def:orientation}
+	Let \graph\ be a directed graph and define the undirected graph $H \defeq (V, E, \gamma)$ with $E \defeq R$ and $\gamma(e) \defeq \{ \alpha(e), \omega(e) \}$ for $e \in E$. Then the graph $H$ is called the \textit{undirected graph associated} with $G$. Vice versa, we call $G$ an \textit{orientation} of $H$.
+\end{definition}
+
+Now that we have established some basic concepts, we define terms for structures within a graph. 
+
+\begin{definition}[Paths and Cycles]
+	\label{def:pathscycles}
+	Let \graph\ be a graph. For some $k \geq 0$ we call a finite sequence $P = (v_0, r_1, v_1, r_2, \dots, r_k, v_k)$ a \textit{path} from $v_0$ to $v_k$ in $G$ if $v_0, \ldots v_k \in V$ , $r_1, \ldots, r_k \in R$ with $\alpha(r_i) = v_{i-1}$ and $\omega(r_i) = v_i$ for all $i = 1, \dots  k$. Analogously we speak of a path $P = (v_0, e_1, v_1, e_2, \dots, e_k, v_k)$ in an	undirected graph if $v_0, \ldots v_k$ are vertices and $e_1, \ldots, e_k$ are edges where $e_i$ connects vertex $v_{i-1}$ and $v_i$, that is, $\gamma(e_i) = \{v_{i-1}, v_i\}$ for all $i = 1, \ldots, k$. We call $|P|\defeq k$ the \textit{length} of the path. A path is called \textit{simple} if $r_i \neq r_j$ (or $e_i \neq e_j$ in the undirected case) for $i \neq j$, that is if it does not use an arc (an edge) more than once. A path is called \textit{elementary} if it is simple and -- except for the case that start and end vertex coincide -- no vertex is touched more than once. If for some path $C$ with $k \geq 1$ we have $v_0 = v_k$, we call $C$ a \textit{cycle}. The notions of simple and elementary cycles transfer from paths. Whenever a graph $G$ is simple, we omit the edges in the finite sequences for all paths since in this case the edges of the paths are uniquely determined by the vertices on the path.	
+\end{definition}
+
+\begin{definition}[Connected Component]
+	\label{def:connectedcomponent}
+	Let \ugraph\ be an undirected graph. For a node $v \in V$ we denote by
+	$$C(v) \defeq \left \{ u \in V \colon \text{ there is a path } P = (v, \dots, u) \text{ in } G \right \} $$	
+	the set of nodes that are \textit{connected} to $v$. We call such a set $C(v)$ a \textit{connected component} of $G$. The graph $G$ is called connected if $C(v) = V$ for any $v \in V$.\medskip
+\end{definition}
+
+\begin{definition}[Cut]
+	\label{def:cut}
+	A cut $(A, B)$ in a directed or undirected graph $G$ is a partition of the set of vertices into two nonempty subsets, that is, $V(G) = A \cup B$ with $A \cap B = \emptyset$, $A \neq \emptyset$, and $B \neq \emptyset$.
+	
+	In extension of the notations $\delta^+(v)$ and $\delta^-(v)$ we define for a subset $V' \subseteq V$ of the vertex set of a graph $G$:
+	$$\delta^+(V') \defeq \{ r \in R \colon \alpha(r) \in V' \text{ and } \omega(r) \in V \setminus V' \}$$
+	$$\delta^-(V') \defeq \{ r \in R \colon \omega(r) \in V' \text{ and } \alpha(r) \in V \setminus V' \}$$
+	If $G$ is undirected, then we define $\delta(U)$ as the set of edges with exactly one end in $V'$:
+	$$\delta(V') \defeq \{e \in E \colon \gamma(e) = (u, v) \text{ with } u \in V' \text{ and } v \in V \setminus V' \}.$$
+\end{definition}
+
+We will now define trees.
+
+\begin{definition}[Tree, Forest]
+	\label{def:treeforest}
+	A simple undirected graph $F = (V, E, \gamma)$ is called a \textit{forest} if it does not contain any cycles. Furthermore, if a graph $T = (V, E, \gamma)$ is a forest and connected, we call $T$ a \textit{tree}. A subgraph $T'$ of $T$ is called a \textit{subtree} if it is connected.
+\end{definition}
+
+\begin{definition}[Root, Rooted Tree, Binary Tree]
+	\label{def:binarytree}
+	Let $T = (V,E,\gamma)$ be a tree. We can choose any $r \in V$ and call $T$ a \textit{rooted tree} with \textit{root} $r$. In a rooted tree $T$ with root $r$, we define the \textit{depth} $d_v$ of a node $v \in V$ as the length of a simple path from $r$ to $v$. Furthermore, all nodes of depth $i$ are referred to as the nodes on the $i$th \textit{level} of the tree. Let $v \in V$ be some node in the tree. Then a node $u$ is called a \textit{child} of $v$ if $d_u = d_v + 1$ and $v$ is adjacent to $u$. If $v$ is not the root we call the unique node $u$ with $d_u = d_v - 1$ that is adjacent to $v$ the \textit{parent} of $v$. If $u$ is the parent of $v$ and $w$ is the parent of $u$ the node $w$ is called the \textit{grandparent} of $v$. Furthermore, $u$ is a \textit{descendant} of $v$ if there is a path $(v = v_0, v_1, \ldots, v_k = u)$ in the tree $T$ such that $v_i$ is a child of $v_{i-1}$ for $i= 1, \dots, k$. We call the subtree with root $v$ that contains all descendants of $v$ the subtree rooted at $v$. A node $u$ is said to be \textit{below} $v$ in the tree $T$ if $u$ is in the subtree rooted at $v$. Analogously $u$ is \textit{above} $v$ in $T$ if $v$ is in the subtree rooted at $u$. The nodes in $T$ without children are called leaves. A rooted tree $T$ is called \textit{binary tree} if no node in $T$ has more than two children. We call a binary tree \textit{full} if no node has exactly one child.
+\end{definition}
+
+\subsection{Integer Programs and Relaxations}
+\label{sec:def:integer}
+
+We continue by defining optimization problems. An in-depth description of this subject is given in \cite{Wol97}.
+
+\begin{definition}[Optimization Problem]
+	\label{def:op}
+	Let $n > 0$ be a positive integer, $f \colon \RR^n \to \RR$ a function, and $X \subset \RR^n$. We define
+	\begin{mini*}
+		{}{f(x)}{}{}\tag{OP}\label{opt:defopt}
+		\addConstraint{x}{\in X}
+	\end{mini*}
+
+	to be an \textit{Optimization Problem} \eqref{opt:defopt}. A solution $x \in \RR^n$ is \textit{feasible} for \eqref{opt:defopt} if $x \in X$. A feasible solution $x^*$ is \textit{optimal}, if $f(x^*) = \min\{f(x) \colon x \in X\}$.
+\end{definition}
+
+\begin{definition}[LP, IP, Linear Relaxation]
+	\label{def:lpip}
+	Let $\min\{f(x) \colon x \in X\}$ be an optimization problem. If $f(x) = c^T x$ is a linear function and $X = \{x \in \RR^n \colon Ax \leq b\}$ for $A \in \RR^{m \times n}$, $c \in \RR^n$ and $b \in \RR^m$, it is referred to as a \textit{Linear Problem} or \textit{Linear Program} \eqref{opt:deflp} and is written as:
+	\begin{mini*}
+		{}{c^T x}{}{}
+		\addConstraint{Ax}{\leq b}\tag{LP}\label{opt:deflp}
+		\addConstraint{x}{\in \RR^n}.
+	\end{mini*}
+
+	If all variables are integer, meaning $X = \{x \in \ZZ^n \colon Ax \leq b\}$, we call the problem \textit{(Linear) Integer Problem} or \textit{(Linear) Integer Program} \eqref{opt:defip} and write:
+	\begin{mini*}
+		{}{c^T x}{}{}
+		\addConstraint{Ax}{\leq b}\tag{IP}\label{opt:defip}
+		\addConstraint{x}{\in \ZZ^n}.
+	\end{mini*}
+
+	We call \eqref{opt:deflp} the \textit{Linear Relaxation} of \eqref{opt:defip}.
+\end{definition}
+
+\begin{definition}[Integrality Gap]
+	\label{def:integralitygap}
+	Given an instance $I$ of an integer program	\eqref{opt:defip} with its optimal value being $M_{\IP}(I)$ and the optimal value of its relaxation \ref{opt:deflp} being $M_{\LP}(I)$. Then, the \textit{Integrality Gap} for instance $I$ is defined by:
+	$$IG(I) = \frac{M_{\IP}(I)}{M_{\LP}(I)}.$$
+\end{definition}
+
+\subsection{Complexity Theory}
+\label{sec:def:complexity}
+
+In this section, we give a brief introduction to complexity theory, as far as it is relevant for this thesis. Details can be found in \cite{Pap94}. In order to be able to classify our results into complexity classes, we first need an exact definition of a decision problem. Informally, a decision problem is a problem that we can answer with ``yes'' or ``no''.\medskip
+
+\begin{definition}[Decision Problem]
+	\label{def:decisionprob}
+	A \textit{decision problem} $\Pi$ consists of a set of instances $\mathcal{I}_{\Pi}$ and a set of yes-instances $\mathcal{Y}_{\Pi} \subset \mathcal{I}_{\Pi}$. Deciding $\Pi$ for an instance $I \in \mathcal{I}_{\Pi}$ is to check, if $I \in \mathcal{Y}_{\Pi}$.
+\end{definition}
+
+Every optimization problem can be reformulated as a decision problem. Given the representation of \eqref{opt:defopt} from Definition \ref{def:op}, the decision problem can be formulated as:
+
+\begin{center}
+	Is there a feasible solution $x \in X$ to \eqref{opt:defopt} with value $f(x) \leq k$?
+\end{center}
+
+In this case an instance of consists of $k$ and a representation of $f$ and $X$. For the linear program \eqref{opt:deflp}, we would have the instance $I = (k, c, A, b)$.
+
+\begin{definition}[Complexity Classes \PP\ and \NP]
+	\label{def:pnp}
+	The class \PP\ consists of all decision problems, which can be solved in polynomial time by a deterministic algorithm.	The class \NP\ consists of all decision problems $\Pi$ with the following property: Given an instance $I \in \mathcal{Y}_{\Pi}$ and a witness $y$ with $L(y) = \OO(L(I)^p)$ for a $p \in \NN$, there is a polynomial algorithm using $I$ and $y$ as its input that is able to verify $I \in \mathcal{Y}_{\Pi}$.
+\end{definition}
+
+From Definition \ref{def:pnp} it follows immediately that \PP\ is a subset of \NP.
+
+\begin{definition}[Input Length]
+	\label{def:inputlength}
+	Let $I$ be an instance of a decision problem $\Pi$. The input length $L(I)$ is defined as the length of the binary encoding of the representation of the instance $I$.
+\end{definition}
+
+\begin{definition}[Polynomial Time Reduction]
+	We say that a decision problem $\Pi$ can be reduced in polynomial time to a decision problem $\Pi'$ and we write $\Pi \leq_p \Pi'$ if there is a function $f \colon \mathcal{I}_{\Pi} \to \mathcal{I}_{\Pi'}$ which can be computed in polynomial time with
+	$$x \in \mathcal{Y}_{\Pi} \iff f(x) \in \mathcal{Y}_{\Pi'}.$$
+\end{definition}
+
+\begin{definition}[\NP-complete Problem]
+	A problem $\Pi \in \NP$ is called \NP-complete if, for all problems $\Pi' \in \NP$, $\Pi' \leq_p \Pi$.
+\end{definition}
+
+For an integer program $\min\{c\tran x | Ax \leq b, x \in \ZZ^n\}$ an instance is given by $I = (c, A, b)$. Given all data is integer, its input length sums up to 
+$$L(I) = \sum_{i=1}^{n} \lceil \log c_i \rceil + \sum_{j=1}^{m} \lceil \log b_j \rceil + \sum_{i=1}^{n} \sum_{j=1}^{m} \lceil \log A_{ij} \rceil.$$
+
+In the following, we will introduce the $\mathcal{O}$-notation in order to later study and categorize running times of algorithms.
+
+\begin{definition}[$\OO$-Notation]
+	\label{def:onotation}
+	Consider the two functions $f, g \colon \NN \to \NN$. We write $f(n) \in \OO(g(n))$ if there exist $c, n_0 \in N$ such that $f(n) \leq c \cdot g(n)$ for all $n \geq n_0$.
+\end{definition}
+
+Now, we are ready to formally define the running time of an algorithm.
+
+\begin{definition}
+	Given a decision problem $\Pi$. Let $A$ be an algorithm for deciding $\Pi$ and $I$ be an instance of $\Pi$. We define $f_A(I)$ to be the number of elementary calculations that $A$ needs to run on $I$. Also, let $f^*_A(l) = \sup_{I \in \mathcal{I}_{\Pi}}	\{f_A(I) \colon L(I) = l\}$ be the running time of algorithm $A$. We call the algorithm $A$ polynomial for the problem $\Pi$, if $f^*_A(l)=\OO(l^p)$ for some $p \in N$.
+\end{definition}

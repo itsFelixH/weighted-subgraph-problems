@@ -1,0 +1,24 @@
+\thispagestyle{empty}
+\section*{Introduction}
+\label{sec:intro}
+
+In some applications (for example as a subproblem of Pricing in Robust Optimization) the problem of finding a connected subgraph with maximum or minimum weight arises. Given an undirected vertex- and edge-weighted graph, the maximum weighted subgraph problem asks to identify a connected subgraph with maximal sum of weights. We are interested in solving this problem efficiently. The complexity and approximability of the weighted subgraph problem on different graph classes are examined. We show that in general, the weighted subgraph problem is \NP-complete and even \NP-complete to approximate within a constant factor.\medskip
+
+We present several algorithms and heuristics for this problem, including a polynomial time dynamic programming algorithm on decomposable graphs and several integer linear programming formulations. In order to test the practical relevance, some of the algorithms presented in this thesis were also implemented. Among those is the dynamic programming algorithm for paths, trees, and series-parallel graphs as well as two heuristic methods. We will see that one of the proposed heuristic procedures, as well as the dynamic program, is a lot faster for solving weighted subgraph problems than a commercial IP solver.
+
+
+\subsection*{Related Work}
+\label{sec:intro:related}
+
+A related problem is the so-called densest $k$-subgraph problem. Here, one seeks a subgraph induced on $k$ nodes, whose weight is maximized. This problem can be constantly approximated for weights fulfilling the triangle inequality \cite{RRT94, Tam91}. For general weights, there are also approximations \cite{KP93}.\medskip
+
+Furthermore, weighted subgraph problems were previously discussed in a paper by El-Kebir and Klau \cite{EK14}. This thesis uses some of the ideas and results of this work.
+
+\subsection*{Outlook}
+\label{sec:intro:outlook}
+
+In the following, we will give an overview of the chapters of this thesis.\medskip
+
+Chapter \ref{sec:def} is dedicated to the recapitulation of definitions from the field of graph theory, complexity theory and mathematical optimization that are necessary in order to formulate comprehensive mathematical statements in the further chapters. The reader familiar with these preliminaries may skip this chapter and only come back to it when needed. Subsequently, in Chapter \ref{sec:treewidth}, we introduce the notion of treewidth and the class of decomposable graphs and present some basic results. The remainder of this thesis is organized as follows.\medskip
+
+Chapter \ref{sec:wsp} formulates the weighted subgraph problem among with some variations considered here. In Chapter \ref{sec:dynamicprog}, we present a polynomial time dynamic programming algorithm for the weighted subgraph problem on special graph classes -- namely paths, trees, series-parallel graphs, and decomposable graphs. Afterward, in Chapter \ref{sec:dks} the densest $k$-subgraph problem is defined and the applicability of techniques for approximating the weighted subgraph problem is examined. We show the hardness of approximating the weighted subgraph problem within a constant factor and describe some heuristic procedures in Section \ref{sec:approximation}. Integer programming formulations exactly solving weighted subgraph problems are given in Chapter \ref{sec:def:integer}. In Chapter \ref{sec:study} we study the performance and practical use of our implementations on graphs of different sizes compared to commercial IP solvers. Finally, Chapter \ref{sec:conclusion} lists our results and hints to further possible studies.
